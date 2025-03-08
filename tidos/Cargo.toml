@@ -8,6 +8,8 @@ description = "Tidos is a component framework that can be served by any web fram
 readme = "../README.md"
 rust-version.workspace = true
 edition.workspace = true
+keywords = ["tidos", "web", "framework", "component"]
+categories = ["web-programming"]
 
 [package.metadata.docs.rs]
 all-features = true
