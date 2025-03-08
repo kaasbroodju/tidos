@@ -1,0 +1,19 @@
+[workspace]
+resolver = "2"
+members = [
+    "tidos",
+    "tidos_macro",
+]
+
+[workspace.package]
+version = "0.6.5"
+
+[workspace.dependencies]
+tidos = { path = "./tidos", version = "0.6.5" }
+tidos_macro = { path = "./tidos_macro", version = "0.6.5" }
+
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 'z'
