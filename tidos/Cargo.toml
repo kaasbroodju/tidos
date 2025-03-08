@@ -1,14 +1,20 @@
 [package]
 name = "tidos"
 version = { workspace = true }
-edition = "2021"
+authors = ["kaasbroodju"]
+license = "MIT"
+repository = "https://github.com/kaasbroodju/tidos"
+description = "Tidos is a component framework that can be served by any web framework."
+readme = "../README.md"
+rust-version.workspace = true
+edition.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 rocket = { version = "0.5.1", optional = true }
 tidos_macro = { workspace = true }
 
 [features]
-# Defines a feature named `webp` that does not enable any other features.
 rocket = ["dep:rocket"]

@@ -1,12 +1,19 @@
+//! # Tidos - Documentation
+//! Tidos is a html framework that compiles
+
 mod components;
 mod page;
+
+#[doc(hidden)]
 pub mod internals;
 
 pub use components::{Component};
 pub use page::Page;
-pub use tidos_macro::{view, page, head, scoped_css};
+pub use tidos_macro::*;
+#[doc(hidden)]
 pub use internals::{sanitize};
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! sanitize {
     ($input:expr) => {&tidos::internals::sanitize(String::from($input))};
