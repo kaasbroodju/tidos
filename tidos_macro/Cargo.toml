@@ -1,7 +1,14 @@
 [package]
 name = "tidos_macro"
 version = { workspace = true }
-edition = "2021"
+authors = ["kaasbroodju"]
+license = "MIT"
+repository = "https://github.com/kaasbroodju/tidos"
+description = "Procedural macros for the Tidos component framework."
+readme = "../README.md"
+rust-version.workspace = true
+edition.workspace = true
+keywords = ["tidos", "web", "framework", "code", "generation"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
