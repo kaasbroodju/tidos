@@ -1,7 +1,7 @@
 use proc_macro2::TokenTree;
 use syn::parse::{Parse, ParseStream};
-use syn::Token;
 use syn::token::Token;
+use syn::Token;
 
 use crate::parsing::utils::matches_corresponding_command_tag;
 use crate::r#impl::Content;
@@ -9,7 +9,7 @@ use crate::r#impl::Content;
 pub enum TypeOfCommandTag {
 	For {
 		left_side: Vec<TokenTree>,
-		right_side: Vec<TokenTree>
+		right_side: Vec<TokenTree>,
 	},
 	If(Vec<TokenTree>),
 	Match(Vec<TokenTree>),
@@ -37,7 +37,7 @@ impl Parse for TypeOfCommandTag {
 				Err(cursor.error("No `in` found in for loop "))
 			})?;
 
-			let right_side  = input.step(|cursor| {
+			let right_side = input.step(|cursor| {
 				let mut rest = *cursor;
 				let mut output = Vec::new();
 				while let Some((tt, next)) = rest.token_tree() {
@@ -50,15 +50,17 @@ impl Parse for TypeOfCommandTag {
 				}
 
 				return Ok((output, rest));
-
 			})?;
 
 			// let x = input.parse::<Group>()?;
-			return Ok(TypeOfCommandTag::For { left_side , right_side });
+			return Ok(TypeOfCommandTag::For {
+				left_side,
+				right_side,
+			});
 		} else if input.peek(Token![match]) {
 			input.parse::<Token![match]>()?;
 
-			let match_content  = input.step(|cursor| {
+			let match_content = input.step(|cursor| {
 				let mut rest = *cursor;
 				let mut output = Vec::new();
 				while let Some((tt, next)) = rest.token_tree() {
@@ -71,14 +73,13 @@ impl Parse for TypeOfCommandTag {
 				}
 
 				return Ok((output, rest));
-
 			})?;
 
-			return Ok(TypeOfCommandTag::Match(match_content))
+			return Ok(TypeOfCommandTag::Match(match_content));
 		} else if input.peek(Token![if]) {
 			input.parse::<Token![if]>()?;
 
-			let if_content  = input.step(|cursor| {
+			let if_content = input.step(|cursor| {
 				let mut rest = *cursor;
 				let mut output = Vec::new();
 				while let Some((tt, next)) = rest.token_tree() {
@@ -91,7 +92,6 @@ impl Parse for TypeOfCommandTag {
 				}
 
 				return Ok((output, rest));
-
 			})?;
 
 			return Ok(TypeOfCommandTag::If(if_content));

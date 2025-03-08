@@ -8,7 +8,11 @@ pub struct Page {
 
 impl Page {
 	pub fn new() -> Page {
-		Page { head_ids: HashSet::new(), head: String::new(), template: String::new() }
+		Page {
+			head_ids: HashSet::new(),
+			head: String::new(),
+			template: String::new(),
+		}
 	}
 
 	pub fn add_elements_to_head(&mut self, id: &'static str, element: String) {
@@ -20,9 +24,9 @@ impl Page {
 
 #[cfg(feature = "rocket")]
 mod rocket {
-	use rocket::response::{Responder};
-	use rocket::{Request, Response, response};
 	use rocket::http::{ContentType, Status};
+	use rocket::response::Responder;
+	use rocket::{response, Request, Response};
 	impl<'r> Responder<'r, 'static> for crate::page::Page {
 		fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
 			let string = format!(

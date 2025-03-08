@@ -1,13 +1,16 @@
-use proc_macro2::{Group, Ident, Literal, Spacing, TokenTree};
 use proc_macro2::Punct;
+use proc_macro2::{Group, Ident, Literal, Spacing, TokenTree};
 use quote::ToTokens;
-use syn::Token;
 use syn::buffer::Cursor;
 use syn::parse::{Parse, ParseStream};
 use syn::token::{Brace, Token};
+use syn::Token;
 
 use crate::parsing::commands::TypeOfCommandTag;
-use crate::parsing::utils::{is_cursor_on_else_branch, is_cursor_on_else_if_branch, is_cursor_on_end_of_if_branch, is_cursor_on_new_if_branch, matches_case_statement, matches_corresponding_command_tag};
+use crate::parsing::utils::{
+	is_cursor_on_else_branch, is_cursor_on_else_if_branch, is_cursor_on_end_of_if_branch,
+	is_cursor_on_new_if_branch, matches_case_statement, matches_corresponding_command_tag,
+};
 use crate::r#impl::{Attribute, Component, Content, ControlTag, HTMLTag};
 
 impl Parse for Content {
@@ -19,14 +22,16 @@ impl Parse for Content {
 			return Ok(Content::Tag(temp));
 
 		// @html{"<p>hello world</p>"}
-		} else if matches!{ input.cursor().punct(), Some((punct, _)) if punct.as_char() == '@'} {
+		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == '@'} {
 			input.parse::<Punct>()?;
 			let ident = input.parse::<Ident>()?;
-			if ident.to_string() != "html" { panic!() }
+			if ident.to_string() != "html" {
+				panic!()
+			}
 			let group = input.parse::<Group>()?;
 
 			return Ok(Content::RawHTMLExpression(group));
-			// {#for ... in ... }, {#if}, {#match} or { name }
+		// {#for ... in ... }, {#if}, {#match} or { name }
 		} else if input.peek(Brace) {
 			let group = input.parse::<Group>()?;
 
@@ -40,10 +45,15 @@ impl Parse for Content {
 			let type_of_command = syn::parse2::<TypeOfCommandTag>(group.stream())?;
 
 			return match type_of_command {
-				TypeOfCommandTag::For { left_side, right_side } => {
+				TypeOfCommandTag::For {
+					left_side,
+					right_side,
+				} => {
 					// ...
 					let mut contents: Vec<Content> = Vec::new();
-					while !input.is_empty() && !matches_corresponding_command_tag(input.cursor(), "for") {
+					while !input.is_empty()
+						&& !matches_corresponding_command_tag(input.cursor(), "for")
+					{
 						let child = input.parse::<Content>()?;
 						contents.push(child);
 					}
@@ -51,7 +61,11 @@ impl Parse for Content {
 					// {/for}
 					input.parse::<Group>()?;
 
-					Ok(Content::ControlTag(ControlTag::For { left_side, right_side, contents }))
+					Ok(Content::ControlTag(ControlTag::For {
+						left_side,
+						right_side,
+						contents,
+					}))
 				}
 				TypeOfCommandTag::If(if_statement) => {
 					let mut if_content: Vec<Content> = Vec::new();
@@ -63,7 +77,11 @@ impl Parse for Content {
 					let mut if_else_chain = Vec::new();
 					while is_cursor_on_else_if_branch(&input.cursor()) {
 						let else_if_statement = input.parse::<Group>()?;
-						let else_if_statement = else_if_statement.stream().into_iter().skip(3).collect::<Vec<_>>();
+						let else_if_statement = else_if_statement
+							.stream()
+							.into_iter()
+							.skip(3)
+							.collect::<Vec<_>>();
 						let mut children_else_if_branch: Vec<Content> = Vec::new();
 						while !is_cursor_on_new_if_branch(&input.cursor()) {
 							let child = input.parse::<Content>()?;
@@ -103,22 +121,34 @@ impl Parse for Content {
 					// {:case ...}
 					let mut cases = Vec::new();
 
-
-					while !input.is_empty() && !matches_corresponding_command_tag(input.cursor(), "match") {
+					while !input.is_empty()
+						&& !matches_corresponding_command_tag(input.cursor(), "match")
+					{
 						let case = input.parse::<Group>()?;
 						let mut children: Vec<Content> = Vec::new();
-						while !matches_case_statement(input.cursor()) && !matches_corresponding_command_tag(input.cursor(), "match") {
+						while !matches_case_statement(input.cursor())
+							&& !matches_corresponding_command_tag(input.cursor(), "match")
+						{
 							let child = input.parse::<Content>()?;
 							children.push(child);
 						}
 
-						cases.push((case.stream().into_iter().skip(2).collect::<Vec<TokenTree>>(), children));
+						cases.push((
+							case.stream()
+								.into_iter()
+								.skip(2)
+								.collect::<Vec<TokenTree>>(),
+							children,
+						));
 					}
 
 					// {/match}>
 					input.parse::<Group>()?;
 
-					Ok(Content::ControlTag(ControlTag::Match { match_statement, cases }))
+					Ok(Content::ControlTag(ControlTag::Match {
+						match_statement,
+						cases,
+					}))
 				}
 			};
 
@@ -131,7 +161,9 @@ impl Parse for Content {
 			while !input.is_empty() && !(input.peek(Token![<]) || input.peek(Brace)) {
 				let token = input.parse::<TokenTree>()?;
 				match token {
-					TokenTree::Group(_) => {panic!()}
+					TokenTree::Group(_) => {
+						panic!()
+					}
 					TokenTree::Ident(ident) => {
 						if !output.is_empty() {
 							output.push(' ');
@@ -143,7 +175,10 @@ impl Parse for Content {
 						output.push(punct.as_char());
 
 						// Check if the next token is also a punctuation
-						if !output.is_empty() && proc_macro2::Punct::peek(input.cursor()) && punct.spacing() == Spacing::Alone {
+						if !output.is_empty()
+							&& proc_macro2::Punct::peek(input.cursor())
+							&& punct.spacing() == Spacing::Alone
+						{
 							output.push(' ');
 						}
 
@@ -165,13 +200,14 @@ impl Parse for Content {
 
 impl Parse for HTMLTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
-
 		// <p>
 		input.parse::<Token![<]>()?;
 		let left_tag = input.step(|cursor| {
 			let mut rest = *cursor;
 			let mut output = String::new();
-			let (ident, next) = rest.ident().expect("Expected an html like <p> or <custom-element>");
+			let (ident, next) = rest
+				.ident()
+				.expect("Expected an html like <p> or <custom-element>");
 			output.push_str(ident.to_string().as_str());
 
 			rest = next;
@@ -183,7 +219,9 @@ impl Parse for HTMLTag {
 				rest = next;
 
 				output.push('-');
-				let (ident, next) = rest.ident().expect("Expected an html like <p> or <custom-element>");
+				let (ident, next) = rest
+					.ident()
+					.expect("Expected an html like <p> or <custom-element>");
 
 				output.push_str(ident.to_string().as_str());
 				rest = next;
@@ -201,7 +239,9 @@ impl Parse for HTMLTag {
 			let name = input.step(|cursor| {
 				let mut rest = *cursor;
 				let mut output = String::new();
-				let (ident, next) = rest.ident().expect("Expected an html like <p> or <custom-element>");
+				let (ident, next) = rest
+					.ident()
+					.expect("Expected an html like <p> or <custom-element>");
 				output.push_str(ident.to_string().as_str());
 
 				rest = next;
@@ -213,7 +253,9 @@ impl Parse for HTMLTag {
 					rest = next;
 
 					output.push('-');
-					let (ident, next) = rest.ident().expect("Expected an html like <p> or <custom-element>");
+					let (ident, next) = rest
+						.ident()
+						.expect("Expected an html like <p> or <custom-element>");
 
 					output.push_str(ident.to_string().as_str());
 					rest = next;
@@ -228,16 +270,27 @@ impl Parse for HTMLTag {
 						panic!("Unable to have a toggle attribute from a literal");
 					}
 
-					attributes.push(Attribute { is_toggle_attribute, name, value: Some(proc_macro2::TokenTree::Literal(literal)) });
+					attributes.push(Attribute {
+						is_toggle_attribute,
+						name,
+						value: Some(proc_macro2::TokenTree::Literal(literal)),
+					});
 				} else if let Ok(group) = input.parse::<Group>() {
-					attributes.push(Attribute { is_toggle_attribute, name, value: Some(proc_macro2::TokenTree::Group(group)) });
+					attributes.push(Attribute {
+						is_toggle_attribute,
+						name,
+						value: Some(proc_macro2::TokenTree::Group(group)),
+					});
 				} else {
 					panic!("Expected a literal \"\" or a group {{}}");
 				}
 			} else {
-				attributes.push(Attribute { is_toggle_attribute, name, value: None });
+				attributes.push(Attribute {
+					is_toggle_attribute,
+					name,
+					value: None,
+				});
 			}
-
 		}
 
 		// self closing tags, like <img />
@@ -245,7 +298,12 @@ impl Parse for HTMLTag {
 			input.parse::<Token![/]>()?;
 			input.parse::<Token![>]>()?;
 
-			return Ok(HTMLTag { tag: left_tag.to_string(), attributes, children: vec![],  is_self_closing: true });
+			return Ok(HTMLTag {
+				tag: left_tag.to_string(),
+				attributes,
+				children: vec![],
+				is_self_closing: true,
+			});
 		}
 
 		input.parse::<Token![>]>()?;
@@ -264,7 +322,9 @@ impl Parse for HTMLTag {
 		input.step(|cursor| {
 			let mut rest = *cursor;
 			let mut output = String::new();
-			let (ident, next) = rest.ident().expect("Expected an html like </p> or </custom-element>");
+			let (ident, next) = rest
+				.ident()
+				.expect("Expected an html like </p> or </custom-element>");
 			output.push_str(ident.to_string().as_str());
 
 			rest = next;
@@ -274,7 +334,9 @@ impl Parse for HTMLTag {
 				rest = next;
 
 				output.push('-');
-				let (ident, next) = rest.ident().expect("Expected an html like </p> or </custom-element>");
+				let (ident, next) = rest
+					.ident()
+					.expect("Expected an html like </p> or </custom-element>");
 
 				output.push_str(ident.to_string().as_str());
 				rest = next;
@@ -284,8 +346,12 @@ impl Parse for HTMLTag {
 		})?;
 		input.parse::<Token![>]>()?;
 
-
-		Ok(HTMLTag { tag: left_tag.to_string(), attributes, children, is_self_closing: false })
+		Ok(HTMLTag {
+			tag: left_tag.to_string(),
+			attributes,
+			children,
+			is_self_closing: false,
+		})
 	}
 }
 
@@ -304,7 +370,9 @@ fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
 	rest = next;
 
 	let mut right_hand_side = String::new();
-	let (ident, next) = rest.ident().expect("Expected an html like <p> or <custom-element>");
+	let (ident, next) = rest
+		.ident()
+		.expect("Expected an html like <p> or <custom-element>");
 	right_hand_side.push_str(ident.to_string().as_str());
 
 	rest = next;
@@ -314,7 +382,9 @@ fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
 		rest = next;
 
 		right_hand_side.push('-');
-		let (ident, next) = rest.ident().expect("Expected an html like <p> or <custom-element>");
+		let (ident, next) = rest
+			.ident()
+			.expect("Expected an html like <p> or <custom-element>");
 
 		right_hand_side.push_str(ident.to_string().as_str());
 		rest = next;
@@ -338,7 +408,9 @@ fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
 impl Parse for Component {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		if input.is_empty() {
-			return Ok(Component { children: Vec::new() });
+			return Ok(Component {
+				children: Vec::new(),
+			});
 		}
 
 		let mut children: Vec<Content> = Vec::new();
@@ -366,13 +438,12 @@ impl Parse for ControlTag {
 				children.push(child);
 			}
 
-
-
-			return Ok(ControlTag::Match { match_statement: vec![], cases: vec![]});
+			return Ok(ControlTag::Match {
+				match_statement: vec![],
+				cases: vec![],
+			});
 		} else if input.peek(Token![if]) {
-
 		} else if input.peek(Token![match]) {
-
 		} else {
 			panic!("invalid logic block");
 		}
@@ -383,16 +454,15 @@ impl Parse for ControlTag {
 		let left_tag: Ident = input.parse()?;
 		input.parse::<Token![>]>()?;
 
-
-
 		// {/for}
 		input.parse::<Token![<]>()?;
 		input.parse::<Token![/]>()?;
 		input.parse::<Ident>()?;
 		input.parse::<Token![>]>()?;
 
-
-
-		return Ok(ControlTag::Match { match_statement: vec![], cases: vec![]});
+		return Ok(ControlTag::Match {
+			match_statement: vec![],
+			cases: vec![],
+		});
 	}
 }

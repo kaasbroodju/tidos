@@ -3,15 +3,15 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input};
 use syn::parse::Parse;
+use syn::parse_macro_input;
 use uuid::Uuid;
 
 mod r#impl;
 mod parsing;
 
-use r#impl::Component;
 use crate::r#impl::PageWrapper;
+use r#impl::Component;
 
 /// Turn your template into a usable string
 ///
@@ -48,7 +48,7 @@ use crate::r#impl::PageWrapper;
 /// 		{:case Dog}
 /// 			<p>{"Who's a good boy!"}</p>
 /// 		{:case Cat}
-/// 			<p>{"Give al mortal possessions to cat!"}</p>
+/// 			<p>{"Give all mortal possessions to cat!"}</p>
 /// 		{:case _}
 /// 			<p>{"Is it a snake or a spider?"}</p>
 /// 	{/match}
@@ -103,7 +103,6 @@ pub fn view(input: TokenStream) -> TokenStream {
 #[allow(clippy::all)]
 #[proc_macro]
 pub fn page(input: TokenStream) -> TokenStream {
-
 	let input = parse_macro_input!(input as PageWrapper);
 
 	let expanded = input.to_token_stream();
@@ -135,12 +134,11 @@ pub fn page(input: TokenStream) -> TokenStream {
 pub fn head(input: TokenStream) -> TokenStream {
 	let input = parse_macro_input!(input as Component);
 
-
 	let x = Uuid::new_v4().to_string();
 	// todo refactor it to &str when I'm comfortable with lifetime annontations
 	let input = quote!(
-        page.add_elements_to_head(#x, #input);
-    );
+		page.add_elements_to_head(#x, #input);
+	);
 
 	let expanded = input.to_token_stream();
 
@@ -182,17 +180,16 @@ pub fn head(input: TokenStream) -> TokenStream {
 #[allow(clippy::all)]
 #[proc_macro]
 pub fn scoped_css(input: TokenStream) -> TokenStream {
-
 	let file_name = input.to_string().replace("\"", "");
 
 	let x = format!("tidos-{}", Uuid::new_v4().to_string());
 	// todo refactor it to &str when I'm comfortable with lifetime annontations
 	let input = quote!(
-        {
-            page.add_elements_to_head(#x, String::from(concat!("<style>.", #x, " {", include_str!(#file_name), "}</style>")));
-            #x
-        }
-    );
+		{
+			page.add_elements_to_head(#x, String::from(concat!("<style>.", #x, " {", include_str!(#file_name), "}</style>")));
+			#x
+		}
+	);
 
 	let expanded = input.to_token_stream();
 
