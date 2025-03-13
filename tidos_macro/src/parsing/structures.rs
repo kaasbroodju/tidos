@@ -15,6 +15,9 @@ use crate::r#impl::{Attribute, Component, Content, ControlTag, HTMLTag};
 
 impl Parse for Content {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
+		if input.is_empty() {
+			panic!("No tokens left to parse")
+		}
 		// <p></p>
 		if input.peek(Token![<]) {
 			let temp = input.parse::<HTMLTag>()?;
