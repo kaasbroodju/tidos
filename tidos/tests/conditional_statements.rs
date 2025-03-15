@@ -1,3 +1,5 @@
+mod control_tags;
+
 use tidos::view;
 
 #[test]
@@ -142,10 +144,7 @@ fn a_simple_conditional_with_if_else_chain() {
 }
 
 #[test]
-#[should_panic]
 fn missing_closing_if_statement() {
-	view! {
-		{#if true}
-			<p>Hello world</p>
-	}
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/missing_end_control_tag.rs");
 }

@@ -18,5 +18,8 @@ all-features = true
 rocket = { version = "0.5.1", optional = true }
 tidos_macro = { workspace = true }
 
+[dev-dependencies]
+trybuild = "1.0.104"
+
 [features]
 rocket = ["dep:rocket"]

@@ -157,7 +157,7 @@ impl ControlTag {
 
 				quote! {
 					#( #case_statement )* => {
-						String::new() + #tokens_content
+						String::new() + #( #case_content )+*
 					}
 				}
 			})
@@ -297,7 +297,7 @@ impl ToTokens for Content {
 							.iter()
 							.map(|(is_static, island)| {
 								if *is_static {
-									quote! { concat!( #( #island ),*) }
+									quote! { concat!( #( #island ),* ) }
 								} else {
 									quote! { #( #island )* }
 								}
