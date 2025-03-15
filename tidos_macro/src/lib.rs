@@ -22,18 +22,18 @@ use r#impl::Component;
 ///let names = vec!["Bob", "Alice"];
 ///
 ///view! {
-///	{#for name in names}
-///		<p>{format!("Hello {}!", name)}</p>
-///	{/for}
+///    {#for name in names}
+///        <p>{format!("Hello {}!", name)}</p>
+///    {/for}
 ///}
 /// ```
 /// ## A match statement
 /// ```
 /// enum Pet {
-/// 	Fish,
-/// 	Dog,
-/// 	Cat,
-/// 	Other { name: String }
+///     Fish,
+///     Dog,
+///     Cat,
+///     Other { name: String }
 /// }
 ///
 /// use tidos_macro::view;
@@ -42,36 +42,36 @@ use r#impl::Component;
 /// let my_pet = Dog;
 ///
 /// view! {
-/// 	{#match my_pet}
-/// 		{:case Fish}
-/// 			<p>{"Blub!"}</p>
-/// 		{:case Dog}
-/// 			<p>{"Who's a good boy!"}</p>
-/// 		{:case Cat}
-/// 			<p>{"Give all mortal possessions to cat!"}</p>
-/// 		{:case _}
-/// 			<p>{"Is it a snake or a spider?"}</p>
-/// 	{/match}
+///     {#match my_pet}
+///         {:case Fish}
+///             <p>Blub!</p>
+///         {:case Dog}
+///             <p>Who's a good boy!</p>
+///         {:case Cat}
+///             <p>Give all mortal possessions to cat!</p>
+///         {:case _}
+///             <p>Is it a snake or a spider?</p>
+///     {/match}
 /// }
 /// ```
 ///
 /// ## If/else statements
 /// ```
 ///use tidos_macro::view;
-/// let age = 18;
+///let age = 18;
 ///
 ///let is_american = false;
 ///
 ///view! {
-///	{#if age >= 18 && !is_american}
-///		<p>{"User is allowed to drink."}</p>
-///	{:else if age >= 21 && is_american}
-///		<p>{"User is allowed to drink."}</p>
-///	{:else if age >= 18 && age < 21 && is_american}
-///		<p>{"User is probably designated driver."}</p>
-///	{:else}
-///		<p>{"User is not allowed to drink."}</p>
-///	{/if}
+///    {#if age >= 18 && !is_american}
+///        <p>User is allowed to drink.</p>
+///    {:else if age >= 21 && is_american}
+///        <p>User is allowed to drink.</p>
+///    {:else if age >= 18 && age < 21 && is_american}
+///        <p>User is probably designated driver.</p>
+///    {:else}
+///        <p>User is not allowed to drink.</p>
+///    {/if}
 ///}
 /// ```
 #[allow(clippy::all)]

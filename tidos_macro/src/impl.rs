@@ -147,14 +147,7 @@ impl ControlTag {
 		let cases = cases
 			.iter()
 			.map(|(case_statement, case_content)| {
-				let mut tokens_content = TokenStream::new();
-
-				for child in case_content {
-					child.to_tokens(&mut tokens_content);
-				}
-
 				// todo static islands
-
 				quote! {
 					#( #case_statement )* => {
 						String::new() + #( #case_content )+*
@@ -202,22 +195,7 @@ pub enum Content {
 impl Content {
 	fn is_static(&self) -> bool {
 		match self {
-			Content::Tag(element) => {
-				let tag = element.tag.as_str();
-				let is_component = tag.chars().next().unwrap().is_ascii_uppercase();
-
-				if is_component {
-					return false;
-				}
-				let has_only_static_attributes = element
-					.attributes
-					.iter()
-					.all(|attribute| attribute.is_static());
-				let has_only_static_children =
-					element.children.iter().all(|child| child.is_static());
-
-				has_only_static_attributes && has_only_static_children
-			}
+			Content::Tag(element) => element.is_static(),
 			Content::ControlTag(_) => false,
 			Content::Literal(_) => true,
 			Content::Expression(_) => false,
@@ -230,164 +208,12 @@ impl ToTokens for Content {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
 			Content::Tag(html_tag) => {
-				let tag = html_tag.tag.as_str();
-				let is_component = tag.chars().next().unwrap().is_ascii_uppercase();
-				let is_self_closing = html_tag.is_self_closing;
-				let has_attributes = html_tag.attributes.len() > 0;
-
+				let is_component = html_tag.tag.chars().next().unwrap().is_ascii_uppercase();
 				if is_component {
-					let mut attributes = vec![];
-					for attribute in &html_tag.attributes {
-						let name = format_ident!("{}", &attribute.name);
-						let value = &attribute.value;
-						attributes.push(quote! { #name: #value })
-					}
-
-					let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
-
-					let tag_tokens =
-						quote! { &#component_name { #( #attributes ),* }.to_render(page) };
-					tokens.append_all(tag_tokens);
+					tokens.append_all(custom_element_to_tokens(html_tag));
 				} else {
-					let mut static_attributes = vec![];
-					let mut dynamic_attributes = vec![];
-					for attribute in &html_tag.attributes {
-						if attribute.is_static() {
-							static_attributes.push(attribute.to_token_stream());
-						} else {
-							dynamic_attributes.push(attribute.to_token_stream());
-						}
-					}
-					let has_only_static_attributes = dynamic_attributes.is_empty();
-
-					if is_self_closing {
-						if has_only_static_attributes {
-							tokens.append_all(
-								quote! { concat!("<", #tag #(, " ", #static_attributes)* , " />") },
-							);
-						} else {
-							tokens.append_all(
-								quote! { concat!("<", #tag #(, " ", #static_attributes)* ) #(+ " " + #dynamic_attributes)* + " />"},
-							);
-						}
-					} else {
-						let mut islands = vec![];
-						let mut island = vec![];
-						let mut unclean = false;
-						for element in &html_tag.children {
-							if element.is_static() {
-								island.push(element);
-								unclean = true;
-							} else if unclean {
-								islands.push((true, island.clone()));
-								unclean = false;
-								island = vec![];
-								islands.push((false, vec![element]))
-							} else {
-								islands.push((false, vec![element]))
-							}
-						}
-
-						if unclean {
-							islands.push((true, island.clone()));
-						}
-
-						let has_only_static_children = islands.iter().all(|&(x, _)| x);
-						let children = islands
-							.iter()
-							.map(|(is_static, island)| {
-								if *is_static {
-									quote! { concat!( #( #island ),* ) }
-								} else {
-									quote! { #( #island )* }
-								}
-							})
-							.collect::<Vec<_>>();
-
-						let x = match (has_only_static_attributes, has_only_static_children) {
-							(true, true) => {
-								quote! {
-									concat!("<", #tag #(, " ", #static_attributes)*
-										, ">"
-										#(, #children)*
-										, "</", #tag, ">")
-								}
-							}
-							(true, false) => {
-								quote! {
-									concat!("<", #tag #(, " ", #static_attributes)* , ">")
-									#( + #children )*
-									+ concat!("</", #tag, ">")
-								}
-							}
-							(false, true) => {
-								quote! {
-									concat!("<", #tag #(, " ", #static_attributes)* )
-									#( + " " + #dynamic_attributes )*
-									+ concat!(">" #(, #children)* , "</", #tag, ">")
-								}
-							}
-							(false, false) => {
-								quote! {
-									concat!("<", #tag #(, " ", #static_attributes)* )
-									#( + " " + #dynamic_attributes )*
-									+ ">"
-									#( + #children )*
-									+ concat!("</", #tag, ">")
-								}
-							}
-						};
-
-						tokens.append_all(x);
-					}
-
-					// if has_attributes {
-					//     let mut static_attributes = vec![];
-					//     let mut dynamic_attributes = vec![];
-					//     for attribute in &html_tag.attributes {
-					//         if attribute.is_static() {
-					//             static_attributes.push(attribute.to_token_stream());
-					//         } else {
-					//             dynamic_attributes.push(attribute.to_token_stream());
-					//         }
-					//     }
-					//     // let &(static_attributes, dynamic_attributes) = &html_tag.attributes.iter().partition(|e| e.is_static());
-					//
-					//     let children = &html_tag.children;
-					//
-					//     // let format_string = format!("<{tag}{}>{}</{tag}>", (" {}".repeat(attributes.len()).as_str()), ("{}".repeat(children.len()).as_str()));
-					//
-					//     let tag_tokens = quote! {
-					//         concat!("<", #tag #(, " ", #static_attributes)*)
-					//         #(
-					//             + " " + #dynamic_attributes
-					//         )*
-					//         + ">"
-					//         #(
-					//             + #children
-					//         )*
-					//         + concat!("</", #tag, ">")
-					//
-					//         //format!( #format_string, #( #attributes ),*, #( #children ),* )
-					//     };
-					//
-					//     tokens.append_all(tag_tokens);
-					// } else {
-					//     let children = &html_tag.children;
-					//
-					//     let tag_tokens = quote! {
-					//         concat!("<", #tag, ">")
-					//         #(
-					//             + #children
-					//         )*
-					//         + concat!("</", #tag, ">")
-					//
-					//         //format!( #format_string, #( #children ),* )
-					//     };
-					//
-					//     tokens.append_all(tag_tokens);
-					// }
-				};
+					tokens.append_all(native_html_tag_to_tokenstream(html_tag))
+				}
 			}
 			Content::ControlTag(control_tag) => {
 				control_tag.to_tokens(tokens);
@@ -401,16 +227,110 @@ impl ToTokens for Content {
 	}
 }
 
+fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
+	let tag = html_tag.tag.as_str();
+
+	let mut static_attributes = vec![];
+	let mut dynamic_attributes = vec![];
+	for attribute in &html_tag.attributes {
+		if attribute.is_static() {
+			static_attributes.push(attribute.to_token_stream());
+		} else {
+			dynamic_attributes.push(attribute.to_token_stream());
+		}
+	}
+	let has_only_static_attributes = dynamic_attributes.is_empty();
+
+	if html_tag.is_self_closing {
+		if has_only_static_attributes {
+			quote! {
+				concat!("<", #tag #(, " ", #static_attributes)* , " />")
+			}
+		} else {
+			quote! {
+				concat!("<", #tag #(, " ", #static_attributes)* ) #(+ " " + #dynamic_attributes)* + " />"
+			}
+		}
+	} else {
+		let mut islands = vec![];
+		let mut island = vec![];
+		let mut unclean = false;
+		for element in &html_tag.children {
+			if element.is_static() {
+				island.push(element);
+				unclean = true;
+			} else if unclean {
+				islands.push((true, island.clone()));
+				unclean = false;
+				island = vec![];
+				islands.push((false, vec![element]))
+			} else {
+				islands.push((false, vec![element]))
+			}
+		}
+
+		if unclean {
+			islands.push((true, island.clone()));
+		}
+
+		let has_only_static_children = islands.iter().all(|&(x, _)| x);
+		let children = islands
+			.iter()
+			.map(|(is_static, island)| {
+				if *is_static {
+					quote! { concat!( #( #island ),* ) }
+				} else {
+					quote! { #( #island )* }
+				}
+			})
+			.collect::<Vec<_>>();
+
+		match (has_only_static_attributes, has_only_static_children) {
+			(true, true) => {
+				quote! {
+					concat!("<", #tag #(, " ", #static_attributes)*
+						, ">"
+						#(, #children)*
+						, "</", #tag, ">")
+				}
+			}
+			(true, false) => {
+				quote! {
+					concat!("<", #tag #(, " ", #static_attributes)* , ">")
+					#( + #children )*
+					+ concat!("</", #tag, ">")
+				}
+			}
+			(false, true) => {
+				quote! {
+					concat!("<", #tag #(, " ", #static_attributes)* )
+					#( + " " + #dynamic_attributes )*
+					+ concat!(">" #(, #children)* , "</", #tag, ">")
+				}
+			}
+			(false, false) => {
+				quote! {
+					concat!("<", #tag #(, " ", #static_attributes)* )
+					#( + " " + #dynamic_attributes )*
+					+ ">"
+					#( + #children )*
+					+ concat!("</", #tag, ">")
+				}
+			}
+		}
+	}
+}
+
 fn custom_element_to_tokens(
-	tag: &str,
-	html_tag: &HTMLTag,
-	tokens: &mut TokenStream,
+	html_tag: &HTMLTag
 ) -> TokenStream {
-	let attributes = html_tag.attributes.iter().map(|attribute| {
-		let name = &attribute.name;
+	let tag = html_tag.tag.as_str();
+	let mut attributes = vec![];
+	for attribute in &html_tag.attributes {
+		let name = format_ident!("{}", &attribute.name);
 		let value = &attribute.value;
-		quote! { #name: #value }
-	});
+		attributes.push(quote! { #name: #value })
+	}
 
 	let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
 
@@ -423,6 +343,25 @@ pub struct HTMLTag {
 	pub attributes: Vec<Attribute>,
 	pub children: Vec<Content>,
 	pub is_self_closing: bool,
+}
+
+impl HTMLTag {
+	fn is_static(&self) -> bool {
+		let is_component = self.tag.chars().next().unwrap().is_ascii_uppercase();
+		if is_component {
+			return false;
+		}
+
+		let has_only_static_attributes = self
+			.attributes
+			.iter()
+			.all(|attribute| attribute.is_static());
+
+		let has_only_static_children =
+			self.children.iter().all(|child| child.is_static());
+
+		has_only_static_attributes && has_only_static_children
+	}
 }
 
 #[derive(Debug)]
