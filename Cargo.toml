@@ -11,8 +11,8 @@ edition = "2021"
 rust-version = "1.80.0"
 
 [workspace.dependencies]
-tidos = { path = "./tidos", version = "0.6.6" }
-tidos_macro = { path = "./tidos_macro", version = "0.6.6" }
+tidos = { path = "./tidos", version = "0.6.7" }
+tidos_macro = { path = "./tidos_macro", version = "0.6.7" }
 
 
 [profile.release]
