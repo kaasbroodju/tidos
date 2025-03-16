@@ -17,7 +17,7 @@ use r#impl::Component;
 ///
 /// # Examples
 /// ## A for loop
-/// ```
+/// ```rust,no_run
 ///use tidos_macro::view;
 ///let names = vec!["Bob", "Alice"];
 ///
@@ -28,7 +28,7 @@ use r#impl::Component;
 ///}
 /// ```
 /// ## A match statement
-/// ```
+/// ```rust,no_run
 /// enum Pet {
 ///     Fish,
 ///     Dog,
@@ -56,7 +56,7 @@ use r#impl::Component;
 /// ```
 ///
 /// ## If/else statements
-/// ```
+/// ```rust,no_run
 ///use tidos_macro::view;
 ///let age = 18;
 ///
@@ -87,7 +87,7 @@ pub fn view(input: TokenStream) -> TokenStream {
 /// Similar to the view, however it will also render the templates into a page context.
 ///
 /// # Example
-/// ```
+/// ```rust,no_run
 /// pub fn getting_started() -> Page {
 ///     let x: isize = Default::default();
 ///
@@ -113,7 +113,7 @@ pub fn page(input: TokenStream) -> TokenStream {
 /// Adds body contents to the head of the page
 ///
 /// # example
-/// ```
+/// ```rust,no_run
 ///use tidos_macro::{head, view};
 ///
 ///pub struct Title {
@@ -149,7 +149,7 @@ pub fn head(input: TokenStream) -> TokenStream {
 /// Macro returns a CSS class you can use in your view template
 ///
 /// # Example
-/// ```
+/// ```rust,no_run
 /// use tidos_macro::{scoped_css, view};
 ///
 /// pub struct DocsGrid {

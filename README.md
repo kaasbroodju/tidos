@@ -9,9 +9,9 @@ use tidos_macro::view;
 let names = vec!["Bob", "Alice"];
 
 view! {
-   {#for name in names}
-   	<p>{format!("Hello {}!", name)}</p>
-   {/for}
+    {#for name in names}
+        <p>{format!("Hello {}!", name)}</p>
+    {/for}
 }
 ```
 
