@@ -1,0 +1,10 @@
+error[E0425]: cannot find value `checked` in this scope
+ --> tests/attributes/panics/missing_variable_defined_toggle.rs:5:4
+  |
+5 |           &view!{
+  |  __________^
+6 | |             <input type="radio" name="day" value="monday" :checked />
+7 | |         },
+  | |_________^ not found in this scope
+  |
+  = note: this error originates in the macro `view` (in Nightly builds, run with -Z macro-backtrace for more info)

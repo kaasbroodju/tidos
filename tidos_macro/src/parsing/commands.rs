@@ -100,17 +100,3 @@ impl Parse for TypeOfCommandTag {
 		}
 	}
 }
-
-struct ForLoopChildren(Vec<Content>);
-
-impl Parse for ForLoopChildren {
-	fn parse(input: ParseStream) -> syn::Result<Self> {
-		let mut children: Vec<Content> = Vec::new();
-		while !input.is_empty() && !matches_corresponding_command_tag(input.cursor(), "for") {
-			let child = input.parse::<Content>()?;
-			children.push(child);
-		}
-
-		Ok(ForLoopChildren(children))
-	}
-}

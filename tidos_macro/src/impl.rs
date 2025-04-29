@@ -244,11 +244,11 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 	if html_tag.is_self_closing {
 		if has_only_static_attributes {
 			quote! {
-				concat!("<", #tag #(, " ", #static_attributes)* , " />")
+				concat!("<", #tag, " ", #( #static_attributes, )* "/>")
 			}
 		} else {
 			quote! {
-				concat!("<", #tag #(, " ", #static_attributes)* ) #(+ " " + #dynamic_attributes)* + " />"
+				concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + "/>"
 			}
 		}
 	} else {
@@ -287,31 +287,48 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 		match (has_only_static_attributes, has_only_static_children) {
 			(true, true) => {
-				quote! {
-					concat!("<", #tag #(, " ", #static_attributes)*
-						, ">"
-						#(, #children)*
-						, "</", #tag, ">")
+				if html_tag.attributes.is_empty() {
+					quote! {
+						concat!("<", #tag, ">"
+							#( , #children )*
+							, "</", #tag, ">")
+					}
+				} else {
+					quote! {
+						concat!("<", #tag, " " #( , #static_attributes )*
+							, ">"
+							#( , #children )*
+							, "</", #tag, ">")
+					}
 				}
+
 			}
 			(true, false) => {
-				quote! {
-					concat!("<", #tag #(, " ", #static_attributes)* , ">")
-					#( + #children )*
-					+ concat!("</", #tag, ">")
+				if html_tag.attributes.is_empty() {
+					quote! {
+						concat!("<", #tag, ">")
+						#( + #children )*
+						+ concat!("</", #tag, ">")
+					}
+				} else {
+					quote! {
+						concat!("<", #tag, " " #( , #static_attributes )* , ">")
+						#( + #children )*
+						+ concat!("</", #tag, ">")
+					}
 				}
 			}
 			(false, true) => {
 				quote! {
-					concat!("<", #tag #(, " ", #static_attributes)* )
-					#( + " " + #dynamic_attributes )*
-					+ concat!(">" #(, #children)* , "</", #tag, ">")
+					concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + concat!(">"
+					#( , #children )*
+					, "</", #tag, ">")
 				}
 			}
 			(false, false) => {
 				quote! {
-					concat!("<", #tag #(, " ", #static_attributes)* )
-					#( + " " + #dynamic_attributes )*
+					concat!("<", #tag, " " #( , #static_attributes )* )
+					#( + #dynamic_attributes )*
 					+ ">"
 					#( + #children )*
 					+ concat!("</", #tag, ">")
@@ -401,21 +418,21 @@ impl ToTokens for Attribute {
 				let attribute_name = &self.name.to_string();
 
 				tokens.append_all(quote! {
-					if #ident { #attribute_name } else { "" }
+					if #ident { concat!(#attribute_name, " ") } else { "" }
 				});
 			}
 			// disabled
 			(None, false) => {
 				let attribute_name = &self.name.to_string();
 				tokens.append_all(quote! {
-					#attribute_name
+					concat!(#attribute_name, " ")
 				});
 			}
 			// :disabled={ true }
 			(Some(value), true) => {
 				let attribute_name = &self.name.to_string();
 				tokens.append_all(quote! {
-					if #value { #attribute_name } else { "" }
+					if #value { concat!(#attribute_name, " ") } else { "" }
 				});
 			}
 			// class="wrapper" or value={ person.name }
@@ -429,14 +446,14 @@ impl ToTokens for Attribute {
 				match value {
 					TokenTree::Group(group) => {
 						tokens.append_all(quote! {
-							concat!(#attribute_name, "=\"") + &tidos::sanitize!(#group) + "\""
+							concat!(#attribute_name, "=\"") + &tidos::sanitize!(#group) + "\" "
 
 							//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
 						});
 					}
 					TokenTree::Literal(literal) => {
 						tokens.append_all(quote! {
-							concat!(#attribute_name, "=\"", #literal, "\"")
+							concat!(#attribute_name, "=\"", #literal, "\" ")
 
 							//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
 						});
