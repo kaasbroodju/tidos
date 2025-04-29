@@ -2,16 +2,17 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 
+use crate::page_wrapper::PageWrapper;
 use quote::{quote, ToTokens};
 use syn::parse::Parse;
 use syn::parse_macro_input;
+use tokens::Component;
 use uuid::Uuid;
 
-mod r#impl;
+mod code_generation;
+mod page_wrapper;
 mod parsing;
-
-use crate::r#impl::PageWrapper;
-use r#impl::Component;
+mod tokens;
 
 /// Turn your template into a usable string
 ///
