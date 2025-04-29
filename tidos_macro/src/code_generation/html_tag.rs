@@ -1,9 +1,4 @@
-use crate::tokens::Attribute;
-use crate::tokens::Content;
-use proc_macro2::{Group, Literal};
 use syn::buffer::Cursor;
-use syn::parse::{Parse, ParseStream};
-use syn::Token;
 
 fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
 	let mut rest = cursor;

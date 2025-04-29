@@ -2,7 +2,6 @@ use crate::parsing::utils::matches_tag;
 use crate::tokens::Content;
 use crate::tokens::{Attribute, HTMLTag};
 use proc_macro2::{Group, Literal};
-use syn::buffer::Cursor;
 use syn::parse::{Parse, ParseStream};
 use syn::Token;
 

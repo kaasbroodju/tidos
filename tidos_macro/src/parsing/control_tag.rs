@@ -1,7 +1,6 @@
 use crate::parsing::utils::matches_corresponding_command_tag;
 use crate::tokens::{Content, ControlTag};
-use proc_macro2::{Group, Ident, Punct, TokenStream, TokenTree};
-use quote::{quote, ToTokens, TokenStreamExt};
+use proc_macro2::{Group, Ident, Punct};
 use syn::parse::{Parse, ParseStream};
 use syn::Token;
 

@@ -1,5 +1,4 @@
-use proc_macro2::{TokenStream, TokenTree};
-use quote::{format_ident, quote, ToTokens, TokenStreamExt};
+use proc_macro2::TokenTree;
 
 #[derive(Debug)]
 pub struct Attribute {

@@ -1,8 +1,5 @@
 use crate::tokens::Content;
-use proc_macro2::{Group, Ident, Punct, TokenStream, TokenTree};
-use quote::{quote, ToTokens, TokenStreamExt};
-use syn::parse::{Parse, ParseStream};
-use syn::Token;
+use proc_macro2::TokenTree;
 
 #[derive(Debug)]
 pub enum ControlTag {

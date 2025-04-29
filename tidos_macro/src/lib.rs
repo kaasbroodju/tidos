@@ -4,7 +4,6 @@ use proc_macro::TokenStream;
 
 use crate::page_wrapper::PageWrapper;
 use quote::{quote, ToTokens};
-use syn::parse::Parse;
 use syn::parse_macro_input;
 use tokens::Component;
 use uuid::Uuid;

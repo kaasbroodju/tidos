@@ -4,8 +4,7 @@ use crate::parsing::utils::{
 };
 use crate::tokens::HTMLTag;
 use crate::tokens::{Content, ControlTag, TypeOfCommandTag};
-use proc_macro2::{Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
-use quote::{format_ident, quote, ToTokens, TokenStreamExt};
+use proc_macro2::{Group, Ident, Punct, Spacing, TokenTree};
 use syn::parse::{Parse, ParseStream};
 use syn::token::{Brace, Token};
 use syn::Token;

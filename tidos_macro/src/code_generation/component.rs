@@ -1,7 +1,6 @@
-use crate::tokens::{Component, Content};
+use crate::tokens::Component;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens, TokenStreamExt};
-use syn::parse::{Parse, ParseStream};
 
 impl ToTokens for Component {
 	fn to_tokens(&self, tokens: &mut TokenStream) {

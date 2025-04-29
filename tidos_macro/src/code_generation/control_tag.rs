@@ -1,8 +1,6 @@
 use crate::tokens::{Content, ControlTag};
-use proc_macro2::{Group, Ident, Punct, TokenStream, TokenTree};
+use proc_macro2::{TokenStream, TokenTree};
 use quote::{quote, ToTokens, TokenStreamExt};
-use syn::parse::{Parse, ParseStream};
-use syn::Token;
 
 impl ToTokens for ControlTag {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
