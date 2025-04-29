@@ -1,0 +1,5 @@
+error: Did you mean `html`?
+ --> tests/view_macro/panics/misspelled_html_in_raw_statement.rs:6:5
+  |
+6 |             @hdmi{"<p>hello world</p>"}
+  |              ^^^^

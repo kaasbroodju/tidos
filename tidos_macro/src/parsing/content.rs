@@ -6,6 +6,7 @@ use crate::tokens::HTMLTag;
 use crate::tokens::{Content, ControlTag, TypeOfCommandTag};
 use proc_macro2::{Group, Ident, Punct, Spacing, TokenTree};
 use syn::parse::{Parse, ParseStream};
+use syn::spanned::Spanned;
 use syn::token::{Brace, Token};
 use syn::Token;
 
@@ -25,7 +26,7 @@ impl Parse for Content {
 			input.parse::<Punct>()?;
 			let ident = input.parse::<Ident>()?;
 			if ident.to_string() != "html" {
-				panic!()
+				return Err(syn::Error::new(ident.span(), "Did you mean `html`?"));
 			}
 			let group = input.parse::<Group>()?;
 
@@ -199,7 +200,7 @@ impl Parse for Content {
 
 impl Parse for TypeOfCommandTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
-		input.parse::<Token![#]>()?;
+		let command_token = input.parse::<Token![#]>()?;
 
 		if input.peek(Token![for]) {
 			input.parse::<Token![for]>()?;
@@ -216,7 +217,7 @@ impl Parse for TypeOfCommandTag {
 					}
 				}
 
-				Err(cursor.error("No `in` found in for loop "))
+				Err(syn::Error::new(command_token.span(), "No `in` found in for loop "))
 			})?;
 
 			let right_side = input.step(|cursor| {
@@ -228,17 +229,17 @@ impl Parse for TypeOfCommandTag {
 				}
 
 				if output.is_empty() {
-					return Err(cursor.error("Empty right side of `in`."));
+					Err(syn::Error::new(command_token.span(), "Empty right side of `in`."))
+				} else {
+					Ok((output, rest))
 				}
-
-				return Ok((output, rest));
 			})?;
 
 			// let x = input.parse::<Group>()?;
-			return Ok(TypeOfCommandTag::For {
+			Ok(TypeOfCommandTag::For {
 				left_side,
 				right_side,
-			});
+			})
 		} else if input.peek(Token![match]) {
 			input.parse::<Token![match]>()?;
 
@@ -251,13 +252,13 @@ impl Parse for TypeOfCommandTag {
 				}
 
 				if output.is_empty() {
-					return Err(cursor.error("No variable to match against."));
+					Err(syn::Error::new(command_token.span(), "No variable to match against."))
+				} else {
+					Ok((output, rest))
 				}
-
-				return Ok((output, rest));
 			})?;
 
-			return Ok(TypeOfCommandTag::Match(match_content));
+			Ok(TypeOfCommandTag::Match(match_content))
 		} else if input.peek(Token![if]) {
 			input.parse::<Token![if]>()?;
 
@@ -270,15 +271,15 @@ impl Parse for TypeOfCommandTag {
 				}
 
 				if output.is_empty() {
-					return Err(cursor.error("If statement is empty."));
+					Err(syn::Error::new(command_token.span(), "If statement is empty."))
+				} else {
+					Ok((output, rest))
 				}
-
-				return Ok((output, rest));
 			})?;
 
-			return Ok(TypeOfCommandTag::If(if_content));
+			Ok(TypeOfCommandTag::If(if_content))
 		} else {
-			panic!("Unknown command tag");
+			Err(syn::Error::new(command_token.span(), "Unknown command tag, must be: 'for', 'if' or 'match'"))
 		}
 	}
 }
