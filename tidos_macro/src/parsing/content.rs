@@ -72,12 +72,15 @@ impl Parse for Content {
 					while !is_cursor_on_new_if_branch(&input.cursor()) {
 						let child = input.parse::<Content>()?;
 						if_content.push(child);
+						if input.is_empty() {
+							return Err(syn::Error::new(group.span(), "missing matching end tag `{/if}`"))
+						}
 					}
 
 					let mut if_else_chain = Vec::new();
 					while is_cursor_on_else_if_branch(&input.cursor()) {
-						let else_if_statement = input.parse::<Group>()?;
-						let else_if_statement = else_if_statement
+						let else_if_tag = input.parse::<Group>()?;
+						let else_if_statement = else_if_tag
 							.stream()
 							.into_iter()
 							.skip(3)
@@ -86,18 +89,24 @@ impl Parse for Content {
 						while !is_cursor_on_new_if_branch(&input.cursor()) {
 							let child = input.parse::<Content>()?;
 							children_else_if_branch.push(child);
+							if input.is_empty() {
+								return Err(syn::Error::new(else_if_tag.span(), "missing matching end tag `{/if}`"))
+							}
 						}
 
 						if_else_chain.push((else_if_statement, children_else_if_branch));
 					}
 
 					let else_content = if is_cursor_on_else_branch(&input.cursor()) {
-						input.parse::<Group>()?;
+						let else_tag = input.parse::<Group>()?;
 
 						let mut children_if_branch: Vec<Content> = Vec::new();
 						while !is_cursor_on_new_if_branch(&input.cursor()) {
 							let child = input.parse::<Content>()?;
 							children_if_branch.push(child);
+							if input.is_empty() {
+								return Err(syn::Error::new(else_tag.span(), "missing matching end tag `{/if}`"))
+							}
 						}
 
 						Some(children_if_branch)

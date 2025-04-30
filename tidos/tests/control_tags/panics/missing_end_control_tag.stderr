@@ -1,10 +1,5 @@
-error: proc macro panicked
- --> tests/control_tags/panics/missing_end_control_tag.rs:4:2
+error: missing matching end tag `{/if}`
+ --> tests/control_tags/panics/missing_end_control_tag.rs:5:3
   |
-4 | /     view! {
-5 | |         {#if true}
-6 | |             <p>Hello world</p>
-7 | |     }
-  | |_____^
-  |
-  = help: message: No tokens left to parse
+5 |         {#if true}
+  |         ^^^^^^^^^^
