@@ -15,7 +15,7 @@ impl Parse for Content {
 		if input.is_empty() {
 			// Expected to have tokens over, but there's none.
 			
-			Err(syn::Error::new(input.span(), "No tokens left to parse"))
+			panic!("No tokens left to parse");
 		
 		} else if input.peek(Token![<]) {
 			// <p></p>

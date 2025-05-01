@@ -68,7 +68,7 @@ pub fn is_cursor_on_end_of_if_branch(cursor: &Cursor) -> bool {
 	}
 }
 
-pub fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
+pub fn matches_tag(cursor: Cursor, target_tag: &String) -> bool {
 	let mut rest = cursor;
 	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '<') {
 		return false;
@@ -103,7 +103,7 @@ pub fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
 		rest = next;
 	}
 
-	if right_hand_side != target_tag {
+	if right_hand_side != *target_tag {
 		return false;
 	}
 

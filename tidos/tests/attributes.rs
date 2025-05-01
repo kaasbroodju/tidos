@@ -63,6 +63,12 @@ fn missing_variable_defined_toggle() {
 }
 
 #[test]
+fn invalid_toggle_value() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/invalid_toggle_value.rs");
+}
+
+#[test]
 fn data_attribute() {
 	assert_eq!(
 		&view!{
