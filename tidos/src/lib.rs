@@ -50,6 +50,6 @@ pub use tidos_macro::*;
 #[macro_export]
 macro_rules! sanitize {
 	($input:expr) => {
-		&tidos::internals::sanitize(String::from($input))
+		&tidos::internals::sanitize(&$input)
 	};
 }

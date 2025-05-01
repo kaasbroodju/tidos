@@ -1,47 +1,146 @@
-use syn::buffer::Cursor;
+use proc_macro2::{Ident, Span, TokenStream};
+use quote::{format_ident, quote, ToTokens, TokenStreamExt};
+use crate::tokens::{AttributeType, HTMLTag};
 
-fn matches_tag(cursor: Cursor, target_tag: String) -> bool {
-	let mut rest = cursor;
-	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '<') {
-		return false;
+impl ToTokens for HTMLTag {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		let is_component = self.tag.chars().next().unwrap().is_ascii_uppercase();
+		if is_component {
+			tokens.append_all(custom_element_to_tokens(self));
+		} else {
+			tokens.append_all(native_html_tag_to_tokenstream(self))
+		}
 	}
-	let (_, next) = rest.punct().unwrap();
-	rest = next;
+}
 
-	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '/') {
-		return false;
+fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
+	let tag = html_tag.tag.as_str();
+
+	let mut static_attributes = vec![];
+	let mut dynamic_attributes = vec![];
+	for attribute in &html_tag.attributes {
+		if attribute.is_static() {
+			static_attributes.push(attribute.to_token_stream());
+		} else {
+			dynamic_attributes.push(attribute.to_token_stream());
+		}
 	}
-	let (_, next) = rest.punct().unwrap();
-	rest = next;
+	let has_only_static_attributes = dynamic_attributes.is_empty();
 
-	let mut right_hand_side = String::new();
-	let (ident, next) = rest
-		.ident()
-		.expect("Expected an html like <p> or <custom-element>");
-	right_hand_side.push_str(ident.to_string().as_str());
+	if html_tag.is_self_closing {
+		if has_only_static_attributes {
+			quote! {
+				concat!("<", #tag, " ", #( #static_attributes, )* "/>")
+			}
+		} else {
+			quote! {
+				concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + "/>"
+			}
+		}
+	} else {
+		let mut islands = vec![];
+		let mut island = vec![];
+		let mut unclean = false;
+		for element in &html_tag.children {
+			if element.is_static() {
+				island.push(element);
+				unclean = true;
+			} else if unclean {
+				islands.push((true, island.clone()));
+				unclean = false;
+				island = vec![];
+				islands.push((false, vec![element]))
+			} else {
+				islands.push((false, vec![element]))
+			}
+		}
 
-	rest = next;
+		if unclean {
+			islands.push((true, island.clone()));
+		}
 
-	while matches!(rest.punct(), Some((p, _)) if p.as_char() == '-') {
-		let next = rest.punct().unwrap().1;
-		rest = next;
+		let has_only_static_children = islands.iter().all(|&(x, _)| x);
+		let children = islands
+			.iter()
+			.map(|(is_static, island)| {
+				if *is_static {
+					quote! { concat!( #( #island ),* ) }
+				} else {
+					quote! { #( #island )* }
+				}
+			})
+			.collect::<Vec<_>>();
 
-		right_hand_side.push('-');
-		let (ident, next) = rest
-			.ident()
-			.expect("Expected an html like <p> or <custom-element>");
+		match (has_only_static_attributes, has_only_static_children) {
+			(true, true) => {
+				if html_tag.attributes.is_empty() {
+					quote! {
+						concat!("<", #tag, ">"
+							#( , #children )*
+							, "</", #tag, ">")
+					}
+				} else {
+					quote! {
+						concat!("<", #tag, " " #( , #static_attributes )*
+							, ">"
+							#( , #children )*
+							, "</", #tag, ">")
+					}
+				}
+			}
+			(true, false) => {
+				if html_tag.attributes.is_empty() {
+					quote! {
+						concat!("<", #tag, ">")
+						#( + #children )*
+						+ concat!("</", #tag, ">")
+					}
+				} else {
+					quote! {
+						concat!("<", #tag, " " #( , #static_attributes )* , ">")
+						#( + #children )*
+						+ concat!("</", #tag, ">")
+					}
+				}
+			}
+			(false, true) => {
+				quote! {
+					concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + concat!(">"
+					#( , #children )*
+					, "</", #tag, ">")
+				}
+			}
+			(false, false) => {
+				quote! {
+					concat!("<", #tag, " " #( , #static_attributes )* )
+					#( + #dynamic_attributes )*
+					+ ">"
+					#( + #children )*
+					+ concat!("</", #tag, ">")
+				}
+			}
+		}
+	}
+}
 
-		right_hand_side.push_str(ident.to_string().as_str());
-		rest = next;
+fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
+	let tag = html_tag.tag.as_str();
+	let mut attributes = vec![];
+	for attribute in &html_tag.attributes {
+		let name = format_ident!("{}", &attribute.name);
+		let value = &attribute.value;
+		match value {
+			None => panic!("Empty attribute"),
+			Some(value) => {
+				match value {
+					AttributeType::Literal(value) => attributes.push(quote! { #name: #value }),
+					AttributeType::Group(value) => attributes.push(quote! { #name: #value }),
+				}
+			}
+		}
 	}
 
-	if right_hand_side != target_tag {
-		return false;
-	}
+	let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
 
-	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '>') {
-		return false;
-	}
-
-	true
+	quote! { &#component_name { #( #attributes ),* }.to_render(page) }
 }

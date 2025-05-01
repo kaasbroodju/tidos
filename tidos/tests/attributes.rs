@@ -12,14 +12,14 @@ fn a_simple_toggle_attribute() {
 
 	assert_eq!(
 		&view!{
-			<input type="radio" name="day" value="monday" :checked={true} />
+			<input type="radio" name="day" value="monday" :checked={ true } />
 		},
 		r#"<input type="radio" name="day" value="monday" checked />"#
 	);
 
 	assert_eq!(
 		&view!{
-			<input type="radio" name="day" value="monday" :checked={false} />
+			<input type="radio" name="day" value="monday" :checked={ false } />
 		},
 		r#"<input type="radio" name="day" value="monday" />"#
 	);

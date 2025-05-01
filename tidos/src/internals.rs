@@ -1,39 +1,25 @@
-#[inline]
-pub fn sanitize(content: String) -> String {
-	content
-		.chars()
-		.fold(String::with_capacity(content.len()), |mut acc, c| {
-			acc + match c {
-				'&' => "&amp;",
-				'<' => "&lt;",
-				'>' => "&gt;",
-				'"' => "&quot;",
-				'\'' => "&#x27;",
-				_ => {
-					// This buffer is only used for non-ASCII characters.
-					static mut BUFFER: [u8; 4] = [0; 4];
+use std::borrow::Cow;
 
-					// Check if the character is ASCII.
-					if c.is_ascii() {
-						// SAFETY: `c` is ASCII, so it's guaranteed to be a single byte and valid UTF-8.
-						let byte = c as u8;
-						unsafe {
-							std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-								&byte as *const u8,
-								1,
-							))
-						}
-					} else {
-						// Non-ASCII characters need to be encoded into UTF-8.
-						unsafe {
-							let len = c.encode_utf8(&mut BUFFER).len();
-							std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-								BUFFER.as_ptr(),
-								len,
-							))
-						}
-					}
-				}
-			}
-		})
+#[inline]
+pub fn sanitize<S: AsRef<str> + ?Sized>(input: &S) -> Cow<str> {
+	let input = input.as_ref();
+
+	if !input.contains(['&', '<', '>', '"', '\'']) {
+		return Cow::Borrowed(input);
+	}
+
+	let mut result = String::with_capacity(input.len());
+
+	for c in input.chars() {
+		match c {
+			'&' => result.push_str("&amp;"),
+			'<' => result.push_str("&lt;"),
+			'>' => result.push_str("&gt;"),
+			'"' => result.push_str("&quot;"),
+			'\'' => result.push_str("&#x27;"),
+			_ => result.push(c),
+		}
+	}
+
+	Cow::Owned(result)
 }

@@ -1,10 +1,16 @@
-use proc_macro2::TokenTree;
+use proc_macro2::TokenStream;
 
 #[derive(Debug)]
 pub struct Attribute {
 	pub is_toggle_attribute: bool,
 	pub name: String,
-	pub value: Option<TokenTree>,
+	pub value: Option<AttributeType>,
+}
+
+#[derive(Debug)]
+pub enum AttributeType {
+	Literal(TokenStream),
+	Group(TokenStream),
 }
 
 impl Attribute {
@@ -16,12 +22,9 @@ impl Attribute {
 			None => true,
 			Some(token) => {
 				match token {
-					TokenTree::Group(_) => false,
+					AttributeType::Group(_) => false,
 					// todo identifier of scoped css is static
-					TokenTree::Literal(_) => true,
-					_ => {
-						panic!("Tidos macro error: expected group or ident")
-					}
+					AttributeType::Literal(_) => true,
 				}
 			}
 		}

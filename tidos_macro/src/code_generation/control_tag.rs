@@ -123,10 +123,20 @@ impl ControlTag {
 		let cases = cases
 			.iter()
 			.map(|(case_statement, case_content)| {
+				let is_static = case_content.iter().all(|content| content.is_static());
+				
 				// todo static islands
-				quote! {
-					#( #case_statement )* => {
-						String::new() + #( #case_content )+*
+				if is_static {
+					quote! {
+						#( #case_statement )* => {
+							String::from(concat!( #( #case_content ),* ))
+						}
+					}
+				} else {
+					quote! {
+						#( #case_statement )* => {
+							String::new() + #( #case_content )+*
+						}
 					}
 				}
 			})

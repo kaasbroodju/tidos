@@ -1,7 +1,8 @@
 use crate::parsing::utils::matches_tag;
-use crate::tokens::Content;
+use crate::tokens::{AttributeType, Content};
 use crate::tokens::{Attribute, HTMLTag};
 use proc_macro2::{Group, Literal};
+use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
@@ -30,14 +31,14 @@ impl Parse for HTMLTag {
 							Attribute {
 								is_toggle_attribute,
 								name: attribute_name,
-								value: Some(proc_macro2::TokenTree::Literal(literal)),
+								value: Some(AttributeType::Literal(literal.to_token_stream())),
 							}
 						}
 					} else if let Ok(group) = input.parse::<Group>() {
 						Attribute {
 							is_toggle_attribute,
 							name: attribute_name,
-							value: Some(proc_macro2::TokenTree::Group(group)),
+							value: Some(AttributeType::Group(group.stream())),
 						}
 					} else {
 						return if is_toggle_attribute {

@@ -1,5 +1,6 @@
 use tidos_macro::view;
 
+#[allow(unused)]
 #[test]
 fn a_simple_match_statement() {
 	enum Pet {
@@ -28,6 +29,7 @@ fn a_simple_match_statement() {
 	)
 }
 
+#[allow(unused)]
 #[test]
 fn a_complex_match_statement() {
 	enum Pet {
@@ -52,7 +54,7 @@ fn a_complex_match_statement() {
 					<p>Give al mortal possessions to cat!</p>
 				{:case Other { name }}
 					<p>What is that?</p>
-					<p>{format!("It is a {}!", name)}</p>
+					<p>{format!("It is a {name}!")}</p>
 			{/match}
 		},
 		"<p>What is that?</p><p>It is a spider!</p>"

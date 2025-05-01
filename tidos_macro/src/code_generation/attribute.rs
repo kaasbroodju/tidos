@@ -1,5 +1,5 @@
-use crate::tokens::Attribute;
-use proc_macro2::{TokenStream, TokenTree};
+use crate::tokens::{Attribute, AttributeType};
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
 
 impl ToTokens for Attribute {
@@ -24,6 +24,10 @@ impl ToTokens for Attribute {
 			// :disabled={ true }
 			(Some(value), true) => {
 				let attribute_name = &self.name.to_string();
+				let value = match value {
+					AttributeType::Literal(_) => panic!("Should be an expression"),
+					AttributeType::Group(contents) => contents
+				};
 				tokens.append_all(quote! {
 					if #value { concat!(#attribute_name, " ") } else { "" }
 				});
@@ -37,22 +41,19 @@ impl ToTokens for Attribute {
 					.to_string();
 
 				match value {
-					TokenTree::Group(group) => {
+					AttributeType::Group(group) => {
 						tokens.append_all(quote! {
 							concat!(#attribute_name, "=\"") + &tidos::sanitize!(#group) + "\" "
 
 							//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
 						});
 					}
-					TokenTree::Literal(literal) => {
+					AttributeType::Literal(literal) => {
 						tokens.append_all(quote! {
 							concat!(#attribute_name, "=\"", #literal, "\" ")
 
 							//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
 						});
-					}
-					_ => {
-						panic!("Tidos macro error: expected group or ident")
 					}
 				}
 			}
