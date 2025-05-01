@@ -10,202 +10,276 @@ use syn::spanned::Spanned;
 use syn::token::{Brace, Token};
 use syn::Token;
 
+const LOOP_TAG: &'static str = "for";
+const CONDITIONAL_TAG: &'static str = "if";
+const MATCH_TAG: &'static str = "match";
+
 impl Parse for Content {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
+		
 		if input.is_empty() {
-			panic!("No tokens left to parse")
-		}
-		// <p></p>
-		if input.peek(Token![<]) {
-			let temp = input.parse::<HTMLTag>()?;
-
-			return Ok(Content::Tag(temp));
-
-		// @html{"<p>hello world</p>"}
+			// Expected to have tokens over, but there's none.
+			
+			Err(syn::Error::new(input.span(), "No tokens left to parse"))
+		
+		} else if input.peek(Token![<]) {
+			// <p></p>
+			
+			Ok(Content::Tag(input.parse::<HTMLTag>()?))
+		
 		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == '@'} {
-			input.parse::<Punct>()?;
-			let ident = input.parse::<Ident>()?;
-			if ident.to_string() != "html" {
-				return Err(syn::Error::new(ident.span(), "Did you mean `html`?"));
-			}
-			let group = input.parse::<Group>()?;
+			// @html{"<p>hello world</p>"}
 
-			return Ok(Content::RawHTMLExpression(group));
-		// {#for ... in ... }, {#if}, {#match} or { name }
+			Self::parse_raw_html_statement(input)
+		
 		} else if input.peek(Brace) {
+			// {#for ... in ... }, {#if}, {#match} or { name }
+			
 			let group = input.parse::<Group>()?;
 
-			let is_command = matches! { group.stream().into_iter().take(1).collect::<Vec<_>>()[0], TokenTree::Punct(ref punct) if punct.as_char() == '#'};
-			if !is_command {
+			if is_command(&group) {
+				// {#for ... in ... } {#if} {#match}
+
+				let type_of_command = syn::parse2::<TypeOfCommandTag>(group.stream())?;
+
+				match type_of_command {
+					TypeOfCommandTag::For { left_side, right_side } => Self::parse_for_loop_body(input, &group, left_side, right_side),
+					TypeOfCommandTag::If(if_statement) => Self::parse_if_statement_body(&input, &group, if_statement),
+					TypeOfCommandTag::Match(match_statement) => Self::parse_match_body(input, group, match_statement),
+				}
+				
+			} else {
 				// { name }
-				return Ok(Content::Expression(group));
+
+				Ok(Content::Expression(group))
+				
 			}
-
-			// {#for ... in ... } {#if} {#match}
-			let type_of_command = syn::parse2::<TypeOfCommandTag>(group.stream())?;
-
-			return match type_of_command {
-				TypeOfCommandTag::For {
-					left_side,
-					right_side,
-				} => {
-					// ...
-					let mut contents: Vec<Content> = Vec::new();
-					while !input.is_empty()
-						&& !matches_corresponding_command_tag(input.cursor(), "for")
-					{
-						let child = input.parse::<Content>()?;
-						contents.push(child);
-					}
-
-					// {/for}
-					input.parse::<Group>()?;
-
-					Ok(Content::ControlTag(ControlTag::For {
-						left_side,
-						right_side,
-						contents,
-					}))
-				}
-				TypeOfCommandTag::If(if_statement) => {
-					let mut if_content: Vec<Content> = Vec::new();
-					while !is_cursor_on_new_if_branch(&input.cursor()) {
-						let child = input.parse::<Content>()?;
-						if_content.push(child);
-						if input.is_empty() {
-							return Err(syn::Error::new(group.span(), "missing matching end tag `{/if}`"))
-						}
-					}
-
-					let mut if_else_chain = Vec::new();
-					while is_cursor_on_else_if_branch(&input.cursor()) {
-						let else_if_tag = input.parse::<Group>()?;
-						let else_if_statement = else_if_tag
-							.stream()
-							.into_iter()
-							.skip(3)
-							.collect::<Vec<_>>();
-						let mut children_else_if_branch: Vec<Content> = Vec::new();
-						while !is_cursor_on_new_if_branch(&input.cursor()) {
-							let child = input.parse::<Content>()?;
-							children_else_if_branch.push(child);
-							if input.is_empty() {
-								return Err(syn::Error::new(else_if_tag.span(), "missing matching end tag `{/if}`"))
-							}
-						}
-
-						if_else_chain.push((else_if_statement, children_else_if_branch));
-					}
-
-					let else_content = if is_cursor_on_else_branch(&input.cursor()) {
-						let else_tag = input.parse::<Group>()?;
-
-						let mut children_if_branch: Vec<Content> = Vec::new();
-						while !is_cursor_on_new_if_branch(&input.cursor()) {
-							let child = input.parse::<Content>()?;
-							children_if_branch.push(child);
-							if input.is_empty() {
-								return Err(syn::Error::new(else_tag.span(), "missing matching end tag `{/if}`"))
-							}
-						}
-
-						Some(children_if_branch)
-					} else {
-						None
-					};
-
-					if !is_cursor_on_end_of_if_branch(&input.cursor()) {
-						input.error("Expected {/if}");
-					}
-					input.parse::<Group>()?;
-
-					Ok(Content::ControlTag(ControlTag::IfChain {
-						if_statement,
-						if_content,
-						if_else_chain,
-						else_content,
-					}))
-				}
-				TypeOfCommandTag::Match(match_statement) => {
-					// {:case ...}
-					let mut cases = Vec::new();
-
-					while !input.is_empty()
-						&& !matches_corresponding_command_tag(input.cursor(), "match")
-					{
-						let case = input.parse::<Group>()?;
-						let mut children: Vec<Content> = Vec::new();
-						while !matches_case_statement(input.cursor())
-							&& !matches_corresponding_command_tag(input.cursor(), "match")
-						{
-							let child = input.parse::<Content>()?;
-							children.push(child);
-						}
-
-						cases.push((
-							case.stream()
-								.into_iter()
-								.skip(2)
-								.collect::<Vec<TokenTree>>(),
-							children,
-						));
-					}
-
-					// {/match}>
-					input.parse::<Group>()?;
-
-					Ok(Content::ControlTag(ControlTag::Match {
-						match_statement,
-						cases,
-					}))
-				}
-			};
-
-			panic!();
-
-		// text between tags
+			
 		} else {
-			let mut output = String::new();
-			let mut last_was_punct = false;
-			while !input.is_empty() && !(input.peek(Token![<]) || input.peek(Brace)) {
-				let token = input.parse::<TokenTree>()?;
-				match token {
-					TokenTree::Group(_) => {
-						panic!()
-					}
-					TokenTree::Ident(ident) => {
-						if !output.is_empty() {
-							output.push(' ');
-						}
-						last_was_punct = false;
-						output.push_str(ident.to_string().as_str());
-					}
-					TokenTree::Punct(punct) => {
-						output.push(punct.as_char());
+			// text between tags
 
-						// Check if the next token is also a punctuation
-						if !output.is_empty()
-							&& proc_macro2::Punct::peek(input.cursor())
-							&& punct.spacing() == Spacing::Alone
-						{
-							output.push(' ');
-						}
-
-						last_was_punct = true;
-					}
-					TokenTree::Literal(lit) => {
-						if !output.is_empty() {
-							output.push(' ');
-						}
-						last_was_punct = false;
-						output.push_str(lit.to_string().as_str());
-					}
-				}
-			}
-			return Ok(Content::Literal(output));
+			Self::parse_text_between_tags(input)
+			
 		}
 	}
 }
+
+impl Content {
+	fn parse_for_loop_body(input: ParseStream, group: &Group, left_side: Vec<TokenTree>, right_side: Vec<TokenTree>) -> syn::Result<Self> {
+		// ...
+		let contents = Self::parse_content_until(
+			&input,
+			group.span(),
+			LOOP_TAG,
+			|cursor| matches_corresponding_command_tag(cursor, LOOP_TAG)
+		)?;
+
+		// {/for}
+		Self::parse_closing_tag(input, group.span(), LOOP_TAG, || {
+			Content::ControlTag(ControlTag::For {
+				left_side,
+				right_side,
+				contents,
+			})
+		})
+	}
+
+	fn parse_if_statement_body(input: &ParseStream, group: &Group, if_statement: Vec<TokenTree>) -> syn::Result<Self> {
+		let if_content = Self::parse_content_until(
+			input,
+			group.span(),
+			CONDITIONAL_TAG,
+			|cursor| is_cursor_on_new_if_branch(&cursor)
+		)?;
+
+		let mut if_else_chain = Vec::new();
+		while is_cursor_on_else_if_branch(&input.cursor()) {
+			let else_if_tag = input.parse::<Group>()?;
+			let else_if_statement = else_if_tag
+				.stream()
+				.into_iter()
+				.skip(3)
+				.collect::<Vec<_>>();
+			let content_else_if_branch: Vec<Content> = Self::parse_content_until(
+				input,
+				group.span(),
+				CONDITIONAL_TAG,
+				|cursor| is_cursor_on_new_if_branch(&cursor)
+			)?;
+
+			if_else_chain.push((else_if_statement, content_else_if_branch));
+		}
+
+		let else_content = if is_cursor_on_else_branch(&input.cursor()) {
+			input.parse::<Group>()?;
+			
+			Some(Self::parse_content_until(
+				input,
+				group.span(),
+				CONDITIONAL_TAG,
+				|cursor| is_cursor_on_end_of_if_branch(&cursor)
+			)?)
+		} else {
+			None
+		};
+
+		Self::parse_closing_tag(input, group.span(), CONDITIONAL_TAG, || {
+			Content::ControlTag(ControlTag::IfChain {
+				if_statement,
+				if_content,
+				if_else_chain,
+				else_content,
+			})
+		})
+	}
+
+	fn parse_match_body(input: ParseStream, group: Group, match_statement: Vec<TokenTree>) -> syn::Result<Self> {
+		// {:case ...}
+		let mut cases = Vec::new();
+
+		while !matches_corresponding_command_tag(input.cursor(), MATCH_TAG) {
+			let case = input.parse::<Group>()?;
+			
+			let statement = case.stream()
+				.into_iter()
+				.skip(2)
+				.collect::<Vec<TokenTree>>();
+			
+			let children = Self::parse_content_until(
+				&input,
+				case.span(),
+				MATCH_TAG,
+				|cursor| matches_case_statement(cursor) || matches_corresponding_command_tag(cursor, MATCH_TAG)
+			)?;
+			
+			cases.push((
+				statement,
+				children,
+			));
+		}
+
+		// {/match}>
+		Self::parse_closing_tag(input, group.span(), MATCH_TAG, || {
+			Content::ControlTag(ControlTag::Match {
+				match_statement,
+				cases,
+			})
+		})
+	}
+
+	fn parse_text_between_tags(input: ParseStream) -> syn::Result<Self> {
+		let mut output = String::new();
+		let mut last_was_punct = false;
+		while !input.is_empty() && !(input.peek(Token![<]) || input.peek(Brace)) {
+			let token = input.parse::<TokenTree>()?;
+			match token {
+				TokenTree::Group(_) => {
+					panic!()
+				}
+				TokenTree::Ident(ident) => {
+					if !output.is_empty() {
+						output.push(' ');
+					}
+					last_was_punct = false;
+					output.push_str(ident.to_string().as_str());
+				}
+				TokenTree::Punct(punct) => {
+					output.push(punct.as_char());
+
+					// Check if the next token is also a punctuation
+					if !output.is_empty()
+						&& proc_macro2::Punct::peek(input.cursor())
+						&& punct.spacing() == Spacing::Alone
+					{
+						output.push(' ');
+					}
+
+					last_was_punct = true;
+				}
+				TokenTree::Literal(lit) => {
+					if !output.is_empty() {
+						output.push(' ');
+					}
+					last_was_punct = false;
+					output.push_str(lit.to_string().as_str());
+				}
+			}
+		}
+		Ok(Content::Literal(output))
+	}
+
+	fn parse_raw_html_statement(input: ParseStream) -> syn::Result<Self> {
+		input.parse::<Punct>()?;
+		let ident = input.parse::<Ident>()?;
+		if ident.to_string() != "html" {
+			Err(syn::Error::new(ident.span(), "Did you mean `html`?"))
+		} else {
+			Ok(Content::RawHTMLExpression(input.parse::<Group>()?))
+		}
+	}
+
+	fn parse_closing_tag<F>(
+		input: ParseStream,
+		group_span: proc_macro2::Span,
+		tag_name: &str,
+		on_success: F,
+	) -> syn::Result<Self>
+	where
+		F: FnOnce() -> Content,
+	{
+		match input.parse::<Group>() {
+			Ok(group) => {
+				let peeked: Vec<TokenTree> = group.stream().into_iter().take(2).collect();
+
+				if peeked.len() == 2
+					&& matches!(&peeked[0], TokenTree::Punct(p) if p.as_char() == '/')
+					&& matches!(&peeked[1], TokenTree::Ident(i) if i.to_string() == tag_name) {
+					Ok(on_success())
+				} else {
+					Err(syn::Error::new(
+						group.span(),
+						format!("missing matching closing tag `{{/{tag_name}}}`")
+					))
+				}
+			}
+			Err(_) => {
+				Err(syn::Error::new(
+					group_span,
+					format!("missing matching closing tag `{{/{tag_name}}}`")
+				))
+			}
+		}
+	}
+
+	fn parse_content_until<F>(
+		input: &ParseStream,
+		group_span: proc_macro2::Span,
+		tag_name: &str,
+		should_stop: F
+	) -> Result<Vec<Content>, syn::Error>
+	where
+		F: Fn(syn::buffer::Cursor) -> bool,
+	{
+		let mut contents: Vec<Content> = Vec::new();
+		while !should_stop(input.cursor()) {
+			let child = input.parse::<Content>()?;
+			contents.push(child);
+			if input.is_empty() {
+				return Err(syn::Error::new(
+					group_span,
+					format!("missing matching closing tag `{{/{tag_name}}}`")
+				));
+			}
+		}
+		Ok(contents)
+	}
+}
+
+
+fn is_command(group: &Group) -> bool {
+	matches! { group.stream().into_iter().take(1).collect::<Vec<_>>()[0], TokenTree::Punct(ref punct) if punct.as_char() == '#'}
+}
+
 
 impl Parse for TypeOfCommandTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -243,8 +317,7 @@ impl Parse for TypeOfCommandTag {
 					Ok((output, rest))
 				}
 			})?;
-
-			// let x = input.parse::<Group>()?;
+			
 			Ok(TypeOfCommandTag::For {
 				left_side,
 				right_side,
