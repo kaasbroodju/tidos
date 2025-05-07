@@ -14,10 +14,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: actions/setup-rust@v1
-        with:
-          rust-version: stable
-
       - name: Run tests
         run: cargo test --verbose
