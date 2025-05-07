@@ -2,4 +2,4 @@ error: missing matching closing tag `</div>`
  --> tests/view_macro/panics/forgot_to_close_html_tag.rs:6:4
   |
 6 |             <div>
-  |             ^^^^^
+  |             ^

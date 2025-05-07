@@ -77,7 +77,7 @@ impl Parse for HTMLTag {
 		let end_first_tag_token = input.parse::<Token![>]>()?;
 		if input.is_empty() {
 			return Err(syn::Error::new(
-				start_first_tag_token.span().join(end_first_tag_token.span()).unwrap(),
+				start_first_tag_token.span(),
 				format!("missing matching closing tag `</{tag}>`")
 			));
 		}
@@ -89,7 +89,7 @@ impl Parse for HTMLTag {
 			children.push(child);
 			if input.is_empty() {
 				return Err(syn::Error::new(
-					start_first_tag_token.span().join(end_first_tag_token.span()).unwrap(),
+					start_first_tag_token.span(),
 					format!("missing matching closing tag `</{tag}>`")
 				));
 			}
