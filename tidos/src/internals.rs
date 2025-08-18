@@ -1,14 +1,14 @@
 use std::borrow::Cow;
 
 #[inline]
-pub fn sanitize<S: AsRef<str> + ?Sized>(input: &S) -> Cow<str> {
+pub fn sanitize<S: AsRef<str> + ?Sized>(input: &S) -> String {
 	let input = input.as_ref();
 
 	if !input.contains(['&', '<', '>', '"', '\'']) {
-		return Cow::Borrowed(input);
+		return String::from(input)
 	}
 
-	let mut result = String::with_capacity(input.len());
+	let mut result = String::new();
 
 	for c in input.chars() {
 		match c {
@@ -21,5 +21,5 @@ pub fn sanitize<S: AsRef<str> + ?Sized>(input: &S) -> Cow<str> {
 		}
 	}
 
-	Cow::Owned(result)
+	result
 }
