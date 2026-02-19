@@ -2,7 +2,7 @@
 name = "tidos_macro"
 version = { workspace = true }
 authors = ["kaasbroodju"]
-license = "LGPL-3"
+license-file = "../LICENSE"
 repository = "https://github.com/kaasbroodju/tidos"
 description = "Procedural macros for the Tidos component framework."
 readme = "../README.md"
