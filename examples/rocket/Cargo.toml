@@ -3,6 +3,10 @@ name = "rocket"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "rocket"
+doc = false
+
 [dependencies]
 tidos = { workspace = true, features = ["rocket"] }
 rocket = "0.5.1"
