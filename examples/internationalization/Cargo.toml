@@ -1,0 +1,13 @@
+[package]
+name = "internationalization"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tidos = { workspace = true, features = ["rocket", "i18n"] }
+rocket = "0.5.1"
+fluent = "0.17.0"
+unic-langid = { version = "0.9.6", features = ["macros"] }
+fluent-langneg = "0.13.1"
+fluent-resmgr = "0.0.8"
+lazy_static = "1.5.0"

@@ -2,16 +2,18 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 
-use crate::page_wrapper::PageWrapper;
+use crate::page_wrapper::{I18nHoist, PageWrapper};
 use quote::{quote, ToTokens};
 use syn::parse_macro_input;
 use tokens::Component;
 use uuid::Uuid;
+use crate::i18n::I18n;
 
 mod code_generation;
 mod page_wrapper;
 mod parsing;
 mod tokens;
+mod i18n;
 
 /// Turn your template into a usable string
 ///
@@ -190,6 +192,16 @@ pub fn scoped_css(input: TokenStream) -> TokenStream {
 			#x
 		}
 	);
+
+	let expanded = input.to_token_stream();
+
+	expanded.into()
+}
+
+#[allow(clippy::all)]
+#[proc_macro]
+pub fn i18n(input: TokenStream) -> TokenStream {
+	let input = parse_macro_input!(input as I18n);
 
 	let expanded = input.to_token_stream();
 
