@@ -8,14 +8,14 @@ members = [
 ]
 
 [workspace.package]
-version = "0.6.11"
+version = "0.7.0"
 edition = "2021"
 rust-version = "1.80.0"
 
 [workspace.dependencies]
-tidos = { path = "./tidos", version = "0.6.9" }
-tidos_macro = { path = "./tidos_macro", version = "0.6.9" }
-tidos_i18n = { path = "./tidos_i18n", version = "0.6.11"}
+tidos = { path = "./tidos", version = "0.7.0" }
+tidos_macro = { path = "./tidos_macro", version = "0.7.0" }
+tidos_i18n = { path = "./tidos_i18n", version = "0.7.0"}
 
 
 [profile.release]

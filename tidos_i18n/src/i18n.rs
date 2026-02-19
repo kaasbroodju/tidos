@@ -37,15 +37,15 @@ impl ToTokens for I18n {
                         .join("{locale}")
                         .join("{res_id}");
                     // ResourceManager should be static
-                    let mgr = fluent_resmgr::resource_manager::ResourceManager::new(res_path.to_str().unwrap().to_string());
+                    let mgr = tidos::i18n::fluent_resmgr::resource_manager::ResourceManager::new(res_path.to_str().unwrap().to_string());
 
 
                     // dynamic part per request
-                    let resolved_locales = fluent_langneg::negotiate_languages(
+                    let resolved_locales = tidos::i18n::fluent_langneg::negotiate_languages(
                             &[&page.lang], // This needs to be detemined once upon request of a page
                             &crate::TIDOS_I18N_CONFIGURATION.get_available_locales(), // could be static
                             Some(&crate::TIDOS_I18N_CONFIGURATION.get_default_locale()), // could be determined during compile time
-                            fluent_langneg::NegotiationStrategy::Filtering,
+                            tidos::i18n::fluent_langneg::NegotiationStrategy::Filtering,
                         )
                         .into_iter()
                         .map(|s| s.to_owned())
@@ -82,15 +82,15 @@ impl ToTokens for I18n {
                         .join("{locale}")
                         .join("{res_id}");
                     // ResourceManager should be static
-                    let mgr = fluent_resmgr::resource_manager::ResourceManager::new(res_path.to_str().unwrap().to_string());
+                    let mgr = tidos::i18n::fluent_resmgr::resource_manager::ResourceManager::new(res_path.to_str().unwrap().to_string());
 
 
                     // dynamic part per request
-                    let resolved_locales = fluent_langneg::negotiate_languages(
+                    let resolved_locales = tidos::i18n::fluent_langneg::negotiate_languages(
                             &[&page.lang], // This needs to be detemined once upon request of a page
                             &crate::TIDOS_I18N_CONFIGURATION.get_available_locales(), // could be static
                             Some(&crate::TIDOS_I18N_CONFIGURATION.get_default_locale()), // could be determined during compile time
-                            fluent_langneg::NegotiationStrategy::Filtering,
+                            tidos::i18n::fluent_langneg::NegotiationStrategy::Filtering,
                         )
                         .into_iter()
                         .map(|s| s.to_owned())
@@ -103,7 +103,7 @@ impl ToTokens for I18n {
                     let msg = bundle.get_message(#key)
                         .expect("Message doesn't exist.");
 
-                    let mut args = fluent::FluentArgs::new();
+                    let mut args = tidos::i18n::fluent::FluentArgs::new();
                     #params
 
                     let mut errors = std::vec![];

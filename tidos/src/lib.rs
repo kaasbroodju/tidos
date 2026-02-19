@@ -58,11 +58,16 @@ macro_rules! sanitize {
 
 #[cfg(feature = "i18n")]
 pub mod i18n {
+	pub use fluent;
+	pub use unic_langid;
+	pub use fluent_langneg;
+	pub use fluent_resmgr;
+	pub use lazy_static;
 
 	#[macro_export]
 	macro_rules! enable_i18n {
 		() => {
-			lazy_static::lazy_static! {
+			tidos::i18n::lazy_static::lazy_static! {
 				static ref TIDOS_I18N_CONFIGURATION: tidos::i18n::TidosI18nConfig = {
 					tidos::i18n::TidosI18nConfig::figment()
 						.extract()

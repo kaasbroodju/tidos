@@ -5,6 +5,7 @@ use syn::parse_macro_input;
 use proc_macro::TokenStream;
 use quote::ToTokens;
 use crate::i18n::I18n;
+
 #[allow(clippy::all)]
 #[proc_macro]
 pub fn i18n(input: TokenStream) -> TokenStream {
