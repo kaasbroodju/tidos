@@ -14,6 +14,7 @@ impl Parse for PageWrapper {
 	}
 }
 
+#[cfg(not(feature = "i18n"))]
 impl ToTokens for PageWrapper {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		let input = self.component.to_token_stream();
@@ -28,5 +29,31 @@ impl ToTokens for PageWrapper {
 			}
 
 		});
+	}
+}
+
+#[cfg(feature = "i18n")]
+impl ToTokens for PageWrapper {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		let input = self.component.to_token_stream();
+		tokens.append_all(quote! {
+			{
+				let mut page_output = Page::new(lang.0);
+				page_output.template = {
+					let page = &mut page_output;
+					#input
+				};
+				page_output
+			}
+
+		});
+	}
+}
+
+pub struct I18nHoist;
+
+impl ToTokens for I18nHoist {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		tokens.append_all(quote! { page.lang });
 	}
 }

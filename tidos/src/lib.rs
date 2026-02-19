@@ -38,11 +38,14 @@ mod page;
 
 #[doc(hidden)]
 pub mod internals;
+mod i18n_config;
 
 pub use components::Component;
 #[doc(hidden)]
 pub use internals::sanitize;
 pub use page::Page;
+pub use page::Lang;
+pub use i18n_config::TidosI18nConfig;
 #[doc(inline)]
 pub use tidos_macro::*;
 
@@ -53,3 +56,7 @@ macro_rules! sanitize {
 		&tidos::internals::sanitize(&$input)
 	};
 }
+
+#[cfg(feature = "i18n")]
+#[doc(inline)]
+pub use tidos_i18n::*;

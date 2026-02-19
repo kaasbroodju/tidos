@@ -1,0 +1,4 @@
+[default]
+resource_location = "translations"
+default_locale = "en-US"
+resources = ["common.ftl"]

@@ -1,18 +1,11 @@
 mod components;
 
 use crate::components::greeting::Greeting;
-use std::{fs, io, vec};
-use std::path::PathBuf;
 use rocket::{get, routes};
-use unic_langid::LanguageIdentifier;
-use tidos::{Component, Page, page, view};
-use tidos_i18n::{enable_i18n, i18n};
-use fluent_langneg::{negotiate_languages, NegotiationStrategy};
-use fluent_resmgr::resource_manager::ResourceManager;
-use lazy_static::lazy_static;
+use tidos::{Component, Page, page, enable_i18n, Lang};
 
-#[get("/")]
-pub fn index() -> Page {
+#[get("/<lang>")]
+pub fn index(lang: Lang) -> Page {
 	page! {
 		<main>
 			<Greeting />
@@ -20,7 +13,7 @@ pub fn index() -> Page {
 	}
 }
 
-enable_i18n!("resources", "en-US", "common.ftl");
+enable_i18n!();
 #[rocket::main]
 async fn main() {
 	rocket::build()

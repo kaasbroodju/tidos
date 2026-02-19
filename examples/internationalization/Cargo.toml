@@ -4,9 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-tidos = { workspace = true, features = ["rocket"] }
-tidos_i18n = { workspace = true }
-rocket = "0.5"
+tidos = { workspace = true, features = ["rocket", "i18n"] }
+rocket = "0.5.1"
 fluent = "0.17.0"
 unic-langid = { version = "0.9.6", features = ["macros"] }
 fluent-langneg = "0.13.1"
