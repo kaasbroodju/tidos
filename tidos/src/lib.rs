@@ -38,6 +38,7 @@ mod page;
 
 #[doc(hidden)]
 pub mod internals;
+#[cfg(feature = "i18n")]
 mod i18n_config;
 
 pub use components::Component;

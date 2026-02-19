@@ -1,5 +1,7 @@
 use std::collections::HashSet;
+#[cfg(all(feature = "rocket", feature = "i18n"))]
 use ::rocket::request::FromParam;
+#[cfg(feature = "i18n")]
 use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
 
 #[cfg(not(feature = "i18n"))]
@@ -102,12 +104,14 @@ mod rocket {
 
 #[cfg(all(feature = "rocket", feature = "i18n"))]
 pub struct Lang(pub LanguageIdentifier);
+
+#[cfg(all(feature = "rocket", feature = "i18n"))]
 impl<'a> FromParam<'a> for Lang {
 		type Error = LanguageIdentifierError;
 
 		fn from_param(param: &'a str) -> Result<Self, Self::Error> {
 			match LanguageIdentifier::from_bytes(param.as_bytes()) {
-				Ok(id) => Ok(Lang(id)),
+				Ok(id) => Ok(Self(id)),
 				Err(error) => Err(error)
 			}
 		}
