@@ -1,0 +1,61 @@
+& {
+    border-bottom: 1px solid #0f3460;
+}
+
+& td:first-child {
+    padding: 0.75rem 1rem;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+& td:first-child span {
+    color: #888;
+}
+
+& td:nth-child(2) {
+    padding: 0.75rem 1rem;
+}
+
+& td:nth-child(2) span[data-status="online"] {
+    margin-left: 0.5rem;
+    color: #4caf50;
+    font-size: 0.75rem;
+}
+
+& td:nth-child(2) span[data-status="offline"] {
+    margin-left: 0.5rem;
+    color: #555;
+    font-size: 0.75rem;
+}
+
+& td:nth-child(3) {
+    padding: 0.75rem 1rem;
+    text-align: right;
+    font-weight: bold;
+    color: #e94560;
+}
+
+& td:nth-child(4) {
+    padding: 0.75rem 1rem;
+    text-align: right;
+}
+
+& td:nth-child(4) span {
+    font-size: 0.75rem;
+}
+
+& td:nth-child(4) span[data-tier="legendary"] {
+    color: #ffd700;
+}
+
+& td:nth-child(4) span[data-tier="expert"] {
+    color: #c0c0c0;
+}
+
+& td:nth-child(4) span[data-tier="pro"] {
+    color: #cd7f32;
+}
+
+& td:nth-child(4) span[data-tier="newbie"] {
+    color: #555;
+}

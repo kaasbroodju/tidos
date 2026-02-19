@@ -1,11 +1,13 @@
 # Tidos
+[![License](https://img.shields.io/crates/l/tidos)](LICENSE)
 [![Download](https://img.shields.io/crates/v/tidos)](https://crates.io/crates/tidos/)
 [![API Docs](https://img.shields.io/badge/documentation-tidos-blue)](https://docs.rs/tidos/latest/tidos/)
 
 Tidos is a high-performance Rust-based component framework that seamlessly integrates with any web framework, enabling developers to build dynamic web applications with ease. With Tidos’ powerful macros, you can intuitively create components directly within your Rust code. It even allows you to leverage Rust's pattern matching, loops, and conditionals inside your components—making your UI logic more expressive and maintainable.
 
 ```rust
-use tidos_macro::view;
+use tidos::view;
+
 let names = vec!["Bob", "Alice"];
 
 view! {
@@ -18,7 +20,7 @@ view! {
 ## Examples
 ### A simple example
 ```rust
-use tidos::{Component, Page};
+use tidos::{view, Component, Page};
 
 pub struct Greet {
     pub name: String,
@@ -27,24 +29,29 @@ pub struct Greet {
 impl Component for Greet {
     fn to_render(&self, page: &mut Page) -> String {
         view! {
-            <h1>Hello {&self.name}</h1>
+            <section>
+                <h1>Hello {&self.name}!</h1>
+                <p>Welcome to Tidos.</p>
+            </section>
         }
     }
 }
 
-
 // Example route from Rocket, but you can use any framework you want.
 #[get("/")]
 pub fn index() -> Page {
-	page! {
-        <main>
-            <Greet name={ String::from("kaasbroodju") } />
-        </main>
+    use tidos::{page, Component, Page};
+
+    page! {
+        <Greet name={String::from("kaasbroodju")} />
     }
 }
 ```
+
 ### More examples
-For more examples visit [our documentation](https://docs.rs/tidos/latest/tidos/).
+- Runnable examples can be found in the [`examples/`](examples/) folder.
+- For API documentation visit [docs.rs/tidos](https://docs.rs/tidos/latest/tidos/).
+- For extra context for your ai-assistent check out Tidos' [Claude skills](.claude/skills/tidos/SKILL.md).
 
 ## Getting help
 If you're stuck or need help, reach out to the community via [our Github discussions](https://github.com/kaasbroodju/tidos/discussions).
@@ -63,3 +70,7 @@ Additionally, you could:
 [code of conduct]: CODE_OF_CONDUCT.md
 [GitHub discussions questions]: https://github.com/kaasbroodju/tidos/discussions/categories/q-a
 [GitHub discussions show & tell]: https://github.com/kaasbroodju/tidos/discussions/categories/show-and-tell
+
+## License
+
+This project is licensed under the [GNU Lesser General Public License v3.0 (LGPL-3.0)](LICENSE).

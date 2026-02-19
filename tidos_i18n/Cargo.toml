@@ -2,13 +2,14 @@
 name = "tidos_i18n"
 version = { workspace = true }
 authors = ["kaasbroodju"]
-license-file = "../LICENSE"
+license = "LGPL-3.0"
 repository = "https://github.com/kaasbroodju/tidos"
 description = "Procedural macros for the Tidos component framework."
 readme = "../README.md"
 rust-version.workspace = true
 edition.workspace = true
 keywords = ["tidos", "i18n", "internationalization", "localization", "l10n" ]
+categories = ["internationalization", "localization", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

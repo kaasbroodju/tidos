@@ -1,0 +1,8 @@
+[package]
+name = "rocket"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tidos = { workspace = true, features = ["rocket"] }
+rocket = "0.5.1"

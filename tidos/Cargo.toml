@@ -2,7 +2,7 @@
 name = "tidos"
 version = { workspace = true }
 authors = ["kaasbroodju"]
-license-file = "../LICENSE"
+license = "LGPL-3.0"
 repository = "https://github.com/kaasbroodju/tidos"
 description = "Tidos is a component framework that can be served by any web framework."
 readme = "../README.md"
