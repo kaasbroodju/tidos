@@ -44,8 +44,7 @@ pub use components::Component;
 #[doc(hidden)]
 pub use internals::sanitize;
 pub use page::Page;
-pub use page::Lang;
-pub use i18n_config::TidosI18nConfig;
+
 #[doc(inline)]
 pub use tidos_macro::*;
 
@@ -58,5 +57,27 @@ macro_rules! sanitize {
 }
 
 #[cfg(feature = "i18n")]
-#[doc(inline)]
-pub use tidos_i18n::*;
+pub mod i18n {
+
+	#[macro_export]
+	macro_rules! enable_i18n {
+		() => {
+			lazy_static::lazy_static! {
+				static ref TIDOS_I18N_CONFIGURATION: tidos::i18n::TidosI18nConfig = {
+					tidos::i18n::TidosI18nConfig::figment()
+						.extract()
+						.unwrap()
+				};
+			}
+		}
+	}
+	pub use crate::enable_i18n;
+
+    #[doc(inline)]
+    pub use tidos_i18n::*;
+
+	pub use crate::i18n_config::TidosI18nConfig;
+
+
+	pub use crate::page::Lang;
+}

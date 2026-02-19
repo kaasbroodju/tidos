@@ -32,26 +32,20 @@ impl ToTokens for I18n {
         if self.params.is_empty() {
             tokens.append_all(quote! {
                 {
-                    use fluent_langneg::{negotiate_languages, NegotiationStrategy};
-                    use fluent_resmgr::resource_manager::ResourceManager;
-                    use std::{fs, io, vec};
-                    use std::path::PathBuf;
-                    use unic_langid::LanguageIdentifier;
-
-                    let res_path = PathBuf::from(std::env!("CARGO_MANIFEST_DIR"))
+                    let res_path = std::path::PathBuf::from(std::env!("CARGO_MANIFEST_DIR"))
                         .join(&crate::TIDOS_I18N_CONFIGURATION.resource_location)
                         .join("{locale}")
                         .join("{res_id}");
                     // ResourceManager should be static
-                    let mgr = ResourceManager::new(res_path.to_str().unwrap().to_string());
+                    let mgr = fluent_resmgr::resource_manager::ResourceManager::new(res_path.to_str().unwrap().to_string());
 
 
                     // dynamic part per request
-                    let resolved_locales = negotiate_languages(
+                    let resolved_locales = fluent_langneg::negotiate_languages(
                             &[&page.lang], // This needs to be detemined once upon request of a page
                             &crate::TIDOS_I18N_CONFIGURATION.get_available_locales(), // could be static
                             Some(&crate::TIDOS_I18N_CONFIGURATION.get_default_locale()), // could be determined during compile time
-                            NegotiationStrategy::Filtering,
+                            fluent_langneg::NegotiationStrategy::Filtering,
                         )
                         .into_iter()
                         .map(|s| s.to_owned())
@@ -64,7 +58,7 @@ impl ToTokens for I18n {
                     let msg = bundle.get_message(#key)
                         .expect("Message doesn't exist.");
 
-                    let mut errors = vec![];
+                    let mut errors = std::vec![];
                     let pattern = msg.value()
                         .expect("Message has no value.");
 
@@ -83,27 +77,20 @@ impl ToTokens for I18n {
             });
             tokens.append_all(quote! {
                 {
-                    use fluent::{FluentArgs};
-                    use fluent_langneg::{negotiate_languages, NegotiationStrategy};
-                    use fluent_resmgr::resource_manager::ResourceManager;
-                    use std::{fs, io, vec};
-                    use std::path::PathBuf;
-                    use unic_langid::LanguageIdentifier;
-
-                    let res_path = PathBuf::from(std::env!("CARGO_MANIFEST_DIR"))
+                    let res_path = std::path::PathBuf::from(std::env!("CARGO_MANIFEST_DIR"))
                         .join(&crate::TIDOS_I18N_CONFIGURATION.resource_location)
                         .join("{locale}")
                         .join("{res_id}");
                     // ResourceManager should be static
-                    let mgr = ResourceManager::new(res_path.to_str().unwrap().to_string());
+                    let mgr = fluent_resmgr::resource_manager::ResourceManager::new(res_path.to_str().unwrap().to_string());
 
 
                     // dynamic part per request
-                    let resolved_locales = negotiate_languages(
+                    let resolved_locales = fluent_langneg::negotiate_languages(
                             &[&page.lang], // This needs to be detemined once upon request of a page
                             &crate::TIDOS_I18N_CONFIGURATION.get_available_locales(), // could be static
                             Some(&crate::TIDOS_I18N_CONFIGURATION.get_default_locale()), // could be determined during compile time
-                            NegotiationStrategy::Filtering,
+                            fluent_langneg::NegotiationStrategy::Filtering,
                         )
                         .into_iter()
                         .map(|s| s.to_owned())
@@ -116,10 +103,10 @@ impl ToTokens for I18n {
                     let msg = bundle.get_message(#key)
                         .expect("Message doesn't exist.");
 
-                    let mut args = FluentArgs::new();
+                    let mut args = fluent::FluentArgs::new();
                     #params
 
-                    let mut errors = vec![];
+                    let mut errors = std::vec![];
                     let pattern = msg.value()
                         .expect("Message has no value.");
 
