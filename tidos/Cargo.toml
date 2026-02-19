@@ -16,10 +16,6 @@ all-features = true
 
 [dependencies]
 rocket = { version = "0.5.1", optional = true }
-tidos_i18n = { workspace = true, optional = true }
-unic-langid = { version = "0.9.6", optional = true}
-figment = { version = "0.10.19", features = ["env", "toml"], optional = true }
-serde = { version = "1.0.228", optional = true}
 tidos_macro = { workspace = true }
 
 # I18n support
