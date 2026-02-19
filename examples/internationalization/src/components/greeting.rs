@@ -1,4 +1,5 @@
-use tidos::{view, Component, Page, i18n};
+use tidos::{view, Component, Page};
+use tidos::i18n::i18n;
 
 pub struct Greeting;
 

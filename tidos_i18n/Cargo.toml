@@ -13,19 +13,11 @@ keywords = ["tidos", "i18n", "internationalization", "localization", "l10n" ]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-proc-macro2 = { version = "1.0.86", features = ["span-locations"] }
-syn = { version = "2.0.72", features = ["full"] }
-quote = "1.0.36"
+proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
+syn = { version = "2.0.116", features = ["full"] }
+quote = "1.0.44"
 cargo-expand = "1.0.74"
 
-[dependencies.uuid]
-version = "1.10.0"
-features = [
-    "v4",                # Lets you generate random UUIDs
-    "fast-rng",          # Use a faster (but still sufficiently random) RNG
-    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
-]
-
-#[lib]
-#proc-macro = true
+[lib]
+proc-macro = true
 

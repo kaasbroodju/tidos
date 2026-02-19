@@ -16,15 +16,21 @@ all-features = true
 
 [dependencies]
 rocket = { version = "0.5.1", optional = true }
-tidos_i18n = { workspace = true, optional = true }
-unic-langid = { version = "0.9.6", optional = true}
-figment = { version = "0.10.19", features = ["env", "toml"], optional = true }
-serde = { version = "1.0.228", optional = true}
 tidos_macro = { workspace = true }
 
+# I18n support
+tidos_i18n = { workspace = true, optional = true }
+fluent = { version = "0.17.0", optional = true }
+fluent-langneg = { version = "0.13.1", optional = true }
+fluent-resmgr = {  version = "0.0.8", optional = true }
+unic-langid = { version = "0.9.6", optional = true}
+lazy_static = { version = "1.5.0", optional = true }
+figment = { version = "0.10.19", features = ["env", "toml"], optional = true }
+serde = { version = "1.0.228", optional = true}
+
 [dev-dependencies]
-trybuild = "1.0.104"
+trybuild = "1.0.116"
 
 [features]
 rocket = ["dep:rocket"]
-i18n = ["dep:tidos_i18n", "dep:unic-langid", "tidos_macro/i18n", "dep:figment", "dep:serde"]
+i18n = ["dep:tidos_i18n", "tidos_macro/i18n", "dep:fluent", "dep:fluent-langneg", "dep:fluent-resmgr", "dep:unic-langid", "dep:lazy_static", "dep:figment", "dep:serde"]
