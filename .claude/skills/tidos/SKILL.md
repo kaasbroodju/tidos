@@ -35,6 +35,8 @@ tidos = { version = "0.7.2", features = ["rocket", "i18n"] }
 | `page!` | Macro that wraps a full page. Returns a `Page` struct. |
 | `Component` trait | Implement `to_render(&self, page: &mut Page) -> String` to make a struct a component. |
 | `Page` | A top-level page object that collects rendered HTML and can be returned from route handlers. |
+| `@html` | Inserts a pre-rendered HTML string without escaping. Used to render named slot content. |
+| `{#slot:name}` | Named slot — passes rendered HTML content as a `String` prop to a child component. |
 | `scoped_css!` | Injects a scoped `<style>` tag into the page `<head>` and returns the generated class name. |
 | `i18n!` | *(feature: `i18n`)* Macro that looks up a Fluent translation key and returns a `String`. |
 | `enable_i18n!` | *(feature: `i18n`)* Initialises the translation system; call once at the top level of `main.rs`. |
@@ -146,6 +148,124 @@ Rules:
 - Each arm: `{:case <pattern>}` followed by HTML body
 - Wildcards (`_`) and enum variants both work as patterns
 - Close with `{/match}`
+
+### `@html{ … }` — raw HTML interpolation
+
+By default, `{ expr }` HTML-escapes its output. Use `@html{ expr }` to insert
+a pre-rendered HTML string **without escaping**:
+
+```rust
+let raw = String::from("<em>already rendered</em>");
+
+view! {
+    <div>@html{&raw}</div>
+}
+// → "<div><em>already rendered</em></div>"
+```
+
+This is primarily used to render content received from named slots (see below),
+where the HTML has already been rendered by the macro.
+
+### `{#slot:name}` / `{/slot}` — named slots
+
+Named slots let you pass **rendered HTML content** as a prop to a child
+component, similar to slots in Vue or Svelte. This is useful when a parent
+component wants to provide complex, dynamic content (including loops and nested
+components) that the child component renders inside its own template.
+
+**Parent side** — wrap content in `{#slot:name} … {/slot}` inside a
+component's opening and closing tags:
+
+```rust
+view! {
+    <Card title={String::from("My Card")}>
+        {#slot:body}
+            <p>This content is passed to the Card's body prop.</p>
+            <p>You can use loops, conditionals, and nested components here.</p>
+        {/slot}
+    </Card>
+}
+```
+
+**Child side** — declare a `String` field with the same name as the slot, and
+render it with `@html`:
+
+```rust
+pub struct Card {
+    pub title: String,
+    pub body: String,   // receives the rendered slot content
+}
+
+impl Component for Card {
+    fn to_render(&self, page: &mut Page) -> String {
+        view! {
+            <div class="card">
+                <h2>{&self.title}</h2>
+                <div class="card-body">
+                    @html{&self.body}
+                </div>
+            </div>
+        }
+    }
+}
+```
+
+Rules:
+- Opening: `{#slot:<name>}` where `<name>` matches a `String` field on the
+  child component's struct.
+- Closing: `{/slot}`
+- The slot body is ordinary `view!` content — loops, conditionals, nested
+  components, and expressions all work inside slots.
+- The macro renders the slot body to a `String` and passes it as a prop to the
+  child component.
+- The child **must** use `@html{&self.<name>}` to output the slot content,
+  since it's already-rendered HTML.
+- A component can accept **multiple named slots** — just add multiple `String`
+  fields and corresponding `{#slot:name}` blocks.
+
+Full example (table with slotted body):
+
+```rust
+// --- Parent component ---
+view! {
+    <LeaderboardTable headers={headers}>
+        {#slot:body}
+            {#for (i, player) in players.iter().enumerate()}
+                <PlayerRow
+                    rank={i + 1}
+                    name={player.name.clone()}
+                    score={player.score}
+                />
+            {/for}
+        {/slot}
+    </LeaderboardTable>
+}
+
+// --- Child component ---
+pub struct LeaderboardTable {
+    pub headers: Vec<String>,
+    pub body: String,
+}
+
+impl Component for LeaderboardTable {
+    fn to_render(&self, page: &mut Page) -> String {
+        view! {
+            <table>
+                <thead>
+                    <tr>
+                        {#for title in &self.headers}
+                            <th>{title}</th>
+                        {/for}
+                    </tr>
+                </thead>
+                <tbody>
+                    @html{&self.body}
+                </tbody>
+            </table>
+        }
+    }
+}
+```
 
 ---
 
@@ -296,6 +416,8 @@ pub fn dashboard() -> Page {
 | `{#for x in iter} … {/for}` | Loop |
 | `{#if cond} … {:else if cond} … {:else} … {/if}` | Conditional |
 | `{#match val} {:case Pat} … {/match}` | Pattern match |
+| `{#slot:name} … {/slot}` | Named slot — pass rendered content as a component prop |
+| `@html{expr}` | Insert raw HTML without escaping |
 | `<Component prop={expr} />` | Render a component with props |
 | `page! { … }` | Produce a full `Page` for a route |
 | `view! { … }` | Produce an HTML `String` fragment |
@@ -321,6 +443,14 @@ pub fn dashboard() -> Page {
 4. **Prop types**: props passed to components with `<Component prop={expr} />`
    must match the struct field types exactly. Use `.into()`, `.clone()`, or
    `String::from(…)` as needed.
+
+5. **Named slots require `@html`**: the child component receiving slot content
+   must render it with `@html{&self.field}`, not `{&self.field}`. Using plain
+   interpolation would HTML-escape the already-rendered markup.
+
+6. **Slot field type**: the struct field that receives named slot content must
+   be `pub <name>: String`. The macro renders the slot body and passes it as a
+   `String` prop.
 
 ---
 
