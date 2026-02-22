@@ -21,12 +21,18 @@ impl Component for Leaderboard {
             Player { name: "newbie_carl".into(), score: 120, online: false },
         ];
 
+        let headers = vec![
+            String::from("Rank"),
+            String::from("Player"),
+            String::from("Score"),
+            String::from("Tier")
+        ];
         let online_count = players.iter().filter(|p| p.online).count();
         let total = players.len();
 
         view! {
             <section class={scoped_css!("./leaderboard.css")}>
-                <h2>{"🏆"} Leaderboard</h2>
+                <h2>{"🏆 Leaderboard"}</h2>
                 <p>
                     {#if online_count == 0}
                         No players online right now.
@@ -36,16 +42,8 @@ impl Component for Leaderboard {
                         {format!("{} of {} players currently online.", online_count, total)}
                     {/if}
                 </p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Player</th>
-                            <th>Score</th>
-                            <th>Tier</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <LeaderboardTable headers={headers}>
+                    {#slot:body}
                         {#for (i, player) in players.iter().enumerate()}
                             <PlayerRow
                                 rank={i + 1}
@@ -54,9 +52,33 @@ impl Component for Leaderboard {
                                 online={player.online}
                             />
                         {/for}
-                    </tbody>
-                </table>
+                    {/slot}
+                </LeaderboardTable>
             </section>
+        }
+    }
+}
+
+pub struct LeaderboardTable {
+    pub headers: Vec<String>,
+    pub body: String,
+}
+
+impl Component for LeaderboardTable {
+    fn to_render(&self, page: &mut Page) -> String {
+        view! {
+            <table>
+                <thead>
+                    <tr>
+                        {#for title in &self.headers}
+                            <th>{title}</th>
+                        {/for}
+                    </tr>
+                </thead>
+                <tbody>
+                    @html{&self.body}
+                </tbody>
+            </table>
         }
     }
 }

@@ -1,24 +1,29 @@
 use crate::tokens::Content;
-use proc_macro2::TokenTree;
+use proc_macro2::{Ident, TokenTree};
 
 #[derive(Debug)]
 pub enum ControlTag {
-	// {#if ... } ... {:else if ... } ... {:else} ... {/if}
+	/// {#if ... } ... {:else if ... } ... {:else} ... {/if}
 	IfChain {
 		if_statement: Vec<TokenTree>,
 		if_content: Vec<Content>,
 		if_else_chain: Vec<(Vec<TokenTree>, Vec<Content>)>,
 		else_content: Option<Vec<Content>>,
 	},
-	// {#for ... in ... } ... {/for}
+	/// {#for ... in ... } ... {/for}
 	For {
 		left_side: Vec<TokenTree>,
 		right_side: Vec<TokenTree>,
 		contents: Vec<Content>,
 	},
-	// {#match ... } ... {/match}
+	/// {#match ... } ... {/match}
 	Match {
 		match_statement: Vec<TokenTree>,
 		cases: Vec<(Vec<TokenTree>, Vec<Content>)>,
 	},
+	/// {#slot:name } ... {/slot}
+	Slot {
+		name: Ident,
+		contents: Vec<Content>,
+	}
 }

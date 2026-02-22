@@ -1,6 +1,6 @@
 use crate::parsing::utils::{is_cursor_on_else_branch, is_cursor_on_else_if_branch, is_cursor_on_end_of_if_branch, is_cursor_on_new_if_branch, matches_case_statement, matches_corresponding_command_tag};
 use crate::tokens::{Content, ControlTag, TypeOfCommandTag};
-use proc_macro2::{Group, TokenTree};
+use proc_macro2::{Group, Ident, TokenTree};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
@@ -8,6 +8,7 @@ use syn::Token;
 const LOOP_TAG: &'static str = "for";
 const CONDITIONAL_TAG: &'static str = "if";
 const MATCH_TAG: &'static str = "match";
+const SLOT_TAG: &'static str = "slot";
 
 impl Parse for ControlTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -18,6 +19,7 @@ impl Parse for ControlTag {
 			TypeOfCommandTag::For { left_side, right_side } => Self::parse_for_loop_body(input, &group, left_side, right_side),
 			TypeOfCommandTag::If(if_statement) => Self::parse_if_statement_body(&input, &group, if_statement),
 			TypeOfCommandTag::Match(match_statement) => Self::parse_match_body(input, group, match_statement),
+			TypeOfCommandTag::Slot(name) => Self::parse_slot_body(input, &group, name),
 		}?;
 		
 		Ok(control_tag)
@@ -123,6 +125,24 @@ impl ControlTag {
 			ControlTag::Match {
 				match_statement,
 				cases,
+			}
+		})
+	}
+
+	fn parse_slot_body(input: ParseStream, group: &Group, name: Ident) -> syn::Result<Self> {
+		// ...
+		let contents = Self::parse_content_until(
+			&input,
+			group.span(),
+			SLOT_TAG,
+			|cursor| matches_corresponding_command_tag(cursor, SLOT_TAG)
+		)?;
+
+		// {/for}
+		Self::parse_closing_tag(input, group.span(), SLOT_TAG, || {
+			ControlTag::Slot {
+				name,
+				contents,
 			}
 		})
 	}
@@ -264,8 +284,17 @@ impl Parse for TypeOfCommandTag {
 			})?;
 
 			Ok(TypeOfCommandTag::If(if_content))
+		} else if input.peek(syn::Ident) {
+			let slot_ident = input.parse::<syn::Ident>()?;
+			if slot_ident.to_string() == String::from("slot") {
+				input.parse::<Token![:]>()?;
+				let name_ident = input.parse::<syn::Ident>()?;
+				Ok(TypeOfCommandTag::Slot(name_ident))
+			} else {
+				Err(syn::Error::new(command_token.span(), "Unknown command tag, must be: 'for', 'if', 'match' or 'slot'"))
+			}
 		} else {
-			Err(syn::Error::new(command_token.span(), "Unknown command tag, must be: 'for', 'if' or 'match'"))
+			Err(syn::Error::new(command_token.span(), "Unknown command tag, must be: 'for', 'if', 'match' or 'slot'"))
 		}
 	}
 }

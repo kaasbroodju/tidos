@@ -1,6 +1,6 @@
 use crate::tokens::ControlTag;
 use crate::tokens::HTMLTag;
-use proc_macro2::{Group, TokenTree};
+use proc_macro2::{Group, Ident, Literal, TokenTree};
 
 #[derive(Debug)]
 pub enum Content {
@@ -10,6 +10,7 @@ pub enum Content {
 	// {#if x > 10} ... {/if}
 	// {#for x in numbers} ... {/for}
 	// {#match x} ... {/match}
+	// {#slot:name} ... {/slot}
 	ControlTag(ControlTag),
 
 	// // <Custom></Custom>
@@ -47,4 +48,5 @@ pub enum TypeOfCommandTag {
 	},
 	If(Vec<TokenTree>),
 	Match(Vec<TokenTree>),
+	Slot(Ident),
 }

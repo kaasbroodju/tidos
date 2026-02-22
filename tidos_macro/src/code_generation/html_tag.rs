@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
-use crate::tokens::{AttributeType, HTMLTag};
+use crate::tokens::{AttributeType, Content, ControlTag, HTMLTag};
 
 impl ToTokens for HTMLTag {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -137,6 +137,12 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 					AttributeType::Group(value) => attributes.push(quote! { #name: #value }),
 				}
 			}
+		}
+	}
+
+	for child in &html_tag.children {
+		if let Content::ControlTag(ControlTag::Slot { name, contents }) = child {
+			attributes.push(quote! { #name: String::new() #( + #contents )* });
 		}
 	}
 
