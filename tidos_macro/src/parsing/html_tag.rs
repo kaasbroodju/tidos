@@ -11,15 +11,17 @@ impl Parse for HTMLTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>
 		let start_first_tag_token = input.parse::<Token![<]>()?;
-		let tag = Self::extract_name(input)
-			.map_err(|_| syn::Error::new(input.span(), "Expected an html like <p> or <custom-element>"))?;
+		let Ok(tag) = Self::extract_name(input) else {
+			return Err(syn::Error::new(input.span(), "Expected an html like <p> or <custom-element>"));
+		};
 
 		let mut attributes = Vec::new();
-		while !((input.peek(Token![/]) && input.peek2(Token![>])) || input.peek(Token![>])) {
+		while !(Self::is_peeking_at_self_closing_tag(input) || input.peek(Token![>])) {
 			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
 			
-			let attribute_name = Self::extract_name(input)
-				.map_err(|_| syn::Error::new(input.span(), "Expected an attribute like `class` or `data-octo`"))?;
+			let Ok(attribute_name) = Self::extract_name(input) else {
+				return Err(syn::Error::new(input.span(), "Expected an attribute like `class` or `data-octo`"))
+			};
 
 			let parsing_equal_sign_result = input.parse::<Token![=]>();
 			let attribute = match parsing_equal_sign_result {
@@ -137,5 +139,9 @@ impl HTMLTag {
 
 			return Ok((output, rest));
 		})
+	}
+
+	fn is_peeking_at_self_closing_tag(input: ParseStream) -> bool {
+		input.peek(Token![/]) && input.peek2(Token![>])
 	}
 }
