@@ -1,0 +1,5 @@
+error: expected a binding variable before `in`, e.g. `{#for item in items}`
+ --> tests/control_tags/panics/for_loop_missing_binding.rs:6:4
+  |
+6 |         {#for in items}
+  |          ^

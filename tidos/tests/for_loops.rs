@@ -13,6 +13,12 @@ fn misspelled_control_tag() {
 }
 
 #[test]
+fn for_loop_missing_binding() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/for_loop_missing_binding.rs");
+}
+
+#[test]
 fn a_simple_for_loop() {
 	let names = vec!["Bob", "Alice"];
 

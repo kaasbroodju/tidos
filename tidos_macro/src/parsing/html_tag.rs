@@ -12,9 +12,7 @@ impl Parse for HTMLTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>
 		let start_first_tag_token = input.parse::<Token![<]>()?;
-		let Ok(tag) = Self::extract_name(input) else {
-			return Err(syn::Error::new(input.span(), "Expected an html like <p> or <custom-element>"));
-		};
+		let tag = Self::extract_name(input)?;
 
 		let attributes = Self::parse_attributes(input, &tag, start_first_tag_token.span())?;
 
@@ -63,7 +61,7 @@ impl HTMLTag {
 			let mut rest = *cursor;
 			let mut output = String::new();
 			let Some((ident, next)) = rest.ident() else {
-				return Err(cursor.error("Expected a name"));
+				return Err(cursor.error("expected an HTML tag name like `p`, `div`, or `custom-element`"));
 			};
 			output.push_str(ident.to_string().as_str());
 
@@ -72,12 +70,13 @@ impl HTMLTag {
 			// parse custom element's tag name.
 			// custom elements should contain '-', however it is not required.
 			while matches!(rest.punct(), Some((p, _)) if p.as_char() == '-') {
-				let next = rest.punct().unwrap().1;
+				let (_, next) = rest.punct().unwrap();
 				rest = next;
 
 				output.push('-');
-				let (ident, next) = rest
-					.ident().unwrap();
+				let Some((ident, next)) = rest.ident() else {
+					return Err(cursor.error("native html or custom elements cannot end with a hyphen:\n\tremove the `-`\n\tadd a name segment after `-`"));
+				};
 
 				output.push_str(ident.to_string().as_str());
 				rest = next;

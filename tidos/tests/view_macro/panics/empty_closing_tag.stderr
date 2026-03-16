@@ -1,0 +1,5 @@
+error: expected an HTML tag name like `p`, `div`, or `custom-element`
+ --> tests/view_macro/panics/empty_closing_tag.rs:5:9
+  |
+5 |         <div></>
+  |               ^

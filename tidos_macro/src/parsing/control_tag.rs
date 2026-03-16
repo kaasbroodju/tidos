@@ -257,6 +257,10 @@ impl TypeOfCommandTag {
 			Err(syn::Error::new(command_token.span(), "No `in` found in for loop "))
 		})?;
 
+		if left_side.is_empty() {
+			return Err(syn::Error::new(command_token.span(), "expected a binding variable before `in`, e.g. `{#for item in items}`"));
+		}
+
 		let right_side = input.step(|cursor| {
 			let mut rest = *cursor;
 			let mut output = Vec::new();

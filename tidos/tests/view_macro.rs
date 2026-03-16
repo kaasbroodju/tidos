@@ -66,6 +66,18 @@ fn missing_closing_angle_bracket() {
 }
 
 #[test]
+fn tag_name_ends_with_hyphen() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/tag_name_ends_with_hyphen.rs");
+}
+
+#[test]
+fn empty_closing_tag() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/empty_closing_tag.rs");
+}
+
+#[test]
 fn punctuation() {
 	assert_eq!(
 		&view!{<p>Lorem. Ipsum</p>},
