@@ -58,11 +58,26 @@ impl ToTokens for Attribute {
 impl Attribute {
 	pub fn to_tokens_custom_element(&self) -> TokenStream {
 		match &self {
-			Attribute::ImplicitToggle{ name } => { quote! { #name }}
-			Attribute::ExplicitToggle{ name, value } => { quote! { #name: #value }}
-			Attribute::Constant{ name } => { quote! { #name: true }}
-			Attribute::ConstantLiteral{ name, literal } => { quote! { #name: #literal }}
-			Attribute::ConstantGroup{ name, contents } => { quote! { #name: #contents } }
+			Attribute::ImplicitToggle{ name } => {
+				let field = format_ident!("{}", name);
+				quote! { #field }
+			}
+			Attribute::ExplicitToggle{ name, value } => {
+				let field = format_ident!("{}", name);
+				quote! { #field: #value }
+			}
+			Attribute::Constant{ name } => {
+				let field = format_ident!("{}", name);
+				quote! { #field: true }
+			}
+			Attribute::ConstantLiteral{ name, literal } => {
+				let field = format_ident!("{}", name);
+				quote! { #field: #literal }
+			}
+			Attribute::ConstantGroup{ name, contents } => {
+				let field = format_ident!("{}", name);
+				quote! { #field: #contents }
+			}
 		}
 	}
 }

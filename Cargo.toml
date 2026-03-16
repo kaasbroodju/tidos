@@ -4,8 +4,10 @@ members = [
     "tidos",
     "tidos_macro",
     "tidos_i18n",
+]
+exclude = [
+    "examples/simple_rocket",
     "examples/internationalization",
-    "examples/rocket",
 ]
 
 [workspace.package]

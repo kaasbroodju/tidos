@@ -15,4 +15,4 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run tests
-        run: cargo test --lib --verbose
+        run: cargo test --package tidos --tests --verbose
