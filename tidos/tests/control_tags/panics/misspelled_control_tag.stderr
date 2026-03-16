@@ -1,0 +1,5 @@
+error: Unknown command tag, must be: 'for', 'if', 'match' or 'slot'
+ --> tests/control_tags/panics/misspelled_control_tag.rs:6:4
+  |
+6 |         {#fore item in items}
+  |          ^

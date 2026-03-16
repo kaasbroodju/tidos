@@ -1,4 +1,4 @@
-use crate::parsing::utils::matches_tag;
+use crate::parsing::utils::{matches_tag, peek_closing_tag_name};
 use crate::tokens::{AttributeType, Content};
 use crate::tokens::{Attribute, HTMLTag};
 use proc_macro2::{Group, Literal};
@@ -6,6 +6,7 @@ use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
+use syn::token::Lt;
 
 impl Parse for HTMLTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -15,56 +16,10 @@ impl Parse for HTMLTag {
 			return Err(syn::Error::new(input.span(), "Expected an html like <p> or <custom-element>"));
 		};
 
-		let mut attributes = Vec::new();
-		while !(Self::is_peeking_at_self_closing_tag(input) || input.peek(Token![>])) {
-			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
-			
-			let Ok(attribute_name) = Self::extract_name(input) else {
-				return Err(syn::Error::new(input.span(), "Expected an attribute like `class` or `data-octo`"))
-			};
-
-			let parsing_equal_sign_result = input.parse::<Token![=]>();
-			let attribute = match parsing_equal_sign_result {
-				Ok(equal_sign_token) => {
-					if let Ok(literal) = input.parse::<Literal>() {
-						if is_toggle_attribute {
-							return Err(syn::Error::new(literal.span(), format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}")));
-						} else {
-							Attribute {
-								is_toggle_attribute,
-								name: attribute_name,
-								value: Some(AttributeType::Literal(literal.to_token_stream())),
-							}
-						}
-					} else if let Ok(group) = input.parse::<Group>() {
-						Attribute {
-							is_toggle_attribute,
-							name: attribute_name,
-							value: Some(AttributeType::Group(group.stream())),
-						}
-					} else {
-						return if is_toggle_attribute {
-							Err(syn::Error::new(equal_sign_token.span(), format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}")))
-						} else {
-							Err(syn::Error::new(equal_sign_token.span(), format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}")))
-						}
-						
-					}
-				}
-				Err(_) => {
-					Attribute {
-						is_toggle_attribute,
-						name: attribute_name,
-						value: None,
-					}
-				}
-			};
-			
-			attributes.push(attribute)
-		}
+		let attributes = Self::parse_attributes(input, &tag, start_first_tag_token.span())?;
 
 		// self closing tags, like <img />
-		if input.peek(Token![/]) && input.peek2(Token![>]) {
+		if Self::is_peeking_at_self_closing_tag(input) {
 			input.parse::<Token![/]>()?;
 			input.parse::<Token![>]>()?;
 
@@ -85,17 +40,7 @@ impl Parse for HTMLTag {
 		}
 
 		// ...
-		let mut children: Vec<Content> = Vec::new();
-		while !matches_tag(input.cursor(), &tag) {
-			let child = input.parse::<Content>()?;
-			children.push(child);
-			if input.is_empty() {
-				return Err(syn::Error::new(
-					start_first_tag_token.span(),
-					format!("missing matching closing tag `</{tag}>`")
-				));
-			}
-		}
+		let children = Self::parse_body(input, start_first_tag_token, &tag)?;
 
 		// </p>
 		input.parse::<Token![<]>()?;
@@ -117,8 +62,9 @@ impl HTMLTag {
 		input.step(|cursor| {
 			let mut rest = *cursor;
 			let mut output = String::new();
-			let (ident, next) = rest
-				.ident().unwrap();
+			let Some((ident, next)) = rest.ident() else {
+				return Err(cursor.error("Expected a name"));
+			};
 			output.push_str(ident.to_string().as_str());
 
 			rest = next;
@@ -143,5 +89,89 @@ impl HTMLTag {
 
 	fn is_peeking_at_self_closing_tag(input: ParseStream) -> bool {
 		input.peek(Token![/]) && input.peek2(Token![>])
+	}
+
+	fn parse_attributes(input: ParseStream, tag: &str, tag_span: proc_macro2::Span) -> Result<Vec<Attribute>, syn::Error> {
+		let mut attributes = Vec::new();
+		while !(Self::is_peeking_at_self_closing_tag(input) || input.peek(Token![>])) {
+			if input.is_empty() {
+				return Err(syn::Error::new(
+					tag_span,
+					format!("missing closing `>` for `<{tag}>` tag"),
+				));
+			}
+			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
+
+			let Ok(attribute_name) = Self::extract_name(input) else {
+				return Err(syn::Error::new(input.span(), "Expected an attribute like `class` or `data-octo`"))
+			};
+
+			let Ok(equal_sign_token) = input.parse::<Token![=]>() else {
+				let attribute = if is_toggle_attribute {
+					Attribute::ImplicitToggle {
+						name: attribute_name,
+					}
+				} else {
+					Attribute::Constant {
+						name: attribute_name,
+					}
+				};
+
+				attributes.push(attribute);
+				continue;
+			};
+
+			if let Ok(literal) = input.parse::<Literal>() {
+				if is_toggle_attribute {
+					return Err(syn::Error::new(literal.span(), format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}")));
+				} else {
+					let attribute = Attribute::ConstantLiteral {
+						name: attribute_name,
+						literal: literal,
+					};
+
+					attributes.push(attribute);
+				}
+			} else if let Ok(group) = input.parse::<Group>() {
+				let attribute = if is_toggle_attribute {
+					Attribute::ExplicitToggle {
+						name: attribute_name,
+						value: group.stream(),
+					}
+				} else {
+					Attribute::ConstantGroup {
+						name: attribute_name,
+						contents: group.stream(),
+					}
+				};
+
+				attributes.push(attribute);
+			} else {
+				let message = if is_toggle_attribute { format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}") } else { format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}") };
+				return Err(syn::Error::new(equal_sign_token.span(), message));
+			}
+		}
+		Ok(attributes)
+	}
+
+	fn parse_body(input: ParseStream, start_first_tag_token: Lt, tag: &String) -> Result<Vec<Content>, syn::Error> {
+		let mut children: Vec<Content> = Vec::new();
+		while !matches_tag(input.cursor(), &tag) {
+			if let Some(found_tag) = peek_closing_tag_name(input.cursor()) {
+				return Err(syn::Error::new(
+					input.span(),
+					format!("unexpected closing tag `</{found_tag}>`, expected `</{tag}>`"),
+				));
+			}
+			let child = input.parse::<Content>()?;
+			children.push(child);
+			if input.is_empty() {
+				return Err(syn::Error::new(
+					start_first_tag_token.span(),
+					format!("missing matching closing tag `</{tag}>`")
+				));
+			}
+		}
+		Ok(children)
 	}
 }

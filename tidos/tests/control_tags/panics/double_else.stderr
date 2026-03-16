@@ -1,0 +1,5 @@
+error: cannot have two {:else} blocks in one {#if}
+  --> tests/control_tags/panics/double_else.rs:10:3
+   |
+10 |         {:else}
+   |         ^^^^^^^

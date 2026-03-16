@@ -69,6 +69,12 @@ fn invalid_toggle_value() {
 }
 
 #[test]
+fn attribute_value_without_delimiters() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/attribute_value_without_delimiters.rs");
+}
+
+#[test]
 fn data_attribute() {
 	assert_eq!(
 		&view!{

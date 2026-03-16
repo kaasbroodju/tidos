@@ -148,3 +148,15 @@ fn missing_closing_if_statement() {
 	let t = trybuild::TestCases::new();
 	t.compile_fail("tests/control_tags/panics/missing_end_control_tag.rs");
 }
+
+#[test]
+fn else_before_else_if() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/else_before_else_if.rs");
+}
+
+#[test]
+fn double_else() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/double_else.rs");
+}

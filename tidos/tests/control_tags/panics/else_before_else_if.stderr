@@ -1,0 +1,5 @@
+error: {:else if} must come before {:else}, not after
+ --> tests/control_tags/panics/else_before_else_if.rs:8:3
+  |
+8 |         {:else}
+  |         ^^^^^^^

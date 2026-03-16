@@ -68,6 +68,34 @@ pub fn is_cursor_on_end_of_if_branch(cursor: &Cursor) -> bool {
 	}
 }
 
+pub fn peek_closing_tag_name(cursor: Cursor) -> Option<String> {
+	let mut rest = cursor;
+	let (p, next) = rest.punct()?;
+	if p.as_char() != '<' { return None; }
+	rest = next;
+	let (p, next) = rest.punct()?;
+	if p.as_char() != '/' { return None; }
+	rest = next;
+	let (ident, mut rest) = rest.ident()?;
+	let mut name = ident.to_string();
+	loop {
+		match rest.punct() {
+			Some((p, next)) if p.as_char() == '-' => {
+				match next.ident() {
+					Some((ident, next)) => {
+						name.push('-');
+						name.push_str(&ident.to_string());
+						rest = next;
+					}
+					None => break,
+				}
+			}
+			_ => break,
+		}
+	}
+	Some(name)
+}
+
 pub fn matches_tag(cursor: Cursor, target_tag: &String) -> bool {
 	let mut rest = cursor;
 	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '<') {
