@@ -1,6 +1,24 @@
 use tidos_macro::view;
 
 #[test]
+fn missing_end_for_loop() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/missing_end_for_loop.rs");
+}
+
+#[test]
+fn misspelled_control_tag() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/misspelled_control_tag.rs");
+}
+
+#[test]
+fn for_loop_missing_binding() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/for_loop_missing_binding.rs");
+}
+
+#[test]
 fn a_simple_for_loop() {
 	let names = vec!["Bob", "Alice"];
 

@@ -1,0 +1,5 @@
+error: missing matching closing tag `{/for}`
+ --> tests/control_tags/panics/missing_end_for_loop.rs:6:3
+  |
+6 |         {#for item in items}
+  |         ^^^^^^^^^^^^^^^^^^^^

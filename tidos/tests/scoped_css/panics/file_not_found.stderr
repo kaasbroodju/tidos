@@ -1,0 +1,5 @@
+error: couldn't read `$DIR/tests/scoped_css/panics/./nonexistent.css`: No such file or directory (os error 2)
+ --> tests/scoped_css/panics/file_not_found.rs:6:15
+  |
+6 |     let _class = scoped_css!("./nonexistent.css");
+  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

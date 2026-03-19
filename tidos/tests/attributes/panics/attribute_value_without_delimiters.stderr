@@ -1,0 +1,7 @@
+error: Expected a literal "" or a group {}, change it into the following:
+       class="value"
+       class={ "value" }
+ --> tests/attributes/panics/attribute_value_without_delimiters.rs:5:11
+  |
+5 |         <p class=my-class>Hello world</p>
+  |                 ^

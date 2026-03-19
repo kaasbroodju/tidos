@@ -1,12 +1,12 @@
 [package]
 name = "internationalization"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 
 [[bin]]
 name = "internationalization"
 doc = false
 
 [dependencies]
-tidos = { workspace = true, features = ["rocket", "i18n"] }
+tidos = { path = "../../tidos", features = ["rocket", "i18n"] }
 rocket = "0.5.1"

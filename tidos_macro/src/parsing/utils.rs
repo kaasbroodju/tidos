@@ -68,6 +68,31 @@ pub fn is_cursor_on_end_of_if_branch(cursor: &Cursor) -> bool {
 	}
 }
 
+pub fn peek_closing_tag_name(cursor: Cursor) -> Option<String> {
+	let mut rest = cursor;
+	let (p, next) = rest.punct()?;
+	if p.as_char() != '<' { return None; }
+	rest = next;
+	let (p, next) = rest.punct()?;
+	if p.as_char() != '/' { return None; }
+	rest = next;
+	let (ident, mut rest) = rest.ident()?;
+	let mut name = ident.to_string();
+
+	while let Some((p, next)) = rest.punct() {
+		if p.as_char() != '-' { break; }
+		if let Some((ident, next)) = next.ident() {
+			name.push('-');
+			name.push_str(&ident.to_string());
+			rest = next;
+		} else {
+			break;
+		}
+	}
+
+	Some(name)
+}
+
 pub fn matches_tag(cursor: Cursor, target_tag: &String) -> bool {
 	let mut rest = cursor;
 	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '<') {
@@ -83,21 +108,21 @@ pub fn matches_tag(cursor: Cursor, target_tag: &String) -> bool {
 	rest = next;
 
 	let mut right_hand_side = String::new();
-	let (ident, next) = rest
-		.ident()
-		.expect("Expected an html like <p> or <custom-element>");
+	let Some((ident, next)) = rest.ident() else {
+		return false;
+	};
 	right_hand_side.push_str(ident.to_string().as_str());
 
 	rest = next;
 
 	while matches!(rest.punct(), Some((p, _)) if p.as_char() == '-') {
-		let next = rest.punct().unwrap().1;
+		let (_, next) = rest.punct().unwrap();
 		rest = next;
 
 		right_hand_side.push('-');
-		let (ident, next) = rest
-			.ident()
-			.expect("Expected an html like <p> or <custom-element>");
+		let Some((ident, next)) = rest.ident() else {
+			return false;
+		};
 
 		right_hand_side.push_str(ident.to_string().as_str());
 		rest = next;
@@ -107,9 +132,5 @@ pub fn matches_tag(cursor: Cursor, target_tag: &String) -> bool {
 		return false;
 	}
 
-	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '>') {
-		return false;
-	}
-
-	true
+	matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '>')
 }

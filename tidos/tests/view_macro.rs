@@ -48,6 +48,36 @@ fn forgot_to_close_html_tag() {
 }
 
 #[test]
+fn wrong_closing_tag() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/wrong_closing_tag.rs");
+}
+
+#[test]
+fn nested_wrong_closing_tag() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/nested_wrong_closing_tag.rs");
+}
+
+#[test]
+fn missing_closing_angle_bracket() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/missing_closing_angle_bracket.rs");
+}
+
+#[test]
+fn tag_name_ends_with_hyphen() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/tag_name_ends_with_hyphen.rs");
+}
+
+#[test]
+fn empty_closing_tag() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/empty_closing_tag.rs");
+}
+
+#[test]
 fn punctuation() {
 	assert_eq!(
 		&view!{<p>Lorem. Ipsum</p>},

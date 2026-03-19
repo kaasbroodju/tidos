@@ -13,9 +13,7 @@ impl Parse for Content {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		
 		if input.is_empty() {
-			// Expected to have tokens over, but there's none.
-			
-			panic!("No tokens left to parse");
+			unreachable!("Content::parse called on empty stream — callers must check is_empty() first");
 		
 		} else if input.peek(Token![<]) {
 			// <p></p>

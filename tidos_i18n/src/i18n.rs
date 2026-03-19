@@ -14,10 +14,12 @@ impl Parse for I18n {
 
         let mut params = vec![];
         while !input.is_empty() && input.peek(Token![,]) {
-            _ = input.parse::<Token![,]>()?;
-            let param_key = input.parse::<Literal>().expect("Expected param key as string literal");
-            _ = input.parse::<Token![,]>()?;
-            let param_value = input.parse::<TokenTree>().expect("Expected param value");
+            input.parse::<Token![,]>()?;
+            let content;
+            syn::parenthesized!(content in input);
+            let param_key = content.parse::<Literal>().expect("Expected param key as string literal");
+            content.parse::<Token![,]>()?;
+            let param_value = content.parse::<TokenTree>().expect("Expected param value");
             params.push((param_key, param_value));
         }
 

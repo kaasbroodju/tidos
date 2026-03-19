@@ -1,0 +1,5 @@
+error: unexpected closing tag `</div>`, expected `</p>`
+ --> tests/view_macro/panics/nested_wrong_closing_tag.rs:7:3
+  |
+7 |         </div>
+  |         ^

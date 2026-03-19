@@ -1,0 +1,5 @@
+error: missing closing `>` for `<p>` tag
+ --> tests/view_macro/panics/missing_closing_angle_bracket.rs:5:3
+  |
+5 |         <p class="greeting"
+  |         ^

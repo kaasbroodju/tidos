@@ -1,0 +1,7 @@
+error: native html or custom elements cannot end with a hyphen:
+           remove the `-`
+           add a name segment after `-`
+ --> tests/view_macro/panics/tag_name_ends_with_hyphen.rs:5:4
+  |
+5 |         <custom->text</custom->
+  |          ^^^^^^

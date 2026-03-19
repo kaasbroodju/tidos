@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
-use crate::tokens::{AttributeType, Content, ControlTag, HTMLTag};
+use crate::tokens::{Attribute, AttributeType, Content, ControlTag, HTMLTag};
 
 impl ToTokens for HTMLTag {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -125,20 +125,13 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 	let tag = html_tag.tag.as_str();
-	let mut attributes = vec![];
-	for attribute in &html_tag.attributes {
-		let name = format_ident!("{}", &attribute.name);
-		let value = &attribute.value;
-		match value {
-			None => panic!("Empty attribute"),
-			Some(value) => {
-				match value {
-					AttributeType::Literal(value) => attributes.push(quote! { #name: #value }),
-					AttributeType::Group(value) => attributes.push(quote! { #name: #value }),
-				}
-			}
-		}
-	}
+	
+	
+	let mut attributes = html_tag
+		.attributes
+		.iter()
+		.map(Attribute::to_tokens_custom_element)
+		.collect::<Vec<_>>();
 
 	for child in &html_tag.children {
 		if let Content::ControlTag(ControlTag::Slot { name, contents }) = child {
