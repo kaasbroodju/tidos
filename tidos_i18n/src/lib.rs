@@ -27,10 +27,10 @@ use crate::i18n::I18n;
 ///
 /// ```text
 /// i18n!("message-key")
-/// i18n!("message-key", "variable", value, …)
+/// i18n!("message-key", ("variable", value), …)
 /// ```
 ///
-/// Variables are passed as alternating key-value pairs after the message key.
+/// Variables are passed as `("key", value)` tuples after the message key.
 /// Keys must be string literals; values can be any Rust expression.
 ///
 /// # Example
@@ -45,7 +45,7 @@ use crate::i18n::I18n;
 ///     fn to_render(&self, page: &mut Page) -> String {
 ///         view! {
 ///             <h1>{i18n!("greeting")}</h1>
-///             <p>{i18n!("shared-photos", "userName", "Anne", "photoCount", 3)}</p>
+///             <p>{i18n!("shared-photos", ("userName", "Anne"), ("photoCount", 3))}</p>
 ///         }
 ///     }
 /// }

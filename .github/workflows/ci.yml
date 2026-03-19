@@ -14,5 +14,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run tests
-        run: cargo test --package tidos --tests --verbose
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Run tests and generate coverage
+        run: |
+          cargo llvm-cov --no-clean --package tidos --tests --lcov --output-path lcov.info
+          cargo llvm-cov --no-clean --package tidos --features "i18n,rocket" --test i18n --lcov --output-path lcov.info
+          cargo llvm-cov report --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info

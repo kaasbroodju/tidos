@@ -2,6 +2,7 @@
 [![License](https://img.shields.io/crates/l/tidos)](LICENSE)
 [![Download](https://img.shields.io/crates/v/tidos)](https://crates.io/crates/tidos/)
 [![API Docs](https://img.shields.io/badge/documentation-tidos-blue)](https://docs.rs/tidos/latest/tidos/)
+[![Coverage](https://codecov.io/gh/kaasbroodju/tidos/branch/main/graph/badge.svg)](https://codecov.io/gh/kaasbroodju/tidos)
 
 Tidos is a high-performance Rust-based component framework that seamlessly integrates with any web framework, enabling developers to build dynamic web applications with ease. With Tidos’ powerful macros, you can intuitively create components directly within your Rust code. It even allows you to leverage Rust's pattern matching, loops, and conditionals inside your components—making your UI logic more expressive and maintainable.
 

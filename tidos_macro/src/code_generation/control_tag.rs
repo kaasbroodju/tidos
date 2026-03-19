@@ -32,7 +32,7 @@ impl ToTokens for ControlTag {
 			} => {
 				ControlTag::to_tokens_match(match_statement, cases, tokens);
 			}
-			ControlTag::Slot { .. } => panic!("Slot should not be rendered")
+			ControlTag::Slot { .. } => unreachable!("Slot should not be rendered")
 		}
 	}
 }

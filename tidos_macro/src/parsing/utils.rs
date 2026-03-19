@@ -78,21 +78,18 @@ pub fn peek_closing_tag_name(cursor: Cursor) -> Option<String> {
 	rest = next;
 	let (ident, mut rest) = rest.ident()?;
 	let mut name = ident.to_string();
-	loop {
-		match rest.punct() {
-			Some((p, next)) if p.as_char() == '-' => {
-				match next.ident() {
-					Some((ident, next)) => {
-						name.push('-');
-						name.push_str(&ident.to_string());
-						rest = next;
-					}
-					None => break,
-				}
-			}
-			_ => break,
+
+	while let Some((p, next)) = rest.punct() {
+		if p.as_char() != '-' { break; }
+		if let Some((ident, next)) = next.ident() {
+			name.push('-');
+			name.push_str(&ident.to_string());
+			rest = next;
+		} else {
+			break;
 		}
 	}
+
 	Some(name)
 }
 
@@ -135,9 +132,5 @@ pub fn matches_tag(cursor: Cursor, target_tag: &String) -> bool {
 		return false;
 	}
 
-	if !matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '>') {
-		return false;
-	}
-
-	true
+	matches!(rest.punct(), Some((punct, _)) if punct.as_char() == '>')
 }

@@ -31,6 +31,14 @@ serde = { version = "1.0.228", optional = true}
 [dev-dependencies]
 trybuild = "1.0.116"
 
+[[test]]
+name = "i18n"
+required-features = ["i18n", "rocket"]
+
+[[test]]
+name = "page_macro"
+required-features = []
+
 [features]
 rocket = ["dep:rocket"]
 i18n = ["dep:tidos_i18n", "tidos_macro/i18n", "dep:fluent", "dep:fluent-langneg", "dep:fluent-resmgr", "dep:unic-langid", "dep:lazy_static", "dep:figment", "dep:serde"]

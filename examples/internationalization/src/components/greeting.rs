@@ -9,7 +9,7 @@ impl Component for Greeting {
         view! {
 			<section>
 				<h1>{i18n!("greeting")}</h1>
-				<p>{i18n!("shared-photos", "userName", "Anne", "userGender", "female", "photoCount", 3 )}</p>
+				<p>{i18n!("shared-photos", ("userName", "Anne"), ("userGender", "female"), ("photoCount", 3))}</p>
 			</section>
 		}
     }

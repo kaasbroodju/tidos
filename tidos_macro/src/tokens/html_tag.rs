@@ -11,18 +11,21 @@ pub struct HTMLTag {
 
 impl HTMLTag {
 	pub fn is_static(&self) -> bool {
-		let is_component = self.tag.chars().next().unwrap().is_ascii_uppercase();
-		if is_component {
+		if self.is_component() {
 			return false;
 		}
 
 		let has_only_static_attributes = self
 			.attributes
 			.iter()
-			.all(|attribute| attribute.is_static());
+			.all(Attribute::is_static);
 
-		let has_only_static_children = self.children.iter().all(|child| child.is_static());
+		let has_only_static_children = self.children.iter().all(Content::is_static);
 
 		has_only_static_attributes && has_only_static_children
+	}
+
+	fn is_component(&self) -> bool {
+		self.tag.chars().next().unwrap().is_ascii_uppercase()
 	}
 }

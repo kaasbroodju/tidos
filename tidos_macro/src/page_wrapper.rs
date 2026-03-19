@@ -49,11 +49,3 @@ impl ToTokens for PageWrapper {
 		});
 	}
 }
-
-pub struct I18nHoist;
-
-impl ToTokens for I18nHoist {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
-		tokens.append_all(quote! { page.lang });
-	}
-}
