@@ -78,9 +78,9 @@ fn attribute_value_without_delimiters() {
 fn data_attribute() {
 	assert_eq!(
 		&view!{
-			<input type="radio" name="day" value="monday" data-octo={ String::from("css-420")} />
+			<input type="radio" name="day" value="monday" data-tidos={ String::from("css-420")} />
 		},
-		r#"<input type="radio" name="day" value="monday" data-octo="css-420" />"#
+		r#"<input type="radio" name="day" value="monday" data-tidos="css-420" />"#
 	);
 }
 

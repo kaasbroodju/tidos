@@ -102,7 +102,7 @@ impl HTMLTag {
 			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
 
 			let Ok(attribute_name) = Self::extract_name(input) else {
-				return Err(syn::Error::new(input.span(), "Expected an attribute like `class` or `data-octo`"))
+				return Err(syn::Error::new(input.span(), "Expected an attribute like `class` or `data-tidos`"))
 			};
 
 			let Ok(equal_sign_token) = input.parse::<Token![=]>() else {
