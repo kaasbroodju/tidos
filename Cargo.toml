@@ -8,7 +8,8 @@ members = [
 exclude = [
     "examples/simple_rocket",
     "examples/internationalization",
-    "examples/svelte"
+    "examples/svelte",
+    "examples/lit"
 ]
 
 [workspace.package]
