@@ -11,7 +11,8 @@ exclude = [
     "examples/svelte",
     "examples/lit",
     "examples/vue",
-    "examples/react"
+    "examples/react",
+    "examples/angular"
 ]
 
 [workspace.package]
