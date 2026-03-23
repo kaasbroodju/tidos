@@ -9,7 +9,8 @@ exclude = [
     "examples/simple_rocket",
     "examples/internationalization",
     "examples/svelte",
-    "examples/lit"
+    "examples/lit",
+    "examples/vue"
 ]
 
 [workspace.package]
