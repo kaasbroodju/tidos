@@ -38,6 +38,7 @@ tidos = { version = "0.7.2", features = ["rocket", "i18n"] }
 | `@html` | Inserts a pre-rendered HTML string without escaping. Used to render named slot content. |
 | `{#slot:name}` | Named slot — passes rendered HTML content as a `String` prop to a child component. |
 | `scoped_css!` | Injects a scoped `<style>` tag into the page `<head>` and returns the generated class name. |
+| `#[native_element]` | Attribute macro — auto-generates a `Component` impl that injects the JS `<script>` and renders the kebab-case custom element tag with all struct fields as attributes. |
 | `i18n!` | *(feature: `i18n`)* Macro that looks up a Fluent translation key and returns a `String`. |
 | `enable_i18n!` | *(feature: `i18n`)* Initialises the translation system; call once at the top level of `main.rs`. |
 | `Lang` | *(feature: `i18n`)* Rocket request guard that extracts the locale from the URL path segment. |
@@ -422,6 +423,7 @@ pub fn dashboard() -> Page {
 | `page! { … }` | Produce a full `Page` for a route |
 | `view! { … }` | Produce an HTML `String` fragment |
 | `scoped_css!("./component.css")` | Inject scoped CSS and return the class name |
+| `#[native_element]` | Auto-generate `Component` for a Custom Element wrapper struct |
 | `i18n!("key")` | *(feature: `i18n`)* Look up a Fluent translation key |
 | `i18n!("key", "var", val, …)` | *(feature: `i18n`)* Look up key with Fluent variables |
 | `enable_i18n!()` | *(feature: `i18n`)* Initialise the translation system in `main.rs` |

@@ -24,8 +24,7 @@ src/
 │   ├── HelloWorld.vue          # Vue SFC — template and logic only, no <style> block
 │   ├── HelloWorld.css          # Component styles (imported as raw string for Shadow DOM)
 │   ├── HelloWorld.js           # Entry point — registers the custom element
-│   ├── hello_world.rs          # Tidos wrapper component
-│   └── hello_world.css         # Scoped styles for the wrapper div
+│   └── hello_world.rs          # Tidos wrapper component
 └── pages/
     └── index.rs                # Route that uses the Tidos wrapper
 ```
@@ -69,29 +68,19 @@ Vite bundles `HelloWorld.js` as the entry point, producing a single `dist/HelloW
 
 ## Tidos wrapper
 
-The Rust wrapper in `hello_world.rs` injects the compiled JS into the page `<head>` and renders the custom element tag:
+The Rust wrapper in `hello_world.rs` uses `#[native_element]` to automatically generate the `Component` implementation:
 
 ```rust
+use tidos::native_element;
+
+#[native_element]
 pub struct HelloWorld;
-
-impl Component for HelloWorld {
-    fn to_render(&self, page: &mut Page) -> String {
-        tidos::head!(
-            <script r#type="module" src="/dist/HelloWorld.js"></script>
-        );
-
-        view!(
-            <div class={scoped_css!("./hello_world.css")}>
-                <hello-world></hello-world>
-            </div>
-        )
-    }
-}
 ```
 
-If the component accepts props, add fields to the struct and pass them as attributes on the custom element tag. Vue maps kebab-case HTML attributes to camelCase props automatically:
+The macro injects `<script type="module" src="/dist/HelloWorld.js">` into `<head>` and renders the `<hello-world>` tag. If the component accepts props, add fields to the struct — they are forwarded as kebab-case HTML attributes. Vue maps these automatically to camelCase props:
 
 ```rust
+#[native_element]
 pub struct Greeter {
     pub initial_name: String,
 }

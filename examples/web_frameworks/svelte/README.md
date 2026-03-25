@@ -22,8 +22,7 @@ HelloWorld.svelte  ──►  vite build  ──►  dist/HelloWorld.js
 src/
 ├── components/
 │   ├── HelloWorld.svelte       # Svelte component (compiled to a custom element)
-│   ├── hello_world.rs          # Tidos wrapper component
-│   └── hello_world.css         # Scoped styles for the wrapper
+│   └── hello_world.rs          # Tidos wrapper component
 └── pages/
     └── index.rs                # Route that uses the Tidos wrapper
 ```
@@ -40,32 +39,19 @@ This tells the Svelte compiler to output a Custom Element class instead of a reg
 
 ## Tidos wrapper
 
-The Rust wrapper in `hello_world.rs` does two things:
-
-1. Injects the compiled JS into the page `<head>` using `tidos::head!`.
-2. Renders the custom element tag.
+The Rust wrapper in `hello_world.rs` uses `#[native_element]` to automatically generate the `Component` implementation:
 
 ```rust
+use tidos::native_element;
+
+#[native_element]
 pub struct HelloWorld;
-
-impl Component for HelloWorld {
-    fn to_render(&self, page: &mut Page) -> String {
-        tidos::head!(
-            <script r#type="module" src="/dist/HelloWorld.js"></script>
-        );
-
-        view!(
-            <div class={scoped_css!("./hello_world.css")}>
-                <hello-world></hello-world>
-            </div>
-        )
-    }
-}
 ```
 
-If the component accepts props, add fields to the struct and pass them as attributes on the custom element tag. Because this is Rust, any mismatch between the struct fields and the rendered attributes is caught at **compile time**:
+The macro injects `<script type="module" src="/dist/HelloWorld.js">` into `<head>` and renders the `<hello-world>` tag. If the component accepts props, add fields to the struct — they are forwarded as kebab-case HTML attributes. Because this is Rust, any mismatch is caught at **compile time**:
 
 ```rust
+#[native_element]
 pub struct Greeter {
     pub initial_name: String,
 }

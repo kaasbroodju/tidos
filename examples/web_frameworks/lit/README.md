@@ -22,8 +22,7 @@ HelloWorld.js  ──►  vite build  ──►  dist/HelloWorld.js
 src/
 ├── components/
 │   ├── HelloWorld.js           # LitElement component (native custom element)
-│   ├── hello_world.rs          # Tidos wrapper component
-│   └── hello_world.css         # Scoped styles for the wrapper div
+│   └── hello_world.rs          # Tidos wrapper component
 └── pages/
     └── index.rs                # Route that uses the Tidos wrapper
 ```
@@ -54,29 +53,19 @@ LitElement uses the Shadow DOM for style encapsulation, so component styles are 
 
 ## Tidos wrapper
 
-The Rust wrapper in `hello_world.rs` injects the compiled JS into the page `<head>` and renders the custom element tag:
+The Rust wrapper in `hello_world.rs` uses `#[native_element]` to automatically generate the `Component` implementation:
 
 ```rust
+use tidos::native_element;
+
+#[native_element]
 pub struct HelloWorld;
-
-impl Component for HelloWorld {
-    fn to_render(&self, page: &mut Page) -> String {
-        tidos::head!(
-            <script r#type="module" src="/dist/HelloWorld.js"></script>
-        );
-
-        view!(
-            <div class={scoped_css!("./hello_world.css")}>
-                <hello-world></hello-world>
-            </div>
-        )
-    }
-}
 ```
 
-If the component accepts props, add fields to the struct and pass them as attributes. LitElement maps kebab-case attributes to camelCase properties automatically when `attribute` is set in the property descriptor:
+The macro injects `<script type="module" src="/dist/HelloWorld.js">` into `<head>` and renders the `<hello-world>` tag. If the component accepts props, add fields to the struct — they are forwarded as kebab-case HTML attributes. LitElement maps these automatically to camelCase properties when `attribute` is set in the property descriptor:
 
 ```rust
+#[native_element]
 pub struct Greeter {
     pub initial_name: String,
 }
