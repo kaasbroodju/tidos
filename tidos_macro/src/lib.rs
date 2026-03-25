@@ -18,10 +18,10 @@ use tokens::Component;
 use uuid::Uuid;
 
 mod code_generation;
+mod i18n;
 mod page_wrapper;
 mod parsing;
 mod tokens;
-mod i18n;
 
 /// Renders an HTML template to a `String`.
 ///
@@ -286,7 +286,8 @@ pub fn native_element(_args: TokenStream, input: TokenStream) -> TokenStream {
 	let struct_name = &input_struct.ident;
 	let struct_name_str = struct_name.to_string();
 
-	let tag_name: Vec<syn::Ident> = pascal_to_kebab(&struct_name_str).split("-")
+	let tag_name: Vec<syn::Ident> = pascal_to_kebab(&struct_name_str)
+		.split("-")
 		.map(|x| format_ident!("{}", x))
 		.collect();
 	let tag_name = quote! { #( #tag_name )-* };
@@ -316,7 +317,6 @@ pub fn native_element(_args: TokenStream, input: TokenStream) -> TokenStream {
 				.map(|x| format_ident!("{}", x))
 				.collect();
 			let attr_name = quote! { #( #attr_parts )-* };
-
 
 			if is_bool_type(&field.ty) {
 				quote! {

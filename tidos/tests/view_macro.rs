@@ -2,16 +2,13 @@ use tidos_macro::view;
 
 #[test]
 fn empty_body() {
-	assert_eq!(
-		&view!{},
-		""
-	);
+	assert_eq!(&view! {}, "");
 }
 
 #[test]
 fn raw_html() {
 	assert_eq!(
-		&view!{
+		&view! {
 			@html{"<p>hello world</p>"}
 		},
 		r#"<p>hello world</p>"#
@@ -21,14 +18,14 @@ fn raw_html() {
 #[test]
 fn custom_element() {
 	assert_eq!(
-		&view!{
+		&view! {
 			<custom-element></custom-element>
 		},
 		r#"<custom-element></custom-element>"#
 	);
 
 	assert_eq!(
-		&view!{
+		&view! {
 			<custom-element-electric-bogaloo></custom-element-electric-bogaloo>
 		},
 		r#"<custom-element-electric-bogaloo></custom-element-electric-bogaloo>"#
@@ -79,8 +76,5 @@ fn empty_closing_tag() {
 
 #[test]
 fn punctuation() {
-	assert_eq!(
-		&view!{<p>Lorem. Ipsum</p>},
-		r#"<p>Lorem. Ipsum</p>"#
-	);
+	assert_eq!(&view! {<p>Lorem. Ipsum</p>}, r#"<p>Lorem. Ipsum</p>"#);
 }

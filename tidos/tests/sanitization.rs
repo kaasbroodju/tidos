@@ -60,7 +60,10 @@ fn expressions_are_sanitized_in_view() {
 #[test]
 fn ampersand_in_expression_is_escaped() {
 	let text = "Tom & Jerry";
-	assert_eq!(&view! { <span>{text}</span> }, "<span>Tom &amp; Jerry</span>");
+	assert_eq!(
+		&view! { <span>{text}</span> },
+		"<span>Tom &amp; Jerry</span>"
+	);
 }
 
 #[test]
@@ -73,19 +76,13 @@ fn quotes_in_expression_are_escaped() {
 
 #[test]
 fn raw_html_is_not_sanitized() {
-	assert_eq!(
-		&view! { @html{"<b>bold</b>"} },
-		"<b>bold</b>"
-	);
+	assert_eq!(&view! { @html{"<b>bold</b>"} }, "<b>bold</b>");
 }
 
 #[test]
 fn raw_html_with_variable() {
 	let snippet = "<em>italic</em>";
-	assert_eq!(
-		&view! { @html{snippet} },
-		"<em>italic</em>"
-	);
+	assert_eq!(&view! { @html{snippet} }, "<em>italic</em>");
 }
 
 #[test]

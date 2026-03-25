@@ -29,7 +29,10 @@ fn single_slot() {
 		</Card>
 	};
 
-	assert_eq!(result, "<div><header><h1>Title</h1></header><main><p>Content</p></main></div>");
+	assert_eq!(
+		result,
+		"<div><header><h1>Title</h1></header><main><p>Content</p></main></div>"
+	);
 }
 
 #[cfg(not(feature = "i18n"))]
@@ -46,7 +49,10 @@ fn slot_with_expression() {
 		</Card>
 	};
 
-	assert_eq!(result, "<div><header><h1>Hello World</h1></header><main><p>Some content</p></main></div>");
+	assert_eq!(
+		result,
+		"<div><header><h1>Hello World</h1></header><main><p>Some content</p></main></div>"
+	);
 }
 
 #[cfg(not(feature = "i18n"))]
@@ -93,5 +99,8 @@ fn slot_alongside_prop() {
 		</Banner>
 	};
 
-	assert_eq!(result, "<section><h1>My Banner</h1><div><p>Slot content</p></div></section>");
+	assert_eq!(
+		result,
+		"<section><h1>My Banner</h1><div><p>Slot content</p></div></section>"
+	);
 }

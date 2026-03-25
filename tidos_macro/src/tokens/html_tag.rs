@@ -15,10 +15,7 @@ impl HTMLTag {
 			return false;
 		}
 
-		let has_only_static_attributes = self
-			.attributes
-			.iter()
-			.all(Attribute::is_static);
+		let has_only_static_attributes = self.attributes.iter().all(Attribute::is_static);
 
 		let has_only_static_children = self.children.iter().all(Content::is_static);
 

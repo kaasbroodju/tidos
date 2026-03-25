@@ -61,15 +61,9 @@ fn a_simple_conditional_with_if_else_chain() {
 	}
 
 	for i in 0..=1 {
-		assert_eq!(
-			view_component(i),
-			format!("<p>{}</p>", i)
-		);
+		assert_eq!(view_component(i), format!("<p>{}</p>", i));
 	}
-	assert_eq!(
-		&view_component(2),
-		""
-	);
+	assert_eq!(&view_component(2), "");
 
 	fn view_component_multiple_if_else(n: usize) -> String {
 		view! {
@@ -84,15 +78,9 @@ fn a_simple_conditional_with_if_else_chain() {
 	}
 
 	for i in 0..=2 {
-		assert_eq!(
-			view_component_multiple_if_else(i),
-			format!("<p>{}</p>", i)
-		);
+		assert_eq!(view_component_multiple_if_else(i), format!("<p>{}</p>", i));
 	}
-	assert_eq!(
-		&view_component_multiple_if_else(3),
-		""
-	);
+	assert_eq!(&view_component_multiple_if_else(3), "");
 
 	fn view_component_with_else(n: usize) -> String {
 		view! {
@@ -107,15 +95,9 @@ fn a_simple_conditional_with_if_else_chain() {
 	}
 
 	for i in 0..=1 {
-		assert_eq!(
-			view_component_with_else(i),
-			format!("<p>{}</p>", i)
-		);
+		assert_eq!(view_component_with_else(i), format!("<p>{}</p>", i));
 	}
-	assert_eq!(
-		&view_component_with_else(2),
-		"<p>Hello world</p>"
-	);
+	assert_eq!(&view_component_with_else(2), "<p>Hello world</p>");
 
 	fn view_component_multiple_if_else_with_else(n: usize) -> String {
 		view! {

@@ -2,23 +2,22 @@ use tidos::{view, Component, Page};
 
 #[test]
 fn a_simple_toggle_attribute() {
-
 	assert_eq!(
-		&view!{
+		&view! {
 			<input type="radio" name="day" value="monday" checked />
 		},
 		r#"<input type="radio" name="day" value="monday" checked />"#
 	);
 
 	assert_eq!(
-		&view!{
+		&view! {
 			<input type="radio" name="day" value="monday" :checked={ true } />
 		},
 		r#"<input type="radio" name="day" value="monday" checked />"#
 	);
 
 	assert_eq!(
-		&view!{
+		&view! {
 			<input type="radio" name="day" value="monday" :checked={ false } />
 		},
 		r#"<input type="radio" name="day" value="monday" />"#
@@ -29,7 +28,7 @@ fn a_simple_toggle_attribute() {
 #[test]
 fn a_simple_toggle_attribute_reordered() {
 	assert_eq!(
-		&view!{
+		&view! {
 			<input :checked={true} type="radio" name="day" value="monday" />
 		},
 		r#"<input type="radio" name="day" value="monday" checked />"#
@@ -38,10 +37,9 @@ fn a_simple_toggle_attribute_reordered() {
 
 #[test]
 fn toggle_attribute_implicit_variable_name() {
-
 	let checked = true;
 	assert_eq!(
-		&view!{
+		&view! {
 			<input type="radio" name="day" value="monday" :checked />
 		},
 		r#"<input type="radio" name="day" value="monday" checked />"#
@@ -49,7 +47,7 @@ fn toggle_attribute_implicit_variable_name() {
 
 	let checked = false;
 	assert_eq!(
-		&view!{
+		&view! {
 			<input type="radio" name="day" value="monday" :checked />
 		},
 		r#"<input type="radio" name="day" value="monday" />"#
@@ -77,7 +75,7 @@ fn attribute_value_without_delimiters() {
 #[test]
 fn data_attribute() {
 	assert_eq!(
-		&view!{
+		&view! {
 			<input type="radio" name="day" value="monday" data-tidos={ String::from("css-420")} />
 		},
 		r#"<input type="radio" name="day" value="monday" data-tidos="css-420" />"#
@@ -107,11 +105,11 @@ fn custom_element_all_attribute_styles() {
 #[test]
 fn struct_component_all_prop_styles() {
 	struct Widget {
-		pub class: &'static str,  // ConstantLiteral:  class="wrapper"
-		pub label: String,        // ConstantGroup:     label={ expr }
-		pub disabled: bool,       // Constant:          disabled  →  true
-		pub active: bool,         // ExplicitToggle:    :active={ true }
-		pub visible: bool,        // ImplicitToggle:    :visible  (uses variable)
+		pub class: &'static str, // ConstantLiteral:  class="wrapper"
+		pub label: String,       // ConstantGroup:     label={ expr }
+		pub disabled: bool,      // Constant:          disabled  →  true
+		pub active: bool,        // ExplicitToggle:    :active={ true }
+		pub visible: bool,       // ImplicitToggle:    :visible  (uses variable)
 	}
 
 	impl Component for Widget {
@@ -137,5 +135,8 @@ fn struct_component_all_prop_styles() {
 		/>
 	};
 
-	assert_eq!(result, "class=wrapper label=hello disabled=true active=true visible=true");
+	assert_eq!(
+		result,
+		"class=wrapper label=hello disabled=true active=true visible=true"
+	);
 }

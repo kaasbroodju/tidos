@@ -1,6 +1,6 @@
 use crate::tokens::ControlTag;
 use crate::tokens::HTMLTag;
-use proc_macro2::{Group, Ident, Literal, TokenTree};
+use proc_macro2::{Group, Ident, TokenTree};
 
 #[derive(Debug)]
 pub enum Content {

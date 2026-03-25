@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 #[cfg(all(feature = "rocket", feature = "i18n"))]
 use ::rocket::request::FromParam;
+use std::collections::HashSet;
 #[cfg(feature = "i18n")]
 use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
 
@@ -56,6 +56,7 @@ impl Page {
 	///
 	/// Called internally by the [`page!`](macro@crate::page) macro.
 	#[cfg(not(feature = "i18n"))]
+	#[allow(clippy::new_without_default)]
 	pub fn new() -> Page {
 		Page {
 			head_ids: HashSet::new(),
@@ -177,7 +178,7 @@ impl<'a> FromParam<'a> for Lang {
 	fn from_param(param: &'a str) -> Result<Self, Self::Error> {
 		match LanguageIdentifier::from_bytes(param.as_bytes()) {
 			Ok(id) => Ok(Self(id)),
-			Err(error) => Err(error)
+			Err(error) => Err(error),
 		}
 	}
 }

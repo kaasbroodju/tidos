@@ -36,7 +36,12 @@ fn key_with_variables() {
 	let lang = en();
 	let mut page_output = Page::new(lang.0);
 	let page = &mut page_output;
-	let result = i18n!("shared-photos", ("userName", "Anne"), ("userGender", "female"), ("photoCount", 5));
+	let result = i18n!(
+		"shared-photos",
+		("userName", "Anne"),
+		("userGender", "female"),
+		("photoCount", 5)
+	);
 	assert!(result.contains("Anne"));
 	assert!(result.contains("5"));
 	assert!(result.contains("her stream"));
@@ -47,7 +52,12 @@ fn key_with_variables_singular() {
 	let lang = en();
 	let mut page_output = Page::new(lang.0);
 	let page = &mut page_output;
-	let result = i18n!("shared-photos", ("userName", "Bob"), ("userGender", "male"), ("photoCount", 1));
+	let result = i18n!(
+		"shared-photos",
+		("userName", "Bob"),
+		("userGender", "male"),
+		("photoCount", 1)
+	);
 	assert!(result.contains("a new photo"));
 	assert!(result.contains("his stream"));
 }
@@ -57,7 +67,12 @@ fn key_with_variables_nl() {
 	let lang = nl();
 	let mut page_output = Page::new(lang.0);
 	let page = &mut page_output;
-	let result = i18n!("shared-photos", ("userName", "Anna"), ("userGender", "female"), ("photoCount", 3));
+	let result = i18n!(
+		"shared-photos",
+		("userName", "Anna"),
+		("userGender", "female"),
+		("photoCount", 3)
+	);
 	assert!(result.contains("Anna"));
 	assert!(result.contains("haar stream"));
 }

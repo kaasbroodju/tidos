@@ -1,0 +1,11 @@
+pre-commit:
+  commands:
+    fmt:
+      run: . "$HOME/.cargo/env" && cargo fmt --all -- --check
+    clippy:
+      run: . "$HOME/.cargo/env" && cargo clippy --workspace -- -D warnings
+
+pre-push:
+  commands:
+    test:
+      run: . "$HOME/.cargo/env" && cargo test --package tidos --tests --verbose

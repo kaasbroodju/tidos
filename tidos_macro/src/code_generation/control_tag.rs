@@ -32,7 +32,7 @@ impl ToTokens for ControlTag {
 			} => {
 				ControlTag::to_tokens_match(match_statement, cases, tokens);
 			}
-			ControlTag::Slot { .. } => unreachable!("Slot should not be rendered")
+			ControlTag::Slot { .. } => unreachable!("Slot should not be rendered"),
 		}
 	}
 }
@@ -41,7 +41,7 @@ impl ControlTag {
 	fn to_tokens_for_loop(
 		left_side: &Vec<TokenTree>,
 		right_side: &Vec<TokenTree>,
-		contents: &Vec<Content>,
+		contents: &[Content],
 		tokens: &mut TokenStream,
 	) {
 		let tokens_children = contents
@@ -62,8 +62,8 @@ impl ControlTag {
 
 	fn to_tokens_if_chain(
 		if_statement: &Vec<TokenTree>,
-		if_content: &Vec<Content>,
-		if_else_chain: &Vec<(Vec<TokenTree>, Vec<Content>)>,
+		if_content: &[Content],
+		if_else_chain: &[(Vec<TokenTree>, Vec<Content>)],
 		else_content: &Option<Vec<Content>>,
 		tokens: &mut TokenStream,
 	) {
@@ -118,14 +118,14 @@ impl ControlTag {
 
 	fn to_tokens_match(
 		match_statement: &Vec<TokenTree>,
-		cases: &Vec<(Vec<TokenTree>, Vec<Content>)>,
+		cases: &[(Vec<TokenTree>, Vec<Content>)],
 		tokens: &mut TokenStream,
 	) {
 		let cases = cases
 			.iter()
 			.map(|(case_statement, case_content)| {
 				let is_static = case_content.iter().all(|content| content.is_static());
-				
+
 				// todo static islands
 				if is_static {
 					quote! {

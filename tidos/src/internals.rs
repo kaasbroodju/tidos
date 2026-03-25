@@ -1,11 +1,9 @@
-use std::borrow::Cow;
-
 #[inline]
 pub fn sanitize<S: AsRef<str> + ?Sized>(input: &S) -> String {
 	let input = input.as_ref();
 
 	if !input.contains(['&', '<', '>', '"', '\'']) {
-		return String::from(input)
+		return String::from(input);
 	}
 
 	let mut result = String::new();

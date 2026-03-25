@@ -22,8 +22,5 @@ pub enum ControlTag {
 		cases: Vec<(Vec<TokenTree>, Vec<Content>)>,
 	},
 	/// {#slot:name } ... {/slot}
-	Slot {
-		name: Ident,
-		contents: Vec<Content>,
-	}
+	Slot { name: Ident, contents: Vec<Content> },
 }

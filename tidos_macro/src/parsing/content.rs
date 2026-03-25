@@ -7,39 +7,35 @@ use syn::Token;
 
 const COMMAND_PREFIX: char = '#';
 const RAW_HTML_PREFIX: char = '@';
-const RAW_HTML_IDENTIFIER: &'static str = "html";
+const RAW_HTML_IDENTIFIER: &str = "html";
 
 impl Parse for Content {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
-		
 		if input.is_empty() {
-			unreachable!("Content::parse called on empty stream — callers must check is_empty() first");
-		
+			unreachable!(
+				"Content::parse called on empty stream — callers must check is_empty() first"
+			);
 		} else if input.peek(Token![<]) {
 			// <p></p>
-			
+
 			Ok(Content::Tag(input.parse::<HTMLTag>()?))
-		
-		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == RAW_HTML_PREFIX} {
+		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == RAW_HTML_PREFIX}
+		{
 			// @html{"<p>hello world</p>"}
 
 			Self::parse_raw_html_statement(input)
-		
 		} else if input.peek(Brace) && is_cursor_at_command(input.cursor()) {
 			// {#for ... in ... } {#if} {#match}
 
 			Ok(Content::ControlTag(ControlTag::parse(input)?))
-				
-		} else if input.peek(Brace) && !is_cursor_at_command(input.cursor()){
+		} else if input.peek(Brace) && !is_cursor_at_command(input.cursor()) {
 			// { name }
-			
+
 			Ok(Content::Expression(input.parse::<Group>()?))
-			
 		} else {
 			// text between tags
 
 			Self::parse_text_between_tags(input)
-			
 		}
 	}
 }
@@ -47,8 +43,7 @@ impl Parse for Content {
 impl Content {
 	fn parse_text_between_tags(input: ParseStream) -> syn::Result<Self> {
 		let mut output = String::new();
-		let mut last_was_punct = false;
-		while !input.is_empty() && !(input.peek(Token![<]) || input.peek(Brace)) {
+		while !(input.is_empty() || input.peek(Token![<]) || input.peek(Brace)) {
 			let token = input.parse::<TokenTree>()?;
 			match token {
 				TokenTree::Group(_) => {
@@ -58,7 +53,6 @@ impl Content {
 					if !output.is_empty() {
 						output.push(' ');
 					}
-					last_was_punct = false;
 					output.push_str(ident.to_string().as_str());
 				}
 				TokenTree::Punct(punct) => {
@@ -71,14 +65,12 @@ impl Content {
 					{
 						output.push(' ');
 					}
-
-					last_was_punct = true;
 				}
 				TokenTree::Literal(lit) => {
 					if !output.is_empty() {
 						output.push(' ');
 					}
-					last_was_punct = false;
+
 					output.push_str(lit.to_string().as_str());
 				}
 			}
@@ -89,8 +81,11 @@ impl Content {
 	fn parse_raw_html_statement(input: ParseStream) -> syn::Result<Self> {
 		input.parse::<Punct>()?;
 		let ident = input.parse::<Ident>()?;
-		if ident.to_string() != RAW_HTML_IDENTIFIER {
-			Err(syn::Error::new(ident.span(), format!("Did you mean `{RAW_HTML_IDENTIFIER}`?")))
+		if *ident.to_string() != *RAW_HTML_IDENTIFIER {
+			Err(syn::Error::new(
+				ident.span(),
+				format!("Did you mean `{RAW_HTML_IDENTIFIER}`?"),
+			))
 		} else {
 			Ok(Content::RawHTMLExpression(input.parse::<Group>()?))
 		}
@@ -99,7 +94,7 @@ impl Content {
 
 fn is_cursor_at_command(cursor: syn::buffer::Cursor) -> bool {
 	// First check if we're at a brace
-	if !cursor.group(Delimiter::Brace).is_some() {
+	if cursor.group(Delimiter::Brace).is_none() {
 		return false;
 	}
 
