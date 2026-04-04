@@ -1,0 +1,17 @@
+& {
+    max-width: 860px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    font-family: monospace;
+    color: #eee;
+}
+
+& > h1 {
+    color: #e94560;
+    margin-bottom: 0.25rem;
+}
+
+& > p {
+    color: #888;
+    margin-top: 0;
+}

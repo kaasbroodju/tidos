@@ -26,7 +26,7 @@ jobs:
       - name: Run tests and generate coverage
         run: |
           cargo llvm-cov --no-clean --package tidos --tests --lcov --output-path lcov.info
-          cargo llvm-cov --no-clean --package tidos --features "i18n,rocket" --test i18n --lcov --output-path lcov.info
+          cargo llvm-cov --no-clean --package tidos --features "i18n,rocket,axum,actix-web,warp" --test i18n --lcov --output-path lcov.info
           cargo llvm-cov report --lcov --output-path lcov.info
 
       - name: Upload coverage to Codecov

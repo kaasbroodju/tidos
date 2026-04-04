@@ -1,8 +1,20 @@
-#[cfg(all(feature = "rocket", feature = "i18n"))]
-use ::rocket::request::FromParam;
 use std::collections::HashSet;
 #[cfg(feature = "i18n")]
-use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
+use unic_langid::LanguageIdentifier;
+#[cfg(feature = "i18n")]
+use unic_langid::LanguageIdentifierError;
+
+#[cfg(feature = "rocket")]
+mod rocket_impl;
+
+#[cfg(feature = "axum")]
+mod axum_impl;
+
+#[cfg(feature = "actix-web")]
+mod actix_web_impl;
+
+#[cfg(feature = "warp")]
+mod warp_impl;
 
 /// A fully rendered page ready to be returned from a route handler.
 ///
@@ -30,10 +42,10 @@ pub struct Page {
 ///
 /// `Page` accumulates the rendered HTML body and any `<head>` elements (such
 /// as `<style>` blocks from [`scoped_css!`](macro@crate::scoped_css) or custom
-/// tags from [`head!`](macro@crate::head)). When the `rocket` feature is
-/// enabled, `Page` implements Rocket's `Responder` and produces a complete
-/// `<!doctype html>` document with the correct `lang` attribute set from the
-/// negotiated locale.
+/// tags from [`head!`](macro@crate::head)). When a web framework feature is
+/// enabled, `Page` implements that framework's response trait and produces a
+/// complete `<!doctype html>` document with the correct `lang` attribute set
+/// from the negotiated locale.
 ///
 /// You rarely construct `Page` directly — the
 /// [`page!`](macro@crate::page) macro creates one for you and returns it
@@ -92,87 +104,42 @@ impl Page {
 	}
 }
 
-#[cfg(feature = "rocket")]
-mod rocket {
-	use rocket::http::{ContentType, Status};
-	use rocket::response::Responder;
-	use rocket::{response, Request, Response};
+/// A request guard / extractor that parses a locale from a URL path segment.
+///
+/// Available whenever the `i18n` feature is enabled. Framework-specific
+/// extractor implementations are provided by the `rocket`, `axum`, and
+/// `actix-web` features. For `warp`, `Lang` implements [`std::str::FromStr`]
+/// so it works directly with `warp::path::param::<Lang>()` and
+/// `warp::header::<Lang>("accept-language")`.
+///
+/// The locale string (e.g. `"en-US"`, `"nl-NL"`) is parsed into a
+/// [`LanguageIdentifier`] and made available on the [`Page`] so that
+/// [`i18n!`](crate::i18n::i18n) can resolve translations.
+///
+/// **Rocket** — use as a `FromParam` route parameter: `#[get("/<lang>")]`.
+///
+/// **Axum** — use as a `FromRequestParts` extractor; route must have a
+/// `:lang` path segment (e.g. `"/:lang"`).
+///
+/// **Actix Web** — use as a `FromRequest` extractor; route must have a
+/// `{lang}` path segment (e.g. `"/{lang}"`).
+///
+/// **Warp** — use `warp::path::param::<Lang>()` or
+/// `warp::header::<Lang>("accept-language")`.
+#[cfg(feature = "i18n")]
+pub struct Lang(pub LanguageIdentifier);
 
-	#[cfg(not(feature = "i18n"))]
-	impl<'r> Responder<'r, 'static> for crate::page::Page {
-		fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
-			let string = format!(
-				"<!doctype html>\
-                <html lang=\"en\">\
-                    <head>\
-                        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\
-                        <meta charset=\"utf-8\" />\
-                        {}\
-                    </head>\
-                    <body>\
-                        {}\
-                    </body>\
-                </html>",
-				self.head,
-				self.template,
-			);
-			Response::build_from(string.respond_to(req)?)
-				.header(ContentType::HTML)
-				.ok()
-		}
-	}
+#[cfg(feature = "i18n")]
+impl std::str::FromStr for Lang {
+	type Err = LanguageIdentifierError;
 
-	#[cfg(feature = "i18n")]
-	impl<'r> Responder<'r, 'static> for crate::page::Page {
-		fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
-			let string = format!(
-				"<!doctype html>\
-                <html lang=\"{}\">\
-                    <head>\
-                        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\
-                        <meta charset=\"utf-8\" />\
-                        {}\
-                    </head>\
-                    <body>\
-                        {}\
-                    </body>\
-                </html>",
-				self.lang,
-				self.head,
-				self.template,
-			);
-			Response::build_from(string.respond_to(req)?)
-				.header(ContentType::HTML)
-				.ok()
-		}
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		s.parse::<LanguageIdentifier>().map(Lang)
 	}
 }
 
-/// A Rocket request guard that extracts a locale from the first URL path segment.
-///
-/// Use `lang: Lang` as a route parameter when the `rocket` and `i18n` features
-/// are both enabled. The locale string (e.g. `"en-US"`, `"nl-NL"`) is parsed
-/// into a [`LanguageIdentifier`] and made available on the [`Page`] so that
-/// [`i18n!`](crate::i18n::i18n) can resolve translations.
-///
-/// # Example
-///
-/// ```rust,no_run
-/// use tidos::i18n::Lang;
-/// use tidos::{page, Page};
-///
-/// #[get("/<lang>")]
-/// pub fn index(lang: Lang) -> Page {
-///     page! {
-///         <main><h1>Hello</h1></main>
-///     }
-/// }
-/// ```
 #[cfg(all(feature = "rocket", feature = "i18n"))]
-pub struct Lang(pub LanguageIdentifier);
-
-#[cfg(all(feature = "rocket", feature = "i18n"))]
-impl<'a> FromParam<'a> for Lang {
+impl<'a> ::rocket::request::FromParam<'a> for Lang {
 	type Error = LanguageIdentifierError;
 
 	fn from_param(param: &'a str) -> Result<Self, Self::Error> {

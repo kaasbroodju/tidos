@@ -5,6 +5,20 @@ use tidos::{page, view, Page};
 
 enable_i18n!();
 
+#[cfg(feature = "rocket")]
+mod rocket;
+
+#[cfg(feature = "axum")]
+mod axum;
+
+#[cfg(feature = "actix-web")]
+mod actix_web;
+
+#[cfg(feature = "warp")]
+mod warp;
+
+// --- helpers ---
+
 fn en() -> Lang {
 	Lang("en-US".parse().unwrap())
 }

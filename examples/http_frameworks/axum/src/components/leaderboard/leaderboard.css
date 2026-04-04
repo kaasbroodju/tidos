@@ -1,0 +1,43 @@
+& h2 {
+    color: #a8dadc;
+    margin-bottom: 0.5rem;
+}
+
+& > p {
+    color: #888;
+    margin-top: 0;
+    font-size: 0.85rem;
+}
+
+& table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #16213e;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+& thead tr {
+    background: #0f3460;
+    color: #a8dadc;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+& th {
+    padding: 0.75rem 1rem;
+}
+
+& th:first-child {
+    text-align: center;
+}
+
+& th:nth-child(2) {
+    text-align: left;
+}
+
+& th:nth-child(3),
+& th:nth-child(4) {
+    text-align: right;
+}
