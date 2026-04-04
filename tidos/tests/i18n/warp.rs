@@ -1,4 +1,4 @@
-use hyper::body::to_bytes;
+use http_body_util::BodyExt;
 use tidos::i18n::Lang;
 use tidos::{i18n::i18n, page, Page};
 use warp::http::StatusCode;
@@ -9,7 +9,13 @@ fn make_page(lang: Lang) -> Page {
 }
 
 async fn body_string(page: Page) -> String {
-	let bytes = to_bytes(page.into_response().into_body()).await.unwrap();
+	let bytes = page
+		.into_response()
+		.into_body()
+		.collect()
+		.await
+		.unwrap()
+		.to_bytes();
 	String::from_utf8(bytes.to_vec()).unwrap()
 }
 

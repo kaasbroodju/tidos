@@ -2,7 +2,6 @@ use figment::providers::{Format, Toml};
 use figment::{Error, Figment, Metadata, Profile, Provider};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TidosI18nConfig {
