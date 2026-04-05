@@ -30,7 +30,17 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
-          cargo publish -p tidos_macro --verbose
-          cargo publish -p tidos_i18n --verbose
+          publish_if_not_exists() {
+            local package=$1
+            local version=$(cargo metadata --no-deps --format-version 1 | jq -r ".packages[] | select(.name==\"$package\") | .version")
+            if curl -sf "https://crates.io/api/v1/crates/$package/$version" > /dev/null; then
+              echo "$package@$version already exists on crates.io, skipping"
+            else
+              cargo publish -p "$package" --verbose
+            fi
+          }
+
+          publish_if_not_exists tidos_macro
+          publish_if_not_exists tidos_i18n
           sleep 60
           cargo publish -p tidos --verbose
