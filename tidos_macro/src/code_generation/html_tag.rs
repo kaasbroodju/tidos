@@ -1,6 +1,6 @@
+use crate::tokens::{Attribute, Content, ControlTag, HTMLTag};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote, ToTokens, TokenStreamExt};
-use crate::tokens::{Attribute, AttributeType, Content, ControlTag, HTMLTag};
+use quote::{quote, ToTokens, TokenStreamExt};
 
 impl ToTokens for HTMLTag {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -125,8 +125,7 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 	let tag = html_tag.tag.as_str();
-	
-	
+
 	let mut attributes = html_tag
 		.attributes
 		.iter()

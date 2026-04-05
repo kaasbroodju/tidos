@@ -1,0 +1,43 @@
+<svelte:options customElement="hello-world"></svelte:options>
+
+<script>
+	let name = $state('');
+</script>
+
+<div>
+	<input bind:value={name} placeholder="Enter your name" />
+	{#if name}
+		<p>Hello {name}!</p>
+	{/if}
+</div>
+
+<style>
+	div {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	input {
+		box-sizing: border-box;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		font-size: 1rem;
+		font-family: inherit;
+		width: 100%;
+		outline: none;
+		transition: border-color 0.15s;
+	}
+
+	input:focus {
+		border-color: #555;
+	}
+
+	p {
+		font-size: 1.25rem;
+		font-weight: 600;
+		margin: 0;
+		color: #1a1a1a;
+	}
+</style>

@@ -7,7 +7,7 @@ fn a_simple_match_statement() {
 		Fish,
 		Dog,
 		Cat,
-		Other { name: String }
+		Other { name: String },
 	}
 	use Pet::*;
 	let my_pet = Dog;
@@ -36,10 +36,12 @@ fn a_complex_match_statement() {
 		Fish,
 		Dog,
 		Cat,
-		Other { name: String }
+		Other { name: String },
 	}
 	use Pet::*;
-	let my_pet = Other { name: String::from("spider") };
+	let my_pet = Other {
+		name: String::from("spider"),
+	};
 
 	assert_eq!(
 		&view! {

@@ -12,16 +12,16 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 use crate::page_wrapper::PageWrapper;
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use syn::parse_macro_input;
 use tokens::Component;
 use uuid::Uuid;
 
 mod code_generation;
+mod i18n;
 mod page_wrapper;
 mod parsing;
 mod tokens;
-mod i18n;
 
 /// Renders an HTML template to a `String`.
 ///
@@ -236,4 +236,130 @@ pub fn scoped_css(input: TokenStream) -> TokenStream {
 	let expanded = input.to_token_stream();
 
 	expanded.into()
+}
+
+/// Derives [`Component`](tidos::Component) for a struct that wraps a native
+/// [Custom Element](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements).
+///
+/// Place `#[native_element]` on a struct to automatically generate a
+/// `Component` implementation that:
+///
+/// 1. Injects `<script type="module" src="/dist/StructName.js"></script>` into
+///    the page `<head>`
+/// 2. Renders the kebab-case HTML tag derived from the struct name, forwarding
+///    all fields as HTML attributes.
+///
+/// # Attribute mapping
+///
+/// Field names are converted from `snake_case` to `kebab-case`.
+/// The struct name is converted from `PascalCase` to `kebab-case` for the
+/// HTML tag, and used as-is for the JS filename.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use tidos::native_element;
+///
+/// #[native_element]
+/// pub struct GreetName {
+///     pub name: String,
+///     pub is_shiny: bool,
+/// }
+/// ```
+///
+/// Generates roughly:
+///
+/// ```rust,no_run
+/// # use tidos::{Component, Page};
+/// # pub struct GreetName { pub name: String, pub is_shiny: bool }
+/// impl tidos::Component for GreetName {
+///     fn to_render(&self, page: &mut tidos::Page) -> String {
+///         tidos::head! { <script type="module" src="/dist/GreetName.js"> }
+///         tidos::view! { <greet-name name="Alice" is-shiny></greet-name> }
+///     }
+/// }
+/// ```
+#[allow(clippy::all)]
+#[proc_macro_attribute]
+pub fn native_element(_args: TokenStream, input: TokenStream) -> TokenStream {
+	let input_struct = parse_macro_input!(input as syn::ItemStruct);
+	let struct_name = &input_struct.ident;
+	let struct_name_str = struct_name.to_string();
+
+	let tag_name: Vec<syn::Ident> = pascal_to_kebab(&struct_name_str)
+		.split("-")
+		.map(|x| format_ident!("{}", x))
+		.collect();
+	let tag_name = quote! { #( #tag_name )-* };
+
+	let script_src = format!("/dist/{}.js", struct_name_str);
+
+	let fields: Vec<&syn::Field> = match &input_struct.fields {
+		syn::Fields::Named(f) => f.named.iter().collect(),
+		syn::Fields::Unit => vec![],
+		_ => {
+			return syn::Error::new_spanned(
+				&input_struct.ident,
+				"#[native_element] only supports structs with named fields or unit structs",
+			)
+			.to_compile_error()
+			.into()
+		}
+	};
+
+	let attr_stmts: Vec<proc_macro2::TokenStream> = fields
+		.iter()
+		.map(|field| {
+			let field_ident = field.ident.as_ref().unwrap();
+			let attr_parts: Vec<syn::Ident> = field_ident
+				.to_string()
+				.split("_")
+				.map(|x| format_ident!("{}", x))
+				.collect();
+			let attr_name = quote! { #( #attr_parts )-* };
+
+			if is_bool_type(&field.ty) {
+				quote! {
+					:#attr_name={self.#field_ident}
+				}
+			} else {
+				quote! {
+					#attr_name={self.#field_ident}
+				}
+			}
+		})
+		.collect();
+
+	let expanded = quote! {
+		#input_struct
+
+		impl tidos::Component for #struct_name {
+			fn to_render(&self, page: &mut tidos::Page) -> String {
+				tidos::head!(<script r#type="module" src=#script_src></script>);
+				tidos::view!(<#tag_name #( #attr_stmts )*></#tag_name>)
+			}
+		}
+	};
+
+	expanded.into()
+}
+
+fn pascal_to_kebab(s: &str) -> String {
+	let mut result = String::new();
+	for (i, c) in s.chars().enumerate() {
+		if c.is_uppercase() && i > 0 {
+			result.push('-');
+		}
+		result.push(c.to_ascii_lowercase());
+	}
+	result
+}
+
+fn is_bool_type(ty: &syn::Type) -> bool {
+	if let syn::Type::Path(type_path) = ty {
+		if let Some(segment) = type_path.path.segments.last() {
+			return segment.ident == "bool";
+		}
+	}
+	false
 }

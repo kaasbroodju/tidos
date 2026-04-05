@@ -241,10 +241,10 @@
 mod components;
 mod page;
 
-#[doc(hidden)]
-pub mod internals;
 #[cfg(feature = "i18n")]
 mod i18n_config;
+#[doc(hidden)]
+pub mod internals;
 
 pub use components::Component;
 #[doc(hidden)]
@@ -319,10 +319,10 @@ macro_rules! sanitize {
 #[cfg(feature = "i18n")]
 pub mod i18n {
 	pub use fluent;
-	pub use unic_langid;
 	pub use fluent_langneg;
 	pub use fluent_resmgr;
 	pub use lazy_static;
+	pub use unic_langid;
 
 	/// Initialises the Tidos i18n translation system.
 	///
@@ -353,7 +353,7 @@ pub mod i18n {
 						.unwrap()
 				};
 			}
-		}
+		};
 	}
 	pub use crate::enable_i18n;
 

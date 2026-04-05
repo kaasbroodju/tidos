@@ -4,35 +4,42 @@ use syn::parse::{Parse, ParseStream};
 use syn::Token;
 
 pub struct I18n {
-    pub key: Literal,
-    pub params: Vec<(Literal, TokenTree)>,
+	pub key: Literal,
+	pub params: Vec<(Literal, TokenTree)>,
 }
 
 impl Parse for I18n {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let result = input.parse::<Literal>().expect("Expected a string literal as key");
+	fn parse(input: ParseStream) -> syn::Result<Self> {
+		let result = input
+			.parse::<Literal>()
+			.expect("Expected a string literal as key");
 
-        let mut params = vec![];
-        while !input.is_empty() && input.peek(Token![,]) {
-            input.parse::<Token![,]>()?;
-            let content;
-            syn::parenthesized!(content in input);
-            let param_key = content.parse::<Literal>().expect("Expected param key as string literal");
-            content.parse::<Token![,]>()?;
-            let param_value = content.parse::<TokenTree>().expect("Expected param value");
-            params.push((param_key, param_value));
-        }
+		let mut params = vec![];
+		while !input.is_empty() && input.peek(Token![,]) {
+			input.parse::<Token![,]>()?;
+			let content;
+			syn::parenthesized!(content in input);
+			let param_key = content
+				.parse::<Literal>()
+				.expect("Expected param key as string literal");
+			content.parse::<Token![,]>()?;
+			let param_value = content.parse::<TokenTree>().expect("Expected param value");
+			params.push((param_key, param_value));
+		}
 
-        Ok(I18n { key: result, params })
-    }
+		Ok(I18n {
+			key: result,
+			params,
+		})
+	}
 }
 
 impl ToTokens for I18n {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let key = &self.key;
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		let key = &self.key;
 
-        if self.params.is_empty() {
-            tokens.append_all(quote! {
+		if self.params.is_empty() {
+			tokens.append_all(quote! {
                 {
                     let res_path = std::path::PathBuf::from(std::env!("CARGO_MANIFEST_DIR"))
                         .join(&crate::TIDOS_I18N_CONFIGURATION.resource_location)
@@ -72,12 +79,15 @@ impl ToTokens for I18n {
                     output
                 }
 		    });
-        } else {
-            let params = &self.params.iter().fold(TokenStream::new(), |mut acc, (key, value)| {
-                acc.append_all(quote! { args.set(#key, #value); });
-                acc
-            });
-            tokens.append_all(quote! {
+		} else {
+			let params = &self
+				.params
+				.iter()
+				.fold(TokenStream::new(), |mut acc, (key, value)| {
+					acc.append_all(quote! { args.set(#key, #value); });
+					acc
+				});
+			tokens.append_all(quote! {
                 {
                     let res_path = std::path::PathBuf::from(std::env!("CARGO_MANIFEST_DIR"))
                         .join(&crate::TIDOS_I18N_CONFIGURATION.resource_location)
@@ -120,6 +130,6 @@ impl ToTokens for I18n {
                     output
                 }
 		    });
-        }
-    }
+		}
+	}
 }

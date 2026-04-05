@@ -1,0 +1,28 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f5f5f5;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    max-width: 640px;
+    margin: 5rem auto;
+    padding: 0 1.5rem;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+}
+
+main > p {
+    color: #666;
+    margin: 0 0 2.5rem;
+}

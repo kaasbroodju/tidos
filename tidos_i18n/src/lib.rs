@@ -10,10 +10,10 @@
 
 mod i18n;
 
-use syn::parse_macro_input;
+use crate::i18n::I18n;
 use proc_macro::TokenStream;
 use quote::ToTokens;
-use crate::i18n::I18n;
+use syn::parse_macro_input;
 
 /// Looks up a [Fluent](https://projectfluent.org/) translation key and returns the translated `String`.
 ///
@@ -53,9 +53,9 @@ use crate::i18n::I18n;
 #[allow(clippy::all)]
 #[proc_macro]
 pub fn i18n(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as I18n);
+	let input = parse_macro_input!(input as I18n);
 
-    let expanded = input.to_token_stream();
+	let expanded = input.to_token_stream();
 
-    expanded.into()
+	expanded.into()
 }

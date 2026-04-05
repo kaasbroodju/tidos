@@ -10,50 +10,30 @@ use proc_macro2::{Literal, TokenStream};
 #[derive(Debug)]
 pub enum Attribute {
 	/// :disabled
-	ImplicitToggle {
-		name: String,
-	},
+	ImplicitToggle { name: String },
 
 	/// :disabled={ true }
-	ExplicitToggle {
-		name: String,
-		value: TokenStream,
-	},
+	ExplicitToggle { name: String, value: TokenStream },
 
 	/// disabled
-	Constant {
-		name: String,
-	},
+	Constant { name: String },
 
 	/// class="wrapper"
-	ConstantLiteral {
-		name: String,
-		literal: Literal,
-	},
+	ConstantLiteral { name: String, literal: Literal },
 
 	/// value={ person.name }
-	ConstantGroup {
-		name: String,
-		contents: TokenStream,
-	}
-
-}
-
-#[derive(Debug)]
-pub enum AttributeType {
-	Literal(TokenStream),
-	Group(TokenStream),
+	ConstantGroup { name: String, contents: TokenStream },
 }
 
 impl Attribute {
 	pub fn is_static(&self) -> bool {
 		match &self {
-			Attribute::ImplicitToggle { .. } => { false }
-			Attribute::ExplicitToggle { .. } => { false }
-			Attribute::Constant { .. } => { true }
+			Attribute::ImplicitToggle { .. } => false,
+			Attribute::ExplicitToggle { .. } => false,
+			Attribute::Constant { .. } => true,
 			// todo identifier of scoped css is static
-			Attribute::ConstantLiteral { .. } => { true }
-			Attribute::ConstantGroup { .. } => { false }
+			Attribute::ConstantLiteral { .. } => true,
+			Attribute::ConstantGroup { .. } => false,
 		}
 
 		// if self.is_toggle_attribute {

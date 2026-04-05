@@ -8,6 +8,11 @@ members = [
 exclude = [
     "examples/simple_rocket",
     "examples/internationalization",
+    "examples/web_frameworks/svelte",
+    "examples/web_frameworks/lit",
+    "examples/web_frameworks/vue",
+    "examples/web_frameworks/react",
+    "examples/web_frameworks/angular"
 ]
 
 [workspace.package]

@@ -1,12 +1,10 @@
 use crate::parsing::utils::{matches_tag, peek_closing_tag_name};
-use crate::tokens::{AttributeType, Content};
-use crate::tokens::{Attribute, HTMLTag};
+use crate::tokens::{Attribute, Content, HTMLTag};
 use proc_macro2::{Group, Literal};
-use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
-use syn::Token;
 use syn::token::Lt;
+use syn::Token;
 
 impl Parse for HTMLTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -28,12 +26,12 @@ impl Parse for HTMLTag {
 				is_self_closing: true,
 			});
 		}
-		
-		let end_first_tag_token = input.parse::<Token![>]>()?;
+
+		let _end_first_tag_token = input.parse::<Token![>]>()?;
 		if input.is_empty() {
 			return Err(syn::Error::new(
 				start_first_tag_token.span(),
-				format!("missing matching closing tag `</{tag}>`")
+				format!("missing matching closing tag `</{tag}>`"),
 			));
 		}
 
@@ -82,7 +80,7 @@ impl HTMLTag {
 				rest = next;
 			}
 
-			return Ok((output, rest));
+			Ok((output, rest))
 		})
 	}
 
@@ -90,7 +88,11 @@ impl HTMLTag {
 		input.peek(Token![/]) && input.peek2(Token![>])
 	}
 
-	fn parse_attributes(input: ParseStream, tag: &str, tag_span: proc_macro2::Span) -> Result<Vec<Attribute>, syn::Error> {
+	fn parse_attributes(
+		input: ParseStream,
+		tag: &str,
+		tag_span: proc_macro2::Span,
+	) -> Result<Vec<Attribute>, syn::Error> {
 		let mut attributes = Vec::new();
 		while !(Self::is_peeking_at_self_closing_tag(input) || input.peek(Token![>])) {
 			if input.is_empty() {
@@ -102,7 +104,10 @@ impl HTMLTag {
 			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
 
 			let Ok(attribute_name) = Self::extract_name(input) else {
-				return Err(syn::Error::new(input.span(), "Expected an attribute like `class` or `data-octo`"))
+				return Err(syn::Error::new(
+					input.span(),
+					"Expected an attribute like `class` or `data-tidos`",
+				));
 			};
 
 			let Ok(equal_sign_token) = input.parse::<Token![=]>() else {
@@ -126,7 +131,7 @@ impl HTMLTag {
 				} else {
 					let attribute = Attribute::ConstantLiteral {
 						name: attribute_name,
-						literal: literal,
+						literal,
 					};
 
 					attributes.push(attribute);
@@ -146,16 +151,24 @@ impl HTMLTag {
 
 				attributes.push(attribute);
 			} else {
-				let message = if is_toggle_attribute { format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}") } else { format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}") };
+				let message = if is_toggle_attribute {
+					format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}")
+				} else {
+					format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}")
+				};
 				return Err(syn::Error::new(equal_sign_token.span(), message));
 			}
 		}
 		Ok(attributes)
 	}
 
-	fn parse_body(input: ParseStream, start_first_tag_token: Lt, tag: &String) -> Result<Vec<Content>, syn::Error> {
+	fn parse_body(
+		input: ParseStream,
+		start_first_tag_token: Lt,
+		tag: &String,
+	) -> Result<Vec<Content>, syn::Error> {
 		let mut children: Vec<Content> = Vec::new();
-		while !matches_tag(input.cursor(), &tag) {
+		while !matches_tag(input.cursor(), tag) {
 			if let Some(found_tag) = peek_closing_tag_name(input.cursor()) {
 				return Err(syn::Error::new(
 					input.span(),
@@ -167,7 +180,7 @@ impl HTMLTag {
 			if input.is_empty() {
 				return Err(syn::Error::new(
 					start_first_tag_token.span(),
-					format!("missing matching closing tag `</{tag}>`")
+					format!("missing matching closing tag `</{tag}>`"),
 				));
 			}
 		}
