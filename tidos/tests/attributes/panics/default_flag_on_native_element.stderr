@@ -1,0 +1,5 @@
+error: native html tags cannot have a default flag, remove the `..`
+ --> tests/attributes/panics/default_flag_on_native_element.rs:6:4
+  |
+6 |             <img .. />
+  |             ^

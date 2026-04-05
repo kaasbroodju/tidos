@@ -313,6 +313,41 @@ view! {
 - Self-closing tag `<ComponentName prop={expr} />`
 - Prop values are Rust expressions wrapped in `{ }`.
 
+### Default trait (`..`)
+
+Components whose struct implements `Default` can use `..` after explicit props
+to fill the remaining fields with their default values — identical to Rust's
+struct update syntax. The component struct must `#[derive(Default)]` or
+manually implement `Default`.
+
+```rust
+#[derive(Default)]
+pub struct Coordinate {
+    pub x: usize,
+    pub y: usize,
+}
+
+impl Component for Coordinate {
+    fn to_render(&self, _page: &mut Page) -> String {
+        view! {
+            <span>{self.x.to_string()}</span>
+            <span>{self.y.to_string()}</span>
+        }
+    }
+}
+
+// x=1, y defaults to 0
+view! { <Coordinate x={1} .. /> }
+
+// all fields default
+view! { <Coordinate .. /> }
+```
+
+Rules:
+- `..` must appear after all explicit props, before `/>`.
+- Only valid on custom components — native HTML tags (`<img .. />`) cause a compile error.
+- The struct must implement `Default`.
+
 ---
 
 ## `page!` macro and `Page`
@@ -420,6 +455,7 @@ pub fn dashboard() -> Page {
 | `{#slot:name} … {/slot}` | Named slot — pass rendered content as a component prop |
 | `@html{expr}` | Insert raw HTML without escaping |
 | `<Component prop={expr} />` | Render a component with props |
+| `<Component prop={expr} .. />` | Render a component, filling unset fields with `Default::default()` |
 | `page! { … }` | Produce a full `Page` for a route |
 | `view! { … }` | Produce an HTML `String` fragment |
 | `scoped_css!("./component.css")` | Inject scoped CSS and return the class name |
