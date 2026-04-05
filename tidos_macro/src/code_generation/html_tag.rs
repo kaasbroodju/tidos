@@ -29,11 +29,11 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 	if html_tag.is_self_closing {
 		if has_only_static_attributes {
 			quote! {
-				concat!("<", #tag, " ", #( #static_attributes, )* "/>")
+				"<", #tag, " ", #( #static_attributes, )* "/>"
 			}
 		} else {
 			quote! {
-				concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + "/>"
+				"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , "/>"
 			}
 		}
 	} else {
@@ -74,48 +74,53 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 			(true, true) => {
 				if html_tag.attributes.attributes.is_empty() {
 					quote! {
-						concat!("<", #tag, ">"
-							#( , #children )*
-							, "</", #tag, ">")
+						"<", #tag, ">"
+						#( , #children )*
+						, "</", #tag, ">"
 					}
 				} else {
 					quote! {
-						concat!("<", #tag, " " #( , #static_attributes )*
-							, ">"
-							#( , #children )*
-							, "</", #tag, ">")
+						"<", #tag, " " #( , #static_attributes )* , ">"
+						#( , #children )*
+						, "</", #tag, ">"
 					}
 				}
 			}
 			(true, false) => {
 				if html_tag.attributes.attributes.is_empty() {
 					quote! {
-						concat!("<", #tag, ">")
-						#( + #children )*
-						+ concat!("</", #tag, ">")
+
+						"<", #tag, ">"
+						#( , #children )*
+						, "</", #tag, ">"
+
 					}
 				} else {
 					quote! {
-						concat!("<", #tag, " " #( , #static_attributes )* , ">")
-						#( + #children )*
-						+ concat!("</", #tag, ">")
+
+						"<", #tag, " " #( , #static_attributes )* , ">"
+						#( , #children )*
+						, "</", #tag, ">"
+
 					}
 				}
 			}
 			(false, true) => {
 				quote! {
-					concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + concat!(">"
+
+					"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , ">"
 					#( , #children )*
-					, "</", #tag, ">")
+					, "</", #tag, ">"
+
 				}
 			}
 			(false, false) => {
 				quote! {
-					concat!("<", #tag, " " #( , #static_attributes )* )
-					#( + #dynamic_attributes )*
-					+ ">"
-					#( + #children )*
-					+ concat!("</", #tag, ">")
+
+					"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , ">"
+					#( , #children )*
+					, "</", #tag, ">"
+
 				}
 			}
 		}
@@ -134,17 +139,17 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 
 	for child in &html_tag.children {
 		if let Content::ControlTag(ControlTag::Slot { name, contents }) = child {
-			attributes.push(quote! { #name: String::new() #( + #contents )* });
+			attributes.push(quote! { #name: tidos::combine!(String::new() #( , #contents )* ) });
 		}
 	}
 
 	let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
 
 	if html_tag.attributes.has_default_flag && attributes.is_empty() {
-		quote! { &#component_name { ..Default::default() }.to_render(page) }
+		quote! { #component_name { ..Default::default() }.to_render(page) }
 	} else if html_tag.attributes.has_default_flag && !attributes.is_empty() {
-		quote! { &#component_name { #( #attributes ),*, ..Default::default() }.to_render(page) }
+		quote! { #component_name { #( #attributes ),*, ..Default::default() }.to_render(page) }
 	} else {
-		quote! { &#component_name { #( #attributes ),* }.to_render(page) }
+		quote! { #component_name { #( #attributes ),* }.to_render(page) }
 	}
 }

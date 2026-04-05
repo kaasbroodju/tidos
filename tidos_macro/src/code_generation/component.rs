@@ -7,7 +7,7 @@ impl ToTokens for Component {
 		let children = &self.children;
 
 		tokens.append_all(quote! {
-			String::new() #( + #children )*
+			tidos::combine!(String::new() #( , #children )*)
 		});
 	}
 }

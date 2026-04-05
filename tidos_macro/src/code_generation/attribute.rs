@@ -51,7 +51,7 @@ impl ToTokens for Attribute {
 					.to_string();
 
 				tokens.append_all(quote! {
-					concat!(#attribute_name, "=\"") + &tidos::sanitize!(#contents) + "\" "
+					#attribute_name, "=\"", tidos::sanitize!(#contents), "\" "
 
 					//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
 				});
