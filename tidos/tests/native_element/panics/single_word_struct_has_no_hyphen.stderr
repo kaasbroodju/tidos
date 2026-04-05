@@ -1,0 +1,5 @@
+error: #[native_element] generated the tag name 'counter', which is not a valid custom element name — custom elements must contain at least one '-'. Use a multi-word struct name (e.g. 'AppCounter' → 'app-counter').
+ --> tests/native_element/panics/single_word_struct_has_no_hyphen.rs:4:12
+  |
+4 | pub struct Counter;
+  |            ^^^^^^^

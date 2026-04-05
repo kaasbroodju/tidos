@@ -286,7 +286,22 @@ pub fn native_element(_args: TokenStream, input: TokenStream) -> TokenStream {
 	let struct_name = &input_struct.ident;
 	let struct_name_str = struct_name.to_string();
 
-	let tag_name: Vec<syn::Ident> = pascal_to_kebab(&struct_name_str)
+	let kebab_name = pascal_to_kebab(&struct_name_str);
+	if !kebab_name.contains('-') {
+		return syn::Error::new_spanned(
+			&input_struct.ident,
+			format!(
+				"#[native_element] generated the tag name '{}', which is not a valid custom \
+				 element name — custom elements must contain at least one '-'. \
+				 Use a multi-word struct name (e.g. 'App{}' → 'app-{}').",
+				kebab_name, struct_name_str, kebab_name
+			),
+		)
+		.to_compile_error()
+		.into();
+	}
+
+	let tag_name: Vec<syn::Ident> = kebab_name
 		.split("-")
 		.map(|x| format_ident!("{}", x))
 		.collect();
