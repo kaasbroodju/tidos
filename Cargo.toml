@@ -6,7 +6,10 @@ members = [
     "tidos_i18n",
 ]
 exclude = [
-    "examples/simple_rocket",
+    "examples/http_frameworks/actix",
+    "examples/http_frameworks/axum",
+    "examples/http_frameworks/warp",
+    "examples/http_frameworks/rocket",
     "examples/internationalization",
     "examples/web_frameworks/svelte",
     "examples/web_frameworks/lit",

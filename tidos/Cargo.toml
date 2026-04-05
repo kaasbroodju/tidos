@@ -15,7 +15,10 @@ categories = ["web-programming"]
 all-features = true
 
 [dependencies]
+actix-web = { version = "4", optional = true }
+axum = { version = "0.8.8", optional = true }
 rocket = { version = "0.5.1", optional = true }
+warp = { version = "0.4.2", default-features = false, optional = true }
 tidos_macro = { workspace = true }
 
 # I18n support
@@ -29,16 +32,23 @@ figment = { version = "0.10.19", features = ["env", "toml"], optional = true }
 serde = { version = "1.0.228", optional = true}
 
 [dev-dependencies]
+http-body-util = "0.1.3"
+hyper = "1.9.0"
+tokio = { version = "1.51.0", features = ["rt", "macros"] }
 trybuild = "1.0.116"
 
 [[test]]
 name = "i18n"
-required-features = ["i18n", "rocket"]
+path = "tests/i18n/mod.rs"
+required-features = ["i18n"]
 
 [[test]]
 name = "page_macro"
 required-features = []
 
 [features]
+actix-web = ["dep:actix-web"]
+axum = ["dep:axum"]
 rocket = ["dep:rocket"]
+warp = ["dep:warp"]
 i18n = ["dep:tidos_i18n", "tidos_macro/i18n", "dep:fluent", "dep:fluent-langneg", "dep:fluent-resmgr", "dep:unic-langid", "dep:lazy_static", "dep:figment", "dep:serde"]
