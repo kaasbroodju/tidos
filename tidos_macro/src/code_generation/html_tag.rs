@@ -4,8 +4,7 @@ use quote::{quote, ToTokens, TokenStreamExt};
 
 impl ToTokens for HTMLTag {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
-		let is_component = self.tag.chars().next().unwrap().is_ascii_uppercase();
-		if is_component {
+		if self.is_component() {
 			tokens.append_all(custom_element_to_tokens(self));
 		} else {
 			tokens.append_all(native_html_tag_to_tokenstream(self))
@@ -18,7 +17,7 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 	let mut static_attributes = vec![];
 	let mut dynamic_attributes = vec![];
-	for attribute in &html_tag.attributes {
+	for attribute in &html_tag.attributes.attributes {
 		if attribute.is_static() {
 			static_attributes.push(attribute.to_token_stream());
 		} else {
@@ -73,7 +72,7 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 		match (has_only_static_attributes, has_only_static_children) {
 			(true, true) => {
-				if html_tag.attributes.is_empty() {
+				if html_tag.attributes.attributes.is_empty() {
 					quote! {
 						concat!("<", #tag, ">"
 							#( , #children )*
@@ -89,7 +88,7 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 				}
 			}
 			(true, false) => {
-				if html_tag.attributes.is_empty() {
+				if html_tag.attributes.attributes.is_empty() {
 					quote! {
 						concat!("<", #tag, ">")
 						#( + #children )*
@@ -128,6 +127,7 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 
 	let mut attributes = html_tag
 		.attributes
+		.attributes
 		.iter()
 		.map(Attribute::to_tokens_custom_element)
 		.collect::<Vec<_>>();
@@ -140,5 +140,11 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 
 	let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
 
-	quote! { &#component_name { #( #attributes ),* }.to_render(page) }
+	if html_tag.attributes.has_default_flag && attributes.is_empty() {
+		quote! { &#component_name { ..Default::default() }.to_render(page) }
+	} else if html_tag.attributes.has_default_flag && !attributes.is_empty() {
+		quote! { &#component_name { #( #attributes ),*, ..Default::default() }.to_render(page) }
+	} else {
+		quote! { &#component_name { #( #attributes ),* }.to_render(page) }
+	}
 }

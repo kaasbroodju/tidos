@@ -1,5 +1,5 @@
 use crate::parsing::utils::{matches_tag, peek_closing_tag_name};
-use crate::tokens::{Attribute, Content, HTMLTag};
+use crate::tokens::{Attribute, Attributes, Content, HTMLTag};
 use proc_macro2::{Group, Literal};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
@@ -11,8 +11,15 @@ impl Parse for HTMLTag {
 		// <p>
 		let start_first_tag_token = input.parse::<Token![<]>()?;
 		let tag = Self::extract_name(input)?;
-
+		let is_component = tag.chars().next().unwrap().is_ascii_uppercase();
 		let attributes = Self::parse_attributes(input, &tag, start_first_tag_token.span())?;
+
+		if !is_component && attributes.has_default_flag {
+			return Err(syn::Error::new(
+				start_first_tag_token.span(),
+				"native html tags cannot have a default flag, remove the `..`".to_string(),
+			));
+		}
 
 		// self closing tags, like <img />
 		if Self::is_peeking_at_self_closing_tag(input) {
@@ -92,8 +99,9 @@ impl HTMLTag {
 		input: ParseStream,
 		tag: &str,
 		tag_span: proc_macro2::Span,
-	) -> Result<Vec<Attribute>, syn::Error> {
+	) -> Result<Attributes, syn::Error> {
 		let mut attributes = Vec::new();
+		let mut has_default_flag = false;
 		while !(Self::is_peeking_at_self_closing_tag(input) || input.peek(Token![>])) {
 			if input.is_empty() {
 				return Err(syn::Error::new(
@@ -101,6 +109,12 @@ impl HTMLTag {
 					format!("missing closing `>` for `<{tag}>` tag"),
 				));
 			}
+
+			if input.parse::<Token![.]>().is_ok() && input.parse::<Token![.]>().is_ok() {
+				has_default_flag = true;
+				continue;
+			}
+
 			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
 
 			let Ok(attribute_name) = Self::extract_name(input) else {
@@ -159,7 +173,10 @@ impl HTMLTag {
 				return Err(syn::Error::new(equal_sign_token.span(), message));
 			}
 		}
-		Ok(attributes)
+		Ok(Attributes {
+			attributes,
+			has_default_flag,
+		})
 	}
 
 	fn parse_body(

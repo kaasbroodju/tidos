@@ -140,3 +140,40 @@ fn struct_component_all_prop_styles() {
 		"class=wrapper label=hello disabled=true active=true visible=true"
 	);
 }
+
+#[cfg(not(feature = "i18n"))]
+#[test]
+fn struct_component_default() {
+	#[derive(Default)]
+	struct Coordinate {
+		pub x: usize,
+		pub y: usize,
+	}
+
+	impl Component for Coordinate {
+		fn to_render(&self, _page: &mut Page) -> String {
+			view! {
+				<span>{self.x.to_string()}</span><span>{self.y.to_string()}</span>
+			}
+		}
+	}
+
+	let visible = true;
+	let mut page_output = Page::new();
+	let page = &mut page_output;
+
+	let result = view! {
+		<Coordinate
+			x={1}
+			..
+		/>
+	};
+
+	assert_eq!(result, "<span>1</span><span>0</span>");
+}
+
+#[test]
+fn default_flag_on_native_element() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/default_flag_on_native_element.rs");
+}
