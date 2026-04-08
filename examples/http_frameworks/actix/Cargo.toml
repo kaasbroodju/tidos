@@ -1,13 +1,13 @@
 [package]
 name = "actix"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 
 [[bin]]
 name = "actix"
 doc = false
 
 [dependencies]
-tidos = { path = "../../../tidos", features = ["actix-web"] }
-common = { path = "../common" }
-actix-web = "4"
+tidos = { workspace = true, features = ["actix-web"] }
+common = { workspace = true }
+actix-web = { workspace = true }

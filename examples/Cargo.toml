@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = [
+    "http_frameworks/common",
+    "http_frameworks/actix",
+    "http_frameworks/axum",
+    "http_frameworks/warp",
+    "http_frameworks/rocket",
+    "internationalization",
+    "web_frameworks/angular",
+    "web_frameworks/lit",
+    "web_frameworks/react",
+    "web_frameworks/svelte",
+    "web_frameworks/vue",
+]
+
+[workspace.package]
+edition = "2021"
+
+[workspace.dependencies]
+tidos = { path = "../tidos" }
+common = { path = "http_frameworks/common" }
+actix-web = { version = "4" }
+axum = { version = "0.8.8" }
+warp = { version = "0.4.2" }
+rocket = { version = "0.5.1" }
+tokio = { version = "1.51.0", features = ["full"] }

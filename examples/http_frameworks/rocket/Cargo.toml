@@ -1,13 +1,13 @@
 [package]
 name = "rocket"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 
 [[bin]]
 name = "rocket"
 doc = false
 
 [dependencies]
-tidos = { path = "../../../tidos", features = ["rocket"] }
-common = { path = "../common" }
-rocket = "0.5.1"
+tidos = { workspace = true, features = ["rocket"] }
+common = { workspace = true }
+rocket = { workspace = true }

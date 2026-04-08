@@ -1,0 +1,54 @@
+version: 2
+updates:
+  # Main workspace (tidos, tidos_macro, tidos_i18n)
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    ignore:
+      # fluent-langneg 0.14+ switched LanguageIdentifier from unic-langid to icu_locid (ICU4X).
+      # fluent 0.17 still uses unic-langid — type mismatch breaks i18n support.
+      # Unblock when fluent-rs itself migrates to ICU4X.
+      # Tracked: https://github.com/projectfluent/fluent-langneg-rs/issues/26
+      - dependency-name: fluent-langneg
+        versions: [">=0.14"]
+
+  # Examples sub-workspace (all http + web framework examples)
+  - package-ecosystem: cargo
+    directory: /examples
+    schedule:
+      interval: monthly
+
+  # Web framework examples (npm side)
+  - package-ecosystem: npm
+    directory: /examples/web_frameworks/angular
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: npm
+    directory: /examples/web_frameworks/lit
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: npm
+    directory: /examples/web_frameworks/react
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: npm
+    directory: /examples/web_frameworks/svelte
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: npm
+    directory: /examples/web_frameworks/vue
+    schedule:
+      interval: monthly
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
