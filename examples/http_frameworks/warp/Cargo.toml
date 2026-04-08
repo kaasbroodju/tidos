@@ -1,14 +1,14 @@
 [package]
 name = "warp"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 
 [[bin]]
 name = "warp"
 doc = false
 
 [dependencies]
-tidos = { path = "../../../tidos", features = ["warp"] }
-common = { path = "../common" }
-warp = "0.4.2"
-tokio = { version = "1", features = ["full"] }
+tidos = { workspace = true, features = ["warp"] }
+common = { workspace = true }
+warp = { workspace = true }
+tokio = { workspace = true }

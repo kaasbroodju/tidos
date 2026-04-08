@@ -1,8 +1,8 @@
 [package]
 name = "svelte"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 
 [dependencies]
-rocket = "0.5.1"
-tidos = { path = "../../../tidos", features = ["rocket"] }
+tidos = { workspace = true, features = ["rocket"] }
+rocket = { workspace = true }

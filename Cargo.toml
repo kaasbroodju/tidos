@@ -6,16 +6,7 @@ members = [
     "tidos_i18n",
 ]
 exclude = [
-    "examples/http_frameworks/actix",
-    "examples/http_frameworks/axum",
-    "examples/http_frameworks/warp",
-    "examples/http_frameworks/rocket",
-    "examples/internationalization",
-    "examples/web_frameworks/svelte",
-    "examples/web_frameworks/lit",
-    "examples/web_frameworks/vue",
-    "examples/web_frameworks/react",
-    "examples/web_frameworks/angular"
+    "examples",
 ]
 
 [workspace.package]
@@ -26,7 +17,7 @@ rust-version = "1.80.0"
 [workspace.dependencies]
 tidos = { path = "./tidos", version = "0.7.6" }
 tidos_macro = { path = "./tidos_macro", version = "0.7.6" }
-tidos_i18n = { path = "./tidos_i18n", version = "0.7.5"}
+tidos_i18n = { path = "./tidos_i18n", version = "0.7.6"}
 
 
 [profile.release]
