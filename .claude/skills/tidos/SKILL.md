@@ -726,7 +726,7 @@ use tidos::i18n::i18n;
 i18n!("greeting")
 
 // With Fluent variables (alternating key-value pairs after the message key):
-i18n!("shared-photos", "userName", "Anne", "userGender", "female", "photoCount", 3)
+i18n!("shared-photos", ("userName", "Anne"), ("userGender", "female"), ("photoCount", 3))
 ```
 
 Full component example:
@@ -742,7 +742,7 @@ impl Component for Greeting {
         view! {
             <section>
                 <h1>{i18n!("greeting")}</h1>
-                <p>{i18n!("shared-photos", "userName", "Anne", "userGender", "female", "photoCount", 3)}</p>
+                <p>{i18n!("shared-photos", ("userName", "Anne"), ("userGender", "female"), ("photoCount", 3))}</p>
             </section>
         }
     }
