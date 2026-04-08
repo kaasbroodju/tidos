@@ -1,7 +1,5 @@
-mod components;
-
-use components::leaderboard::Leaderboard;
-use components::nav_bar::NavBar;
+use common::components::leaderboard::Leaderboard;
+use common::components::nav_bar::NavBar;
 use tidos::{page, scoped_css, Component, Page};
 use warp::Filter;
 
@@ -17,10 +15,8 @@ async fn main() {
         page! {
             <NavBar title={String::from("🦀 Ferris Fan Club")} links={nav_links} />
             <main class={scoped_css!("./main.css")}>
-                <h1>Welcome, Rustacean!</h1>
-                <p>
-                    The premier leaderboard for crab enthusiasts worldwide.
-                </p>
+                <h1>{"Welcome, Rustacean!"}</h1>
+                <p>{"The premier leaderboard for crab enthusiasts worldwide."}</p>
                 <Leaderboard />
             </main>
         }

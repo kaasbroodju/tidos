@@ -7,7 +7,7 @@ fn a_simple_conditional() {
 	assert_eq!(
 		&view! {
 			{#if true}
-				<p>Hello world</p>
+				<p>{"Hello world"}</p>
 			{/if}
 		},
 		"<p>Hello world</p>"
@@ -16,7 +16,7 @@ fn a_simple_conditional() {
 	assert_eq!(
 		&view! {
 			{#if false}
-				<p>Hello world</p>
+				<p>{"Hello world"}</p>
 			{/if}
 		},
 		""
@@ -28,9 +28,9 @@ fn a_simple_conditional_with_an_else() {
 	assert_eq!(
 		&view! {
 			{#if true}
-				<p>Hello world</p>
+				<p>{"Hello world"}</p>
 			{:else}
-				<p>Hello mars</p>
+				<p>{"Hello mars"}</p>
 			{/if}
 		},
 		"<p>Hello world</p>"
@@ -39,9 +39,9 @@ fn a_simple_conditional_with_an_else() {
 	assert_eq!(
 		&view! {
 			{#if false}
-				<p>Hello world</p>
+				<p>{"Hello world"}</p>
 			{:else}
-				<p>Hello mars</p>
+				<p>{"Hello mars"}</p>
 			{/if}
 		},
 		"<p>Hello mars</p>"
@@ -53,9 +53,9 @@ fn a_simple_conditional_with_if_else_chain() {
 	fn view_component(n: usize) -> String {
 		view! {
 			{#if n == 0}
-				<p>0</p>
+				<p>{"0"}</p>
 			{:else if n == 1}
-				<p>1</p>
+				<p>{"1"}</p>
 			{/if}
 		}
 	}
@@ -68,11 +68,11 @@ fn a_simple_conditional_with_if_else_chain() {
 	fn view_component_multiple_if_else(n: usize) -> String {
 		view! {
 			{#if n == 0}
-				<p>0</p>
+				<p>{"0"}</p>
 			{:else if n == 1}
-				<p>1</p>
+				<p>{"1"}</p>
 			{:else if n == 2}
-				<p>2</p>
+				<p>{"2"}</p>
 			{/if}
 		}
 	}
@@ -85,11 +85,11 @@ fn a_simple_conditional_with_if_else_chain() {
 	fn view_component_with_else(n: usize) -> String {
 		view! {
 			{#if n == 0}
-				<p>0</p>
+				<p>{"0"}</p>
 			{:else if n == 1}
-				<p>1</p>
+				<p>{"1"}</p>
 			{:else}
-				<p>Hello world</p>
+				<p>{"Hello world"}</p>
 			{/if}
 		}
 	}
@@ -102,13 +102,13 @@ fn a_simple_conditional_with_if_else_chain() {
 	fn view_component_multiple_if_else_with_else(n: usize) -> String {
 		view! {
 			{#if n == 0}
-				<p>0</p>
+				<p>{"0"}</p>
 			{:else if n == 1}
-				<p>1</p>
+				<p>{"1"}</p>
 			{:else if n == 2}
-				<p>2</p>
+				<p>{"2"}</p>
 			{:else}
-				<p>Hello world</p>
+				<p>{"Hello world"}</p>
 			{/if}
 		}
 	}

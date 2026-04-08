@@ -4,11 +4,11 @@ fn else_before_else_if() {
 	let n = 1;
 	view! {
 		{#if n == 0}
-			<p>Zero</p>
+			<p>{"Zero"}</p>
 		{:else}
-			<p>Not zero</p>
+			<p>{"Not zero"}</p>
 		{:else if n == 1}
-			<p>One</p>
+			<p>{"One"}</p>
 		{/if}
 	};
 }

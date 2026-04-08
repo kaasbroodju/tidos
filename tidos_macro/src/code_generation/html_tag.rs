@@ -17,106 +17,32 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 	let mut static_attributes = vec![];
 	let mut dynamic_attributes = vec![];
-	for attribute in &html_tag.attributes.attributes {
+	let attributes = html_tag.attributes.attributes.iter();
+	for attribute in attributes {
 		if attribute.is_static() {
-			static_attributes.push(attribute.to_token_stream());
+			static_attributes.push(attribute);
 		} else {
-			dynamic_attributes.push(attribute.to_token_stream());
+			dynamic_attributes.push(attribute);
 		}
 	}
-	let has_only_static_attributes = dynamic_attributes.is_empty();
 
 	if html_tag.is_self_closing {
-		if has_only_static_attributes {
+		quote! {
+			"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , "/>"
+		}
+	} else {
+		let children = &html_tag.children;
+		if static_attributes.is_empty() && dynamic_attributes.is_empty() {
 			quote! {
-				concat!("<", #tag, " ", #( #static_attributes, )* "/>")
+				"<", #tag, ">"
+				#( , #children )*
+				, "</", #tag, ">"
 			}
 		} else {
 			quote! {
-				concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + "/>"
-			}
-		}
-	} else {
-		let mut islands = vec![];
-		let mut island = vec![];
-		let mut unclean = false;
-		for element in &html_tag.children {
-			if element.is_static() {
-				island.push(element);
-				unclean = true;
-			} else if unclean {
-				islands.push((true, island.clone()));
-				unclean = false;
-				island = vec![];
-				islands.push((false, vec![element]))
-			} else {
-				islands.push((false, vec![element]))
-			}
-		}
-
-		if unclean {
-			islands.push((true, island.clone()));
-		}
-
-		let has_only_static_children = islands.iter().all(|&(x, _)| x);
-		let children = islands
-			.iter()
-			.map(|(is_static, island)| {
-				if *is_static {
-					quote! { concat!( #( #island ),* ) }
-				} else {
-					quote! { #( #island )* }
-				}
-			})
-			.collect::<Vec<_>>();
-
-		match (has_only_static_attributes, has_only_static_children) {
-			(true, true) => {
-				if html_tag.attributes.attributes.is_empty() {
-					quote! {
-						concat!("<", #tag, ">"
-							#( , #children )*
-							, "</", #tag, ">")
-					}
-				} else {
-					quote! {
-						concat!("<", #tag, " " #( , #static_attributes )*
-							, ">"
-							#( , #children )*
-							, "</", #tag, ">")
-					}
-				}
-			}
-			(true, false) => {
-				if html_tag.attributes.attributes.is_empty() {
-					quote! {
-						concat!("<", #tag, ">")
-						#( + #children )*
-						+ concat!("</", #tag, ">")
-					}
-				} else {
-					quote! {
-						concat!("<", #tag, " " #( , #static_attributes )* , ">")
-						#( + #children )*
-						+ concat!("</", #tag, ">")
-					}
-				}
-			}
-			(false, true) => {
-				quote! {
-					concat!("<", #tag, " " #( , #static_attributes )* ) #( + #dynamic_attributes )* + concat!(">"
-					#( , #children )*
-					, "</", #tag, ">")
-				}
-			}
-			(false, false) => {
-				quote! {
-					concat!("<", #tag, " " #( , #static_attributes )* )
-					#( + #dynamic_attributes )*
-					+ ">"
-					#( + #children )*
-					+ concat!("</", #tag, ">")
-				}
+				"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , ">"
+				#( , #children )*
+				, "</", #tag, ">"
 			}
 		}
 	}
@@ -134,17 +60,17 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 
 	for child in &html_tag.children {
 		if let Content::ControlTag(ControlTag::Slot { name, contents }) = child {
-			attributes.push(quote! { #name: String::new() #( + #contents )* });
+			attributes.push(quote! { #name: tidos::combine!(String::new() #( , #contents )* ) });
 		}
 	}
 
 	let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
 
 	if html_tag.attributes.has_default_flag && attributes.is_empty() {
-		quote! { &#component_name { ..Default::default() }.to_render(page) }
+		quote! { #component_name { ..Default::default() }.to_render(page) }
 	} else if html_tag.attributes.has_default_flag && !attributes.is_empty() {
-		quote! { &#component_name { #( #attributes ),*, ..Default::default() }.to_render(page) }
+		quote! { #component_name { #( #attributes ),*, ..Default::default() }.to_render(page) }
 	} else {
-		quote! { &#component_name { #( #attributes ),* }.to_render(page) }
+		quote! { #component_name { #( #attributes ),* }.to_render(page) }
 	}
 }

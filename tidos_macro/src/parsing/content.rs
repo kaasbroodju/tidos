@@ -1,6 +1,6 @@
-use crate::tokens::HTMLTag;
 use crate::tokens::{Content, ControlTag};
-use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, TokenTree};
+use crate::tokens::{HTMLTag, TextContent};
+use proc_macro2::{Delimiter, Ident, Literal, Punct, Spacing, TokenTree};
 use syn::parse::{Parse, ParseStream};
 use syn::token::{Brace, Token};
 use syn::Token;
@@ -21,7 +21,7 @@ impl Parse for Content {
 			Ok(Content::Tag(input.parse::<HTMLTag>()?))
 		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == RAW_HTML_PREFIX}
 		{
-			// @html{"<p>hello world</p>"}
+			// @html{"<p>Hello world</p>"} @html{"<p>Hello {}</p>", name} @html{ markdown }
 
 			Self::parse_raw_html_statement(input)
 		} else if input.peek(Brace) && is_cursor_at_command(input.cursor()) {
@@ -29,19 +29,55 @@ impl Parse for Content {
 
 			Ok(Content::ControlTag(ControlTag::parse(input)?))
 		} else if input.peek(Brace) && !is_cursor_at_command(input.cursor()) {
-			// { name }
-
-			Ok(Content::Expression(input.parse::<Group>()?))
+			// {"Hello world"} {"Hello {}", name} { name }
+			let text_content = Self::parse_text_content(input)?;
+			Ok(Content::Text(text_content))
+			// Ok(Content::Expression(input.parse::<Group>()?))
 		} else {
 			// text between tags
-
-			Self::parse_text_between_tags(input)
+			if let Ok(x) = Self::parse_text_between_tags(input) {
+				panic!("Raw text between tags is no longer supported. Use `{{\"{x}\"}}` instead.")
+			}
+			unreachable!();
 		}
 	}
 }
 
 impl Content {
-	fn parse_text_between_tags(input: ParseStream) -> syn::Result<Self> {
+	fn parse_text_content(input: ParseStream) -> syn::Result<TextContent> {
+		let content;
+		syn::braced!(content in input);
+		if content.peek(syn::LitStr) {
+			let base_string = content.parse::<Literal>()?;
+			let mut params = vec![];
+			while !content.is_empty() && content.peek(Token![,]) {
+				content.parse::<Token![,]>()?;
+				let mut contents = vec![];
+				while !content.is_empty() && !content.peek(Token![,]) {
+					contents.push(content.parse::<TokenTree>()?);
+				}
+				params.push(contents);
+			}
+
+			if params.is_empty() {
+				Ok(TextContent::Literal(base_string))
+			} else {
+				Ok(TextContent::Formatted(base_string, params))
+			}
+		} else {
+			// panic!("hello test");
+			let mut contents = vec![];
+			while let Ok(token) = content.parse::<TokenTree>() {
+				contents.push(token);
+			}
+			// while !input.is_empty() {
+			// 	contents.push(content.parse::<TokenTree>()?);
+			// }
+			Ok(TextContent::Expression(contents))
+		}
+	}
+
+	fn parse_text_between_tags(input: ParseStream) -> syn::Result<String> {
 		let mut output = String::new();
 		while !(input.is_empty() || input.peek(Token![<]) || input.peek(Brace)) {
 			let token = input.parse::<TokenTree>()?;
@@ -75,7 +111,7 @@ impl Content {
 				}
 			}
 		}
-		Ok(Content::Literal(output))
+		Ok(output)
 	}
 
 	fn parse_raw_html_statement(input: ParseStream) -> syn::Result<Self> {
@@ -87,7 +123,8 @@ impl Content {
 				format!("Did you mean `{RAW_HTML_IDENTIFIER}`?"),
 			))
 		} else {
-			Ok(Content::RawHTMLExpression(input.parse::<Group>()?))
+			let text_content = Self::parse_text_content(input)?;
+			Ok(Content::RawHTMLExpression(text_content))
 		}
 	}
 }

@@ -54,7 +54,7 @@ impl ControlTag {
 
 		let output = quote! {
 
-			&( #( #right_side )* ).into_iter().fold(String::new(), |acc, ( #( #left_side )* )| { acc + #tokens_children })
+			&( #( #right_side )* ).into_iter().fold(String::new(), |acc, ( #( #left_side )* )| { tidos::combine!(acc, #tokens_children) })
 		};
 
 		tokens.append_all(output);
@@ -87,7 +87,7 @@ impl ControlTag {
 					.to_owned();
 
 				let chain = quote! {
-					else if #( #statement )* { String::new() + #chain_contents_tokens }
+					else if #( #statement )* { tidos::combine!(String::new(), #chain_contents_tokens) }
 				};
 
 				chain.to_tokens(acc);
@@ -105,11 +105,11 @@ impl ControlTag {
 				.to_owned();
 
 			quote! {
-				&if #( #if_statement )* { String::new() + #if_content_tokens } #if_else_chain_tokens else { String::new() + #else_content_tokens }
+				if #( #if_statement )* { tidos::combine!(String::new(), #if_content_tokens) } #if_else_chain_tokens else { tidos::combine!(String::new(), #else_content_tokens) }
 			}
 		} else {
 			quote! {
-				&if #( #if_statement )* { String::new() + #if_content_tokens } #if_else_chain_tokens else { String::new() }
+				if #( #if_statement )* { tidos::combine!(String::new(), #if_content_tokens) } #if_else_chain_tokens else { String::new() }
 			}
 		};
 
@@ -136,7 +136,7 @@ impl ControlTag {
 				} else {
 					quote! {
 						#( #case_statement )* => {
-							String::new() + #( #case_content )+*
+							tidos::combine!(String::new(), #( #case_content ),*)
 						}
 					}
 				}

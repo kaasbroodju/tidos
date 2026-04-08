@@ -9,5 +9,6 @@ doc = false
 
 [dependencies]
 tidos = { path = "../../../tidos", features = ["warp"] }
+common = { path = "../common" }
 warp = "0.4.2"
 tokio = { version = "1", features = ["full"] }

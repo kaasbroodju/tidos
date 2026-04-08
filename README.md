@@ -13,7 +13,7 @@ let names = vec!["Bob", "Alice"];
 
 view! {
     {#for name in names}
-        <p>{format!("Hello {}!", name)}</p>
+        <p>{"Hello {}!", name}</p>
     {/for}
 }
 ```
@@ -31,8 +31,8 @@ impl Component for Greet {
     fn to_render(&self, page: &mut Page) -> String {
         view! {
             <section>
-                <h1>Hello {&self.name}!</h1>
-                <p>Welcome to Tidos.</p>
+                <h1>{"Hello {}!", &self.name}</h1>
+                <p>{"Welcome to Tidos."}</p>
             </section>
         }
     }

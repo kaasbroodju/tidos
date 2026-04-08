@@ -9,4 +9,5 @@ doc = false
 
 [dependencies]
 tidos = { path = "../../../tidos", features = ["actix-web"] }
+common = { path = "../common" }
 actix-web = "4"

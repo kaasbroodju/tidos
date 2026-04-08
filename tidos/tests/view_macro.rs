@@ -75,6 +75,48 @@ fn empty_closing_tag() {
 }
 
 #[test]
-fn punctuation() {
-	assert_eq!(&view! {<p>Lorem. Ipsum</p>}, r#"<p>Lorem. Ipsum</p>"#);
+fn text_literal() {
+	assert_eq!(&view! { <p>{"Hello world"}</p> }, "<p>Hello world</p>");
+}
+
+#[test]
+fn text_literal_with_sanitation() {
+	assert_eq!(&view! { <p>{"Hello>world"}</p> }, "<p>Hello&gt;world</p>");
+}
+
+#[test]
+fn text_literal_with_params() {
+	let a = "world";
+	let b = "mars";
+	assert_eq!(
+		&view! { <p>{"Hello {} and {}", a, b}</p> },
+		"<p>Hello world and mars</p>"
+	);
+}
+
+#[test]
+fn text_expression() {
+	let greeting = String::from("hello");
+	assert_eq!(&view! { <p>{greeting.to_uppercase()}</p> }, "<p>HELLO</p>");
+}
+
+#[test]
+fn raw_html_literal() {
+	assert_eq!(&view! { @html{"<b>bold</b>"} }, "<b>bold</b>");
+}
+
+#[test]
+fn raw_html_literal_with_params() {
+	let a = "bold";
+	let b = "italic";
+	assert_eq!(
+		&view! { @html{"<b>{}</b><i>{}</i>", a, b} },
+		"<b>bold</b><i>italic</i>"
+	);
+}
+
+#[test]
+fn raw_html_expression() {
+	let html = "<em>emphasized</em>";
+	assert_eq!(&view! { @html{html} }, "<em>emphasized</em>");
 }
