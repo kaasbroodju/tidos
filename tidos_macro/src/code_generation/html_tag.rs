@@ -17,111 +17,32 @@ fn native_html_tag_to_tokenstream(html_tag: &HTMLTag) -> TokenStream {
 
 	let mut static_attributes = vec![];
 	let mut dynamic_attributes = vec![];
-	for attribute in &html_tag.attributes.attributes {
+	let attributes = html_tag.attributes.attributes.iter();
+	for attribute in attributes {
 		if attribute.is_static() {
-			static_attributes.push(attribute.to_token_stream());
+			static_attributes.push(attribute);
 		} else {
-			dynamic_attributes.push(attribute.to_token_stream());
+			dynamic_attributes.push(attribute);
 		}
 	}
-	let has_only_static_attributes = dynamic_attributes.is_empty();
 
 	if html_tag.is_self_closing {
-		if has_only_static_attributes {
+		quote! {
+			"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , "/>"
+		}
+	} else {
+		let children = &html_tag.children;
+		if static_attributes.is_empty() && dynamic_attributes.is_empty() {
 			quote! {
-				"<", #tag, " ", #( #static_attributes, )* "/>"
+				"<", #tag, ">"
+				#( , #children )*
+				, "</", #tag, ">"
 			}
 		} else {
 			quote! {
-				"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , "/>"
-			}
-		}
-	} else {
-		let mut islands = vec![];
-		let mut island = vec![];
-		let mut unclean = false;
-		for element in &html_tag.children {
-			if element.is_static() {
-				island.push(element);
-				unclean = true;
-			} else if unclean {
-				islands.push((true, island.clone()));
-				unclean = false;
-				island = vec![];
-				islands.push((false, vec![element]))
-			} else {
-				islands.push((false, vec![element]))
-			}
-		}
-
-		if unclean {
-			islands.push((true, island.clone()));
-		}
-
-		let has_only_static_children = islands.iter().all(|&(x, _)| x);
-		let children = islands
-			.iter()
-			.map(|(is_static, island)| {
-				if *is_static {
-					quote! { concat!( #( #island ),* ) }
-				} else {
-					quote! { #( #island )* }
-				}
-			})
-			.collect::<Vec<_>>();
-
-		match (has_only_static_attributes, has_only_static_children) {
-			(true, true) => {
-				if html_tag.attributes.attributes.is_empty() {
-					quote! {
-						"<", #tag, ">"
-						#( , #children )*
-						, "</", #tag, ">"
-					}
-				} else {
-					quote! {
-						"<", #tag, " " #( , #static_attributes )* , ">"
-						#( , #children )*
-						, "</", #tag, ">"
-					}
-				}
-			}
-			(true, false) => {
-				if html_tag.attributes.attributes.is_empty() {
-					quote! {
-
-						"<", #tag, ">"
-						#( , #children )*
-						, "</", #tag, ">"
-
-					}
-				} else {
-					quote! {
-
-						"<", #tag, " " #( , #static_attributes )* , ">"
-						#( , #children )*
-						, "</", #tag, ">"
-
-					}
-				}
-			}
-			(false, true) => {
-				quote! {
-
-					"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , ">"
-					#( , #children )*
-					, "</", #tag, ">"
-
-				}
-			}
-			(false, false) => {
-				quote! {
-
-					"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , ">"
-					#( , #children )*
-					, "</", #tag, ">"
-
-				}
+				"<", #tag, " " #( , #static_attributes )* #( , #dynamic_attributes )* , ">"
+				#( , #children )*
+				, "</", #tag, ">"
 			}
 		}
 	}

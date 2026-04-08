@@ -107,14 +107,14 @@ fn i18n_inside_view() {
 #[test]
 fn page_lang_is_set_to_en() {
 	let lang = en();
-	let result = page! { <p>Hello</p> };
+	let result = page! { <p>{"Hello"}</p> };
 	assert_eq!(result.lang.to_string(), "en-US");
 }
 
 #[test]
 fn page_lang_is_set_to_nl() {
 	let lang = nl();
-	let result = page! { <p>Hallo</p> };
+	let result = page! { <p>{"Hallo"}</p> };
 	assert_eq!(result.lang.to_string(), "nl-NL");
 }
 

@@ -9,4 +9,5 @@ doc = false
 
 [dependencies]
 tidos = { path = "../../../tidos", features = ["rocket"] }
+common = { path = "../common" }
 rocket = "0.5.1"

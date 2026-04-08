@@ -25,7 +25,7 @@ impl ToTokens for Attribute {
 				// disabled
 				let attribute_name = name.to_string();
 				tokens.append_all(quote! {
-					concat!(#attribute_name, " ")
+					#attribute_name, " "
 				});
 			}
 			Attribute::ConstantLiteral { name, literal } => {
@@ -37,9 +37,7 @@ impl ToTokens for Attribute {
 					.to_string();
 
 				tokens.append_all(quote! {
-					concat!(#attribute_name, "=\"", #literal, "\" ")
-
-					//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
+					#attribute_name, "=\"", #literal, "\" "
 				});
 			}
 			Attribute::ConstantGroup { name, contents } => {
@@ -52,8 +50,6 @@ impl ToTokens for Attribute {
 
 				tokens.append_all(quote! {
 					#attribute_name, "=\"", tidos::sanitize!(#contents), "\" "
-
-					//format!("{}=\"{}\"", #attribute_name, tidos::sanitize!(#value.to_string()) )
 				});
 			}
 		}

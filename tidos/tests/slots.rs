@@ -24,8 +24,8 @@ fn single_slot() {
 
 	let result = view! {
 		<Card>
-			{#slot:header}<h1>Title</h1>{/slot}
-			{#slot:body}<p>Content</p>{/slot}
+			{#slot:header}<h1>{"Title"}</h1>{/slot}
+			{#slot:body}<p>{"Content"}</p>{/slot}
 		</Card>
 	};
 
@@ -95,7 +95,7 @@ fn slot_alongside_prop() {
 
 	let result = view! {
 		<Banner title="My Banner">
-			{#slot:content}<p>Slot content</p>{/slot}
+			{#slot:content}<p>{"Slot content"}</p>{/slot}
 		</Banner>
 	};
 

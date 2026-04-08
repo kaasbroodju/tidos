@@ -35,7 +35,7 @@ impl Component for Leaderboard {
                 <h2>{"🏆 Leaderboard"}</h2>
                 <p>
                     {#if online_count == 0}
-                        No players online right now.
+                        {"No players online right now."}
                     {:else if online_count == 1}
                         {format!("1 of {} players currently online.", total)}
                     {:else}

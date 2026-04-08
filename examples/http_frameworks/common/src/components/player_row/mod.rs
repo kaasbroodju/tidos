@@ -20,15 +20,15 @@ impl Component for PlayerRow {
                         {:case 3}
                             {"🥉"}
                         {:case _}
-                            <span>#{self.rank.to_string()}</span>
+                            <span>{"#{}", self.rank}</span>
                     {/match}
                 </td>
                 <td>
                     <span>{&self.name}</span>
                     {#if self.online}
-                        <span data-status="online">online</span>
+                        <span data-status="online">{"online"}</span>
                     {:else}
-                        <span data-status="offline">offline</span>
+                        <span data-status="offline">{"offline"}</span>
                     {/if}
                 </td>
                 <td>
@@ -36,13 +36,13 @@ impl Component for PlayerRow {
                 </td>
                 <td>
                     {#if self.score >= 9000}
-                        <span data-tier="legendary">LEGENDARY</span>
+                        <span data-tier="legendary">{"LEGENDARY"}</span>
                     {:else if self.score >= 5000}
-                        <span data-tier="expert">EXPERT</span>
+                        <span data-tier="expert">{"EXPERT"}</span>
                     {:else if self.score >= 3000}
-                        <span data-tier="pro">PRO</span>
+                        <span data-tier="pro">{"PRO"}</span>
                     {:else}
-                        <span data-tier="newbie">NEWBIE</span>
+                        <span data-tier="newbie">{"NEWBIE"}</span>
                     {/if}
                 </td>
             </tr>

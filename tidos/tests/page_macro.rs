@@ -5,7 +5,7 @@ use tidos::{head, page, Component, Page};
 #[test]
 fn renders_basic_html() {
 	let result = page! {
-		<main><h1>Hello</h1></main>
+		<main><h1>{"Hello"}</h1></main>
 	};
 	assert_eq!(result.template, "<main><h1>Hello</h1></main>");
 }
@@ -20,7 +20,7 @@ fn empty_page() {
 #[test]
 fn head_is_empty_by_default() {
 	let result = page! {
-		<p>Content</p>
+		<p>{"Content"}</p>
 	};
 	assert_eq!(result.head, "");
 }
@@ -58,7 +58,7 @@ fn renders_component() {
 fn head_injects_into_page() {
 	let mut page_output = Page::new();
 	let page = &mut page_output;
-	head! { <title>My Title</title> }
+	head! { <title>{"My Title"}</title> }
 	assert!(page.head.contains("<title>My Title</title>"));
 }
 
@@ -67,7 +67,7 @@ fn head_deduplicates_same_invocation() {
 	let mut page_output = Page::new();
 	let page = &mut page_output;
 	for _ in 0..3 {
-		head! { <title>My Title</title> }
+		head! { <title>{"My Title"}</title> }
 	}
 	assert_eq!(page.head.matches("<title>My Title</title>").count(), 1);
 }
@@ -77,7 +77,7 @@ fn head_multiple_different_invocations_both_inject() {
 	let mut page_output = Page::new();
 	let page = &mut page_output;
 	head! { <link rel="stylesheet" href="/style.css" /> }
-	head! { <title>My Page</title> }
+	head! { <title>{"My Page"}</title> }
 	assert!(page.head.contains("<link"));
 	assert!(page.head.contains("<title>My Page</title>"));
 }
