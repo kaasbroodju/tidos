@@ -35,7 +35,7 @@ tidos = { version = "0.7.2", features = ["rocket", "i18n"] }
 | `page!` | Macro that wraps a full page. Returns a `Page` struct. |
 | `Component` trait | Implement `to_render(&self, page: &mut Page) -> String` to make a struct a component. |
 | `Page` | A top-level page object that collects rendered HTML and can be returned from route handlers. |
-| `@html` | Inserts a pre-rendered HTML string without escaping. Used to render named slot content. |
+| `@html{…}` | Inserts a pre-rendered HTML string without escaping. Used to render named slot content. |
 | `{#slot:name}` | Named slot — passes rendered HTML content as a `String` prop to a child component. |
 | `scoped_css!` | Injects a scoped `<style>` tag into the page `<head>` and returns the generated class name. |
 | `#[native_element]` | Attribute macro — auto-generates a `Component` impl that injects the JS `<script>` and renders the kebab-case custom element tag with all struct fields as attributes. |
@@ -51,30 +51,52 @@ tidos = { version = "0.7.2", features = ["rocket", "i18n"] }
 **Rust expressions** and **control-flow blocks** using a special `{# ... }` /
 `{/ ... }` syntax.
 
-### Inline Rust expressions
+### Text content — `{"..."}`, `{expr}`, `@html{...}`
 
-Wrap any Rust expression in `{ }` to interpolate it into the HTML:
+All text between HTML tags **must** be wrapped in `{ }`. Raw text without
+braces causes a compile-time panic. There are four variants:
+
+| Form | When to use | Sanitized? |
+|---|---|---|
+| `{"literal text"}` | Static string that never changes | No (emitted as-is) |
+| `{"Hello {}", name}` | Format-string with comma-separated Rust params | Yes |
+| `{expr}` | Any Rust expression | Yes |
+| `@html{"literal html"}` | Static raw HTML string | No |
+| `@html{"<b>{}</b>", expr}` | Formatted raw HTML | No |
+| `@html{expr}` | Any Rust expression producing raw HTML | No |
 
 ```rust
 use tidos_macro::view;
 
 let name = "Alice";
-let count = 42;
+let count = 42_usize;
+let raw = "<em>emphasized</em>";
 
 view! {
-    <p>Hello {name}, you have {count} messages.</p>
+    // static text — emitted as-is
+    <p>{"Hello world"}</p>
+
+    // formatted text — comma-separated params, sanitized
+    <p>{"Hello {}, you have {} messages.", name, count}</p>
+
+    // Rust expression — sanitized
+    <p>{count.to_string()}</p>
+
+    // raw HTML — literal, not sanitized
+    <div>@html{"<b>bold</b>"}</div>
+
+    // raw HTML — formatted, not sanitized
+    <div>@html{"<b>{}</b>", name}</div>
+
+    // raw HTML — expression, not sanitized
+    <div>@html{raw}</div>
 }
-// → "<p>Hello Alice, you have 42 messages.</p>"
 ```
 
-For method calls / format strings, just write normal Rust inside the braces:
-
-```rust
-view! {
-    <p>{format!("Score: {:.1}", 9.5_f64)}</p>
-    <p>{some_value.to_uppercase()}</p>
-}
-```
+> **WRONG** — raw text between tags panics at compile time:
+> ```rust
+> view! { <p>Hello world</p> }  // ✗ panics
+> ```
 
 ### `{#for … }` / `{/for}` — loops
 
@@ -107,13 +129,13 @@ let is_american = false;
 
 view! {
     {#if age >= 18 && !is_american}
-        <p>Allowed to drink.</p>
+        <p>{"Allowed to drink."}</p>
     {:else if age >= 21 && is_american}
-        <p>Allowed to drink (US rules).</p>
+        <p>{"Allowed to drink (US rules)."}</p>
     {:else if age >= 18 && age < 21 && is_american}
-        <p>Probably the designated driver.</p>
+        <p>{"Probably the designated driver."}</p>
     {:else}
-        <p>Not allowed to drink.</p>
+        <p>{"Not allowed to drink."}</p>
     {/if}
 }
 ```
@@ -135,11 +157,11 @@ let status = Status::Active;
 view! {
     {#match status}
         {:case Status::Active}
-            <span class="green">Active</span>
+            <span class="green">{"Active"}</span>
         {:case Status::Banned}
-            <span class="red">Banned</span>
+            <span class="red">{"Banned"}</span>
         {:case _}
-            <span class="gray">Guest</span>
+            <span class="gray">{"Guest"}</span>
     {/match}
 }
 ```
@@ -149,23 +171,6 @@ Rules:
 - Each arm: `{:case <pattern>}` followed by HTML body
 - Wildcards (`_`) and enum variants both work as patterns
 - Close with `{/match}`
-
-### `@html{ … }` — raw HTML interpolation
-
-By default, `{ expr }` HTML-escapes its output. Use `@html{ expr }` to insert
-a pre-rendered HTML string **without escaping**:
-
-```rust
-let raw = String::from("<em>already rendered</em>");
-
-view! {
-    <div>@html{&raw}</div>
-}
-// → "<div><em>already rendered</em></div>"
-```
-
-This is primarily used to render content received from named slots (see below),
-where the HTML has already been rendered by the macro.
 
 ### `{#slot:name}` / `{/slot}` — named slots
 
@@ -181,8 +186,8 @@ component's opening and closing tags:
 view! {
     <Card title={String::from("My Card")}>
         {#slot:body}
-            <p>This content is passed to the Card's body prop.</p>
-            <p>You can use loops, conditionals, and nested components here.</p>
+            <p>{"This content is passed to the Card's body prop."}</p>
+            <p>{"You can use loops, conditionals, and nested components here."}</p>
         {/slot}
     </Card>
 }
@@ -249,7 +254,7 @@ pub struct LeaderboardTable {
 }
 
 impl Component for LeaderboardTable {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, _page: &mut Page) -> String {
         view! {
             <table>
                 <thead>
@@ -412,7 +417,7 @@ impl Component for UserBadge {
             <div class="badge">
                 <span>{&self.username}</span>
                 {#if self.is_admin}
-                    <span class="admin-tag">Admin</span>
+                    <span class="admin-tag">{"Admin"}</span>
                 {/if}
             </div>
         }
@@ -437,7 +442,7 @@ pub fn dashboard() -> Page {
     page! {
         <NavBar links={nav.links} />
         <UserBadge username={user.username} is_admin={user.is_admin} />
-        <h1>Welcome to the dashboard</h1>
+        <h1>{"Welcome to the dashboard"}</h1>
     }
 }
 ```
@@ -448,12 +453,16 @@ pub fn dashboard() -> Page {
 
 | Syntax | Meaning |
 |---|---|
-| `{expr}` | Interpolate a Rust expression |
+| `{"literal text"}` | Static text — emitted as-is |
+| `{"Hello {}", name}` | Formatted text — sanitized |
+| `{expr}` | Rust expression — sanitized |
+| `@html{"<b>literal</b>"}` | Raw HTML literal — not sanitized |
+| `@html{"<b>{}</b>", expr}` | Raw HTML formatted — not sanitized |
+| `@html{expr}` | Raw HTML expression — not sanitized |
 | `{#for x in iter} … {/for}` | Loop |
 | `{#if cond} … {:else if cond} … {:else} … {/if}` | Conditional |
 | `{#match val} {:case Pat} … {/match}` | Pattern match |
 | `{#slot:name} … {/slot}` | Named slot — pass rendered content as a component prop |
-| `@html{expr}` | Insert raw HTML without escaping |
 | `<Component prop={expr} />` | Render a component with props |
 | `<Component prop={expr} .. />` | Render a component, filling unset fields with `Default::default()` |
 | `page! { … }` | Produce a full `Page` for a route |
@@ -468,27 +477,34 @@ pub fn dashboard() -> Page {
 
 ## Common pitfalls
 
-1. **Borrow vs. owned**: `view!` often needs `&self.field` (a reference) to
+1. **Raw text between tags panics**: All text must be in `{}`. Use `{"Hello"}`,
+   `{"Hello {}", name}`, or `{expr}`. Bare text like `<p>Hello</p>` causes a
+   compile-time panic.
+
+2. **Borrow vs. owned**: `view!` often needs `&self.field` (a reference) to
    avoid moving out of `self`. If you see a "value moved" error, add `&`.
 
-2. **Closing tags**: every `{#for}`, `{#if}`, `{#match}` block **must** have a
+3. **Closing tags**: every `{#for}`, `{#if}`, `{#match}` block **must** have a
    matching close tag (`{/for}`, `{/if}`, `{/match}`). Missing them causes
    compile errors.
 
-3. **`{:else}` placement**: `{:else}` must come *after* all `{:else if}`
+4. **`{:else}` placement**: `{:else}` must come *after* all `{:else if}`
    branches and *before* `{/if}`.
 
-4. **Prop types**: props passed to components with `<Component prop={expr} />`
+5. **Prop types**: props passed to components with `<Component prop={expr} />`
    must match the struct field types exactly. Use `.into()`, `.clone()`, or
    `String::from(…)` as needed.
 
-5. **Named slots require `@html`**: the child component receiving slot content
+6. **Named slots require `@html`**: the child component receiving slot content
    must render it with `@html{&self.field}`, not `{&self.field}`. Using plain
    interpolation would HTML-escape the already-rendered markup.
 
-6. **Slot field type**: the struct field that receives named slot content must
+7. **Slot field type**: the struct field that receives named slot content must
    be `pub <name>: String`. The macro renders the slot body and passes it as a
    `String` prop.
+
+8. **Numeric types**: `{self.score}` where `score` is `u32`/`usize` fails
+   because sanitize requires `AsRef<str>`. Use `{self.score.to_string()}`.
 
 ---
 
@@ -615,11 +631,11 @@ status indicators), use `data-*` attributes instead of extra CSS files or extra
 ```rust
 // In the component template:
 {#if self.score >= 9000}
-    <span data-tier="legendary">LEGENDARY</span>
+    <span data-tier="legendary">{"LEGENDARY"}</span>
 {:else if self.score >= 5000}
-    <span data-tier="expert">EXPERT</span>
+    <span data-tier="expert">{"EXPERT"}</span>
 {:else}
-    <span data-tier="newbie">NEWBIE</span>
+    <span data-tier="newbie">{"NEWBIE"}</span>
 {/if}
 ```
 

@@ -76,9 +76,17 @@ pub fn index() -> Page {
 
 ## Template syntax
 
-### Interpolating Rust expressions
+### Text content
 
-Wrap any Rust expression in `{ }` to interpolate it:
+All text between HTML tags must be wrapped in `{ }`. Raw text without
+braces causes a compile-time panic. There are four forms:
+
+| Form | When to use | Sanitized? |
+|---|---|---|
+| `{"literal"}` | Static string | No (emitted as-is) |
+| `{"Hello {}", name}` | Format string with comma-separated params | Yes |
+| `{expr}` | Any Rust expression | Yes |
+| `@html{expr}` | Trusted raw HTML — not escaped | No |
 
 ```rust,no_run
 use tidos::view;
@@ -87,7 +95,9 @@ let name = "Alice";
 let count = 42_usize;
 
 view! {
-    <p>Hello {name}, you have {count.to_string()} messages.</p>
+    <p>{"Hello world"}</p>
+    <p>{"Hello {}, you have {} messages.", name, count}</p>
+    <p>{count.to_string()}</p>
 }
 ```
 
@@ -117,11 +127,11 @@ let is_american = false;
 
 view! {
     {#if age >= 18 && !is_american}
-        <p>Allowed to drink.</p>
+        <p>{"Allowed to drink."}</p>
     {:else if age >= 21 && is_american}
-        <p>Allowed to drink (US rules).</p>
+        <p>{"Allowed to drink (US rules)."}</p>
     {:else}
-        <p>Not allowed to drink.</p>
+        <p>{"Not allowed to drink."}</p>
     {/if}
 }
 ```
@@ -137,11 +147,11 @@ let status = Status::Active;
 view! {
     {#match status}
         {:case Status::Active}
-            <span class="green">Active</span>
+            <span class="green">{"Active"}</span>
         {:case Status::Banned}
-            <span class="red">Banned</span>
+            <span class="red">{"Banned"}</span>
         {:case _}
-            <span class="gray">Guest</span>
+            <span class="gray">{"Guest"}</span>
     {/match}
 }
 ```
