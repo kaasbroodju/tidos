@@ -1,5 +1,5 @@
 use crate::tokens::{Attribute, Content, ControlTag, HTMLTag};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 
 impl ToTokens for HTMLTag {
@@ -64,13 +64,20 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 		}
 	}
 
-	let component_name = Ident::new(tag, Span::call_site()).to_token_stream();
+	let component_name = Ident::new(tag, html_tag.tag_span).to_token_stream();
 
-	if html_tag.attributes.has_default_flag && attributes.is_empty() {
+	let inner = if html_tag.attributes.has_default_flag && attributes.is_empty() {
 		quote! { #component_name { ..Default::default() }.to_render(page) }
 	} else if html_tag.attributes.has_default_flag && !attributes.is_empty() {
 		quote! { #component_name { #( #attributes ),*, ..Default::default() }.to_render(page) }
 	} else {
 		quote! { #component_name { #( #attributes ),* }.to_render(page) }
+	};
+
+	if let Some(closing_span) = html_tag.closing_tag_span {
+		let closing_ident = Ident::new(tag, closing_span);
+		quote! { { let _: #closing_ident; #inner } }
+	} else {
+		inner
 	}
 }

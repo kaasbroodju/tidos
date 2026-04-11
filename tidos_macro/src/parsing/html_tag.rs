@@ -10,7 +10,7 @@ impl Parse for HTMLTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>
 		let start_first_tag_token = input.parse::<Token![<]>()?;
-		let tag = Self::extract_name(input)?;
+		let (tag, tag_span) = Self::extract_name(input)?;
 		let is_component = tag.chars().next().unwrap().is_ascii_uppercase();
 		let attributes = Self::parse_attributes(input, &tag, start_first_tag_token.span())?;
 
@@ -28,6 +28,8 @@ impl Parse for HTMLTag {
 
 			return Ok(HTMLTag {
 				tag,
+				tag_span,
+				closing_tag_span: None,
 				attributes,
 				children: vec![],
 				is_self_closing: true,
@@ -48,11 +50,13 @@ impl Parse for HTMLTag {
 		// </p>
 		input.parse::<Token![<]>()?;
 		input.parse::<Token![/]>()?;
-		Self::extract_name(input)?;
+		let (_, closing_span) = Self::extract_name(input)?;
 		input.parse::<Token![>]>()?;
 
 		Ok(HTMLTag {
 			tag,
+			tag_span,
+			closing_tag_span: Some(closing_span),
 			attributes,
 			children,
 			is_self_closing: false,
@@ -61,13 +65,14 @@ impl Parse for HTMLTag {
 }
 
 impl HTMLTag {
-	fn extract_name(input: ParseStream) -> Result<String, syn::Error> {
+	fn extract_name(input: ParseStream) -> Result<(String, proc_macro2::Span), syn::Error> {
 		input.step(|cursor| {
 			let mut rest = *cursor;
 			let mut output = String::new();
 			let Some((ident, next)) = rest.ident() else {
 				return Err(cursor.error("expected an HTML tag name like `p`, `div`, or `custom-element`"));
 			};
+			let span = ident.span();
 			output.push_str(ident.to_string().as_str());
 
 			rest = next;
@@ -87,7 +92,7 @@ impl HTMLTag {
 				rest = next;
 			}
 
-			Ok((output, rest))
+			Ok(((output, span), rest))
 		})
 	}
 
@@ -117,7 +122,7 @@ impl HTMLTag {
 
 			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
 
-			let Ok(attribute_name) = Self::extract_name(input) else {
+			let Ok((attribute_name, _)) = Self::extract_name(input) else {
 				return Err(syn::Error::new(
 					input.span(),
 					"Expected an attribute like `class` or `data-tidos`",
