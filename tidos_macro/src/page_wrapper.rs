@@ -20,6 +20,7 @@ impl ToTokens for PageWrapper {
 		let input = self.component.to_token_stream();
 		tokens.append_all(quote! {
 			{
+				use tidos::Component as _;
 				let mut page_output = Page::new();
 				page_output.template = {
 					let page = &mut page_output;
@@ -38,6 +39,7 @@ impl ToTokens for PageWrapper {
 		let input = self.component.to_token_stream();
 		tokens.append_all(quote! {
 			{
+				use tidos::Component as _;
 				let mut page_output = Page::new(lang.0);
 				page_output.template = {
 					let page = &mut page_output;
