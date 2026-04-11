@@ -1,53 +1,39 @@
-use proc_macro2::{Literal, TokenStream};
-
-// #[derive(Debug)]
-// pub struct Attribute {
-// 	pub is_toggle_attribute: bool,
-// 	pub name: String,
-// 	pub value: Option<AttributeType>,
-// }
+use proc_macro2::{Literal, Span, TokenStream};
 
 #[derive(Debug)]
-pub enum Attribute {
+pub struct Attribute {
+	pub name: String,
+	pub name_span: Span,
+	pub attribute_type: AttributeType,
+}
+
+#[derive(Debug)]
+pub enum AttributeType {
 	/// :disabled
-	ImplicitToggle { name: String },
+	ImplicitToggle,
 
 	/// :disabled={ true }
-	ExplicitToggle { name: String, value: TokenStream },
+	ExplicitToggle { value: TokenStream },
 
 	/// disabled
-	Constant { name: String },
+	Constant,
 
 	/// class="wrapper"
-	ConstantLiteral { name: String, literal: Literal },
+	ConstantLiteral { literal: Literal },
 
 	/// value={ person.name }
-	ConstantGroup { name: String, contents: TokenStream },
+	ConstantGroup { contents: TokenStream },
 }
 
 impl Attribute {
 	pub fn is_static(&self) -> bool {
-		match &self {
-			Attribute::ImplicitToggle { .. } => false,
-			Attribute::ExplicitToggle { .. } => false,
-			Attribute::Constant { .. } => true,
+		match &self.attribute_type {
+			AttributeType::ImplicitToggle => false,
+			AttributeType::ExplicitToggle { .. } => false,
+			AttributeType::Constant => true,
 			// todo identifier of scoped css is static
-			Attribute::ConstantLiteral { .. } => true,
-			Attribute::ConstantGroup { .. } => false,
+			AttributeType::ConstantLiteral { .. } => true,
+			AttributeType::ConstantGroup { .. } => false,
 		}
-
-		// if self.is_toggle_attribute {
-		// 	return false;
-		// }
-		// match &self.value {
-		// 	None => true,
-		// 	Some(token) => {
-		// 		match token {
-		// 			AttributeType::Group(_) => false,
-		// 			// todo identifier of scoped css is static
-		// 			AttributeType::Literal(_) => true,
-		// 		}
-		// 	}
-		// }
 	}
 }

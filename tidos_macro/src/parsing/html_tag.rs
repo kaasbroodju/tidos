@@ -1,5 +1,5 @@
 use crate::parsing::utils::{matches_tag, peek_closing_tag_name};
-use crate::tokens::{Attribute, Attributes, Content, HTMLTag};
+use crate::tokens::{Attribute, AttributeType, Attributes, Content, HTMLTag};
 use proc_macro2::{Group, Literal};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
@@ -122,7 +122,7 @@ impl HTMLTag {
 
 			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
 
-			let Ok((attribute_name, _)) = Self::extract_name(input) else {
+			let Ok((attribute_name, attribute_name_span)) = Self::extract_name(input) else {
 				return Err(syn::Error::new(
 					input.span(),
 					"Expected an attribute like `class` or `data-tidos`",
@@ -131,12 +131,16 @@ impl HTMLTag {
 
 			let Ok(equal_sign_token) = input.parse::<Token![=]>() else {
 				let attribute = if is_toggle_attribute {
-					Attribute::ImplicitToggle {
+					Attribute {
 						name: attribute_name,
+						name_span: attribute_name_span,
+						attribute_type: AttributeType::ImplicitToggle,
 					}
 				} else {
-					Attribute::Constant {
+					Attribute {
 						name: attribute_name,
+						name_span: attribute_name_span,
+						attribute_type: AttributeType::Constant,
 					}
 				};
 
@@ -148,23 +152,30 @@ impl HTMLTag {
 				if is_toggle_attribute {
 					return Err(syn::Error::new(literal.span(), format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}")));
 				} else {
-					let attribute = Attribute::ConstantLiteral {
+					let attribute = Attribute {
 						name: attribute_name,
-						literal,
+						name_span: attribute_name_span,
+						attribute_type: AttributeType::ConstantLiteral { literal },
 					};
 
 					attributes.push(attribute);
 				}
 			} else if let Ok(group) = input.parse::<Group>() {
 				let attribute = if is_toggle_attribute {
-					Attribute::ExplicitToggle {
+					Attribute {
 						name: attribute_name,
-						value: group.stream(),
+						name_span: attribute_name_span,
+						attribute_type: AttributeType::ExplicitToggle {
+							value: group.stream(),
+						},
 					}
 				} else {
-					Attribute::ConstantGroup {
+					Attribute {
 						name: attribute_name,
-						contents: group.stream(),
+						name_span: attribute_name_span,
+						attribute_type: AttributeType::ConstantGroup {
+							contents: group.stream(),
+						},
 					}
 				};
 

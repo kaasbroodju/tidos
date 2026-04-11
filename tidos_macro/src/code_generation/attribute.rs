@@ -1,11 +1,12 @@
-use crate::tokens::Attribute;
-use proc_macro2::TokenStream;
+use crate::tokens::{Attribute, AttributeType};
+use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
 
 impl ToTokens for Attribute {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
-		match &self {
-			Attribute::ImplicitToggle { name } => {
+		let name = &self.name;
+		match &self.attribute_type {
+			AttributeType::ImplicitToggle => {
 				// :disabled
 				let ident = format_ident!("{}", name);
 				let attribute_name = name.to_string();
@@ -14,21 +15,21 @@ impl ToTokens for Attribute {
 					if #ident { concat!(#attribute_name, " ") } else { "" }
 				});
 			}
-			Attribute::ExplicitToggle { name, value } => {
+			AttributeType::ExplicitToggle { value } => {
 				// :disabled={ true }
 				let attribute_name = name.to_string();
 				tokens.append_all(quote! {
 					if #value { concat!(#attribute_name, " ") } else { "" }
 				});
 			}
-			Attribute::Constant { name } => {
+			AttributeType::Constant => {
 				// disabled
 				let attribute_name = name.to_string();
 				tokens.append_all(quote! {
 					#attribute_name, " "
 				});
 			}
-			Attribute::ConstantLiteral { name, literal } => {
+			AttributeType::ConstantLiteral { literal } => {
 				// class="wrapper"
 				let attribute_name = &name
 					.clone()
@@ -40,7 +41,7 @@ impl ToTokens for Attribute {
 					#attribute_name, "=\"", #literal, "\" "
 				});
 			}
-			Attribute::ConstantGroup { name, contents } => {
+			AttributeType::ConstantGroup { contents } => {
 				// value={ person.name }
 				let attribute_name = &name
 					.clone()
@@ -58,26 +59,22 @@ impl ToTokens for Attribute {
 
 impl Attribute {
 	pub fn to_tokens_custom_element(&self) -> TokenStream {
-		match &self {
-			Attribute::ImplicitToggle { name } => {
-				let field = format_ident!("{}", name);
-				quote! { #field }
+		let name = Ident::new(&self.name, self.name_span).to_token_stream();
+		match &self.attribute_type {
+			AttributeType::ImplicitToggle => {
+				quote! { #name }
 			}
-			Attribute::ExplicitToggle { name, value } => {
-				let field = format_ident!("{}", name);
-				quote! { #field: #value }
+			AttributeType::ExplicitToggle { value } => {
+				quote! { #name: #value }
 			}
-			Attribute::Constant { name } => {
-				let field = format_ident!("{}", name);
-				quote! { #field: true }
+			AttributeType::Constant => {
+				quote! { #name: true }
 			}
-			Attribute::ConstantLiteral { name, literal } => {
-				let field = format_ident!("{}", name);
-				quote! { #field: #literal }
+			AttributeType::ConstantLiteral { literal } => {
+				quote! { #name: #literal }
 			}
-			Attribute::ConstantGroup { name, contents } => {
-				let field = format_ident!("{}", name);
-				quote! { #field: #contents }
+			AttributeType::ConstantGroup { contents } => {
+				quote! { #name: #contents }
 			}
 		}
 	}
