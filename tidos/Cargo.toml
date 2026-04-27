@@ -32,10 +32,16 @@ figment = { version = "0.10.19", features = ["env", "toml"], optional = true }
 serde = { version = "1.0.228", optional = true}
 
 [dev-dependencies]
+criterion = { version = "0.8.2", features = ["html_reports"] }
 http-body-util = "0.1.3"
 hyper = "1.9.0"
+stats_alloc = "0.1"
 tokio = { version = "1.51.0", features = ["rt", "macros"] }
 trybuild = "1.0.116"
+
+[[bench]]
+name = "page_rendering"
+harness = false
 
 [[test]]
 name = "i18n"
