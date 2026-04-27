@@ -1,4 +1,4 @@
-use crate::tokens::{Content, ControlTag};
+use crate::tokens::{Content, ControlTag, IsStatic};
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{quote, ToTokens, TokenStreamExt};
 
@@ -70,7 +70,12 @@ impl ControlTag {
 		let if_content_tokens = if_content
 			.iter()
 			.fold(&mut TokenStream::new(), |acc, child| {
-				child.to_tokens(acc);
+				let content = if child.is_static() {
+					quote! { String::from(concat!( #child ) ) }
+				} else {
+					quote! { tidos::combine!(String::new(), #child) }
+				};
+				content.to_tokens(acc);
 				acc
 			})
 			.to_owned();
@@ -81,13 +86,18 @@ impl ControlTag {
 				let chain_contents_tokens = contents
 					.iter()
 					.fold(&mut TokenStream::new(), |acc, child| {
-						child.to_tokens(acc);
+						let content = if child.is_static() {
+							quote! { String::from(concat!( #child ) ) }
+						} else {
+							quote! { tidos::combine!(String::new(), #child) }
+						};
+						content.to_tokens(acc);
 						acc
 					})
 					.to_owned();
 
 				let chain = quote! {
-					else if #( #statement )* { tidos::combine!(String::new(), #chain_contents_tokens) }
+					else if #( #statement )* { #chain_contents_tokens }
 				};
 
 				chain.to_tokens(acc);
@@ -99,17 +109,22 @@ impl ControlTag {
 			let else_content_tokens = else_content
 				.iter()
 				.fold(&mut TokenStream::new(), |acc, child| {
-					child.to_tokens(acc);
+					let content = if child.is_static() {
+						quote! { String::from(concat!( #child ) ) }
+					} else {
+						quote! { tidos::combine!(String::new(), #child) }
+					};
+					content.to_tokens(acc);
 					acc
 				})
 				.to_owned();
 
 			quote! {
-				if #( #if_statement )* { tidos::combine!(String::new(), #if_content_tokens) } #if_else_chain_tokens else { tidos::combine!(String::new(), #else_content_tokens) }
+				if #( #if_statement )* { #if_content_tokens } #if_else_chain_tokens else { #else_content_tokens }
 			}
 		} else {
 			quote! {
-				if #( #if_statement )* { tidos::combine!(String::new(), #if_content_tokens) } #if_else_chain_tokens else { String::new() }
+				if #( #if_statement )* { #if_content_tokens } #if_else_chain_tokens else { String::new() }
 			}
 		};
 
@@ -126,7 +141,6 @@ impl ControlTag {
 			.map(|(case_statement, case_content)| {
 				let is_static = case_content.iter().all(|content| content.is_static());
 
-				// todo static islands
 				if is_static {
 					quote! {
 						#( #case_statement )* => {

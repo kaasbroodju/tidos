@@ -1,5 +1,5 @@
-use crate::tokens::ControlTag;
 use crate::tokens::HTMLTag;
+use crate::tokens::{ControlTag, IsStatic};
 use proc_macro2::{Ident, Literal, TokenTree};
 
 #[derive(Debug)]
@@ -32,8 +32,8 @@ pub enum Content {
 	RawHTMLExpression(TextContent),
 }
 
-impl Content {
-	pub fn is_static(&self) -> bool {
+impl IsStatic for Content {
+	fn is_static(&self) -> bool {
 		match self {
 			Content::Tag(element) => element.is_static(),
 			Content::ControlTag(_) => false,
@@ -52,8 +52,8 @@ pub enum TextContent {
 	Expression(Vec<TokenTree>),
 }
 
-impl TextContent {
-	pub fn is_static(&self) -> bool {
+impl IsStatic for TextContent {
+	fn is_static(&self) -> bool {
 		match self {
 			TextContent::Literal(_) => true,
 			TextContent::Formatted(_, _) => false,

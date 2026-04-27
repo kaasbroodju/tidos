@@ -1,3 +1,4 @@
+use crate::tokens::IsStatic;
 use proc_macro2::{Literal, Span, TokenStream};
 
 #[derive(Debug)]
@@ -25,8 +26,8 @@ pub enum AttributeType {
 	ConstantGroup { contents: TokenStream },
 }
 
-impl Attribute {
-	pub fn is_static(&self) -> bool {
+impl IsStatic for Attribute {
+	fn is_static(&self) -> bool {
 		match &self.attribute_type {
 			AttributeType::ImplicitToggle => false,
 			AttributeType::ExplicitToggle { .. } => false,

@@ -1,5 +1,5 @@
-use crate::tokens::Attribute;
 use crate::tokens::Content;
+use crate::tokens::{Attribute, IsStatic};
 use proc_macro2::Span;
 
 #[derive(Debug)]
@@ -19,7 +19,13 @@ pub struct Attributes {
 }
 
 impl HTMLTag {
-	pub fn is_static(&self) -> bool {
+	pub fn is_component(&self) -> bool {
+		self.tag.chars().next().unwrap().is_ascii_uppercase()
+	}
+}
+
+impl IsStatic for HTMLTag {
+	fn is_static(&self) -> bool {
 		if self.is_component() {
 			return false;
 		}
@@ -31,9 +37,5 @@ impl HTMLTag {
 		let has_only_static_children = self.children.iter().all(Content::is_static);
 
 		has_only_static_attributes && has_only_static_children
-	}
-
-	pub fn is_component(&self) -> bool {
-		self.tag.chars().next().unwrap().is_ascii_uppercase()
 	}
 }

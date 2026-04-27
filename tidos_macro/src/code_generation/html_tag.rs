@@ -1,4 +1,4 @@
-use crate::tokens::{Attribute, Content, ControlTag, HTMLTag};
+use crate::tokens::{Attribute, Content, ControlTag, HTMLTag, IsStatic};
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 

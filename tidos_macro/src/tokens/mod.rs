@@ -8,3 +8,7 @@ mod control_tag;
 pub use control_tag::*;
 mod attribute;
 pub use attribute::*;
+
+pub trait IsStatic {
+	fn is_static(&self) -> bool;
+}
