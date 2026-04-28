@@ -29,7 +29,8 @@ mod tokens;
 pub fn view(input: TokenStream) -> TokenStream {
 	let input = parse_macro_input!(input as Component);
 
-	let expanded = input.to_token_stream();
+	let push_stmts = input.to_token_stream();
+	let expanded = quote! { #push_stmts };
 
 	expanded.into()
 }
@@ -99,12 +100,14 @@ pub fn head(input: TokenStream) -> TokenStream {
 	let input = parse_macro_input!(input as Component);
 
 	let x = Uuid::new_v4().to_string();
-	// todo refactor it to &str when I'm comfortable with lifetime annontations
-	let input = quote!(
-		page.add_elements_to_head(#x, #input);
-	);
-
-	let expanded = input.to_token_stream();
+	let push_stmts = input.to_token_stream();
+	let expanded = quote! {
+		if page.head_ids.insert(#x) {
+			::std::mem::swap(&mut page.template, &mut page.head);
+			#push_stmts
+			::std::mem::swap(&mut page.template, &mut page.head);
+		}
+	};
 
 	expanded.into()
 }
@@ -140,7 +143,8 @@ pub fn head(input: TokenStream) -> TokenStream {
 #[allow(clippy::all)]
 #[proc_macro]
 pub fn scoped_css(input: TokenStream) -> TokenStream {
-	let file_name = input.to_string().replace("\"", "");
+	// let file_name = input.to_string().replace("\"", "");
+	let file_name: proc_macro2::TokenStream = input.into();
 
 	let x = format!("tidos-{}", Uuid::new_v4().to_string());
 	// todo refactor it to &str when I'm comfortable with lifetime annontations
@@ -267,9 +271,9 @@ pub fn native_element(_args: TokenStream, input: TokenStream) -> TokenStream {
 		#input_struct
 
 		impl tidos::Component for #struct_name {
-			fn to_render(&self, page: &mut tidos::Page) -> String {
+			fn to_render(&self, page: &mut tidos::Page) {
 				tidos::head!(<script r#type="module" src=#script_src></script>);
-				tidos::view!(<#tag_name #( #attr_stmts )*></#tag_name>)
+				tidos::view!(<#tag_name #( #attr_stmts )*></#tag_name>);
 			}
 		}
 	};

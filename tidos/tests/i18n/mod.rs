@@ -98,8 +98,8 @@ fn i18n_inside_view() {
 	let lang = en();
 	let mut page_output = Page::new(lang.0);
 	let page = &mut page_output;
-	let html = view! { <h1>{i18n!("greeting")}</h1> };
-	assert_eq!(html, "<h1>Hello</h1>");
+	view! { <h1>{i18n!("greeting")}</h1> }
+	assert_eq!(&page.template, "<h1>Hello</h1>");
 }
 
 // --- page! lang attribute ---

@@ -18,13 +18,13 @@ struct ListItem {
 }
 
 impl Component for ListItem {
-	fn to_render(&self, _page: &mut Page) -> String {
+	fn to_render(&self, page: &mut Page) {
 		view! {
 			<li>
 				<span>{self.index.to_string()}</span>
 				<span>{&self.label}</span>
 			</li>
-		}
+		};
 	}
 }
 

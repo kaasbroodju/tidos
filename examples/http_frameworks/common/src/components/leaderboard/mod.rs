@@ -1,4 +1,4 @@
-use tidos::{scoped_css, view, Component, Page};
+use tidos::{scoped_css, view, Component, Page, Slot};
 
 use crate::components::player_row::PlayerRow;
 
@@ -11,7 +11,7 @@ pub struct Player {
 pub struct Leaderboard;
 
 impl Component for Leaderboard {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         let players = vec![
             Player { name: "ferris_the_crab".into(), score: 9999, online: true },
             Player { name: "rustacean42".into(), score: 8420, online: true },
@@ -61,11 +61,11 @@ impl Component for Leaderboard {
 
 pub struct LeaderboardTable {
     pub headers: Vec<String>,
-    pub body: String,
+    pub body: Slot,
 }
 
 impl Component for LeaderboardTable {
-    fn to_render(&self, _page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <table>
                 <thead>
@@ -76,7 +76,7 @@ impl Component for LeaderboardTable {
                     </tr>
                 </thead>
                 <tbody>
-                    @html{&self.body}
+                    @slot{self.body}
                 </tbody>
             </table>
         }

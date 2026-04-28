@@ -1,5 +1,11 @@
 use tidos::internals::sanitize;
-use tidos_macro::view;
+use tidos::{view, Page};
+
+fn render(f: impl FnOnce(&mut Page)) -> String {
+	let mut p = Page::new();
+	f(&mut p);
+	p.into_html()
+}
 
 // --- sanitize() unit tests ---
 
@@ -52,7 +58,9 @@ fn empty_string_returns_empty() {
 fn expressions_are_sanitized_in_view() {
 	let user_input = "<script>alert('xss')</script>";
 	assert_eq!(
-		&view! { <p>{user_input}</p> },
+		render(|page| {
+			view! { <p>{user_input}</p> }
+		}),
 		"<p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>"
 	);
 }
@@ -61,7 +69,9 @@ fn expressions_are_sanitized_in_view() {
 fn ampersand_in_expression_is_escaped() {
 	let text = "Tom & Jerry";
 	assert_eq!(
-		&view! { <span>{text}</span> },
+		render(|page| {
+			view! { <span>{text}</span> }
+		}),
 		"<span>Tom &amp; Jerry</span>"
 	);
 }
@@ -69,32 +79,54 @@ fn ampersand_in_expression_is_escaped() {
 #[test]
 fn quotes_in_expression_are_escaped() {
 	let attr = r#"say "hi""#;
-	assert_eq!(&view! { <p>{attr}</p> }, "<p>say &quot;hi&quot;</p>");
+	assert_eq!(
+		render(|page| {
+			view! { <p>{attr}</p> }
+		}),
+		"<p>say &quot;hi&quot;</p>"
+	);
 }
 
 // --- @html{} bypasses sanitization ---
 
 #[test]
 fn raw_html_is_not_sanitized() {
-	assert_eq!(&view! { @html{"<b>bold</b>"} }, "<b>bold</b>");
+	assert_eq!(
+		render(|page| {
+			view! { @html{"<b>bold</b>"} }
+		}),
+		"<b>bold</b>"
+	);
 }
 
 #[test]
 fn raw_html_with_variable() {
-	let snippet = "<em>italic</em>";
-	assert_eq!(&view! { @html{snippet} }, "<em>italic</em>");
+	let snippet = String::from("<em>italic</em>");
+	assert_eq!(
+		render(|page| {
+			view! { @html{snippet} }
+		}),
+		"<em>italic</em>"
+	);
 }
 
 #[test]
 fn raw_html_empty_string() {
-	assert_eq!(&view! { @html{""} }, "");
+	assert_eq!(
+		render(|page| {
+			view! { @html{""} }
+		}),
+		""
+	);
 }
 
 #[test]
 fn raw_html_alongside_sanitized_expression() {
 	let user = "<evil>";
 	assert_eq!(
-		&view! { <p>{user}@html{"<b>safe</b>"}</p> },
+		render(|page| {
+			view! { <p>{user}@html{"<b>safe</b>"}</p> }
+		}),
 		"<p>&lt;evil&gt;<b>safe</b></p>"
 	);
 }

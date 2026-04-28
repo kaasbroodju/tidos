@@ -1,12 +1,11 @@
-use tidos::view;
+use tidos::{view, Page};
 
 fn toggle_attribute_implicit_variable_name() {
-	assert_eq!(
-		&view!{
-			<input type="radio" name="day" value="monday" :checked />
-		},
-		r#"<input type="radio" name="day" value="monday" checked />"#
-	)
+	let mut page = Page::new();
+	let page = &mut page;
+	view! {
+		<input type="radio" name="day" value="monday" :checked />
+	}
 }
 
 fn main() {}

@@ -7,50 +7,44 @@ impl ToTokens for Attribute {
 		let name = &self.name;
 		match &self.attribute_type {
 			AttributeType::ImplicitToggle => {
-				// :disabled
 				let ident = format_ident!("{}", name);
 				let attribute_name = name.to_string();
-
 				tokens.append_all(quote! {
-					if #ident { concat!(#attribute_name, " ") } else { "" }
+					if #ident { page.push_static(concat!(#attribute_name, " ")); }
 				});
 			}
 			AttributeType::ExplicitToggle { value } => {
-				// :disabled={ true }
 				let attribute_name = name.to_string();
 				tokens.append_all(quote! {
-					if #value { concat!(#attribute_name, " ") } else { "" }
+					if #value { page.push_static(concat!(#attribute_name, " ")); }
 				});
 			}
 			AttributeType::Constant => {
-				// disabled
 				let attribute_name = name.to_string();
 				tokens.append_all(quote! {
-					#attribute_name, " "
+					page.push_static(concat!(#attribute_name, " "));
 				});
 			}
 			AttributeType::ConstantLiteral { literal } => {
-				// class="wrapper"
-				let attribute_name = &name
+				let attribute_name = name
 					.clone()
 					.to_string()
 					.trim_start_matches("r#")
 					.to_string();
-
 				tokens.append_all(quote! {
-					#attribute_name, "=\"", #literal, "\" "
+					page.push_static(concat!(#attribute_name, "=\"", #literal, "\" "));
 				});
 			}
 			AttributeType::ConstantGroup { contents } => {
-				// value={ person.name }
-				let attribute_name = &name
+				let attribute_name = name
 					.clone()
 					.to_string()
 					.trim_start_matches("r#")
 					.to_string();
-
 				tokens.append_all(quote! {
-					#attribute_name, "=\"", tidos::sanitize!(#contents), "\" "
+					page.push_static(concat!(#attribute_name, "=\""));
+					{ let _v = tidos::sanitize!(#contents); page.push_dynamic(_v); }
+					page.push_static("\" ");
 				});
 			}
 		}

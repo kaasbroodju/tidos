@@ -1,16 +1,29 @@
-use tidos_macro::view;
+use tidos::{view, Page};
+
+fn render(f: impl FnOnce(&mut Page)) -> String {
+	let mut p = Page::new();
+	f(&mut p);
+	p.into_html()
+}
 
 #[test]
 fn empty_body() {
-	assert_eq!(&view! {}, "");
+	assert_eq!(
+		render(|page| {
+			view! {}
+		}),
+		""
+	);
 }
 
 #[test]
 fn raw_html() {
 	assert_eq!(
-		&view! {
-			@html{"<p>hello world</p>"}
-		},
+		render(|page| {
+			view! {
+				@html{"<p>hello world</p>"}
+			}
+		}),
 		r#"<p>hello world</p>"#
 	);
 }
@@ -18,16 +31,20 @@ fn raw_html() {
 #[test]
 fn custom_element() {
 	assert_eq!(
-		&view! {
-			<custom-element></custom-element>
-		},
+		render(|page| {
+			view! {
+				<custom-element></custom-element>
+			}
+		}),
 		r#"<custom-element></custom-element>"#
 	);
 
 	assert_eq!(
-		&view! {
-			<custom-element-electric-bogaloo></custom-element-electric-bogaloo>
-		},
+		render(|page| {
+			view! {
+				<custom-element-electric-bogaloo></custom-element-electric-bogaloo>
+			}
+		}),
 		r#"<custom-element-electric-bogaloo></custom-element-electric-bogaloo>"#
 	);
 }
@@ -76,12 +93,22 @@ fn empty_closing_tag() {
 
 #[test]
 fn text_literal() {
-	assert_eq!(&view! { <p>{"Hello world"}</p> }, "<p>Hello world</p>");
+	assert_eq!(
+		render(|page| {
+			view! { <p>{"Hello world"}</p> }
+		}),
+		"<p>Hello world</p>"
+	);
 }
 
 #[test]
 fn text_literal_with_sanitation() {
-	assert_eq!(&view! { <p>{"Hello>world"}</p> }, "<p>Hello&gt;world</p>");
+	assert_eq!(
+		render(|page| {
+			view! { <p>{"Hello>world"}</p> }
+		}),
+		"<p>Hello&gt;world</p>"
+	);
 }
 
 #[test]
@@ -89,7 +116,9 @@ fn text_literal_with_params() {
 	let a = "world";
 	let b = "mars";
 	assert_eq!(
-		&view! { <p>{"Hello {} and {}", a, b}</p> },
+		render(|page| {
+			view! { <p>{"Hello {} and {}", a, b}</p> }
+		}),
 		"<p>Hello world and mars</p>"
 	);
 }
@@ -97,12 +126,22 @@ fn text_literal_with_params() {
 #[test]
 fn text_expression() {
 	let greeting = String::from("hello");
-	assert_eq!(&view! { <p>{greeting.to_uppercase()}</p> }, "<p>HELLO</p>");
+	assert_eq!(
+		render(|page| {
+			view! { <p>{greeting.to_uppercase()}</p> }
+		}),
+		"<p>HELLO</p>"
+	);
 }
 
 #[test]
 fn raw_html_literal() {
-	assert_eq!(&view! { @html{"<b>bold</b>"} }, "<b>bold</b>");
+	assert_eq!(
+		render(|page| {
+			view! { @html{"<b>bold</b>"} }
+		}),
+		"<b>bold</b>"
+	);
 }
 
 #[test]
@@ -110,13 +149,20 @@ fn raw_html_literal_with_params() {
 	let a = "bold";
 	let b = "italic";
 	assert_eq!(
-		&view! { @html{"<b>{}</b><i>{}</i>", a, b} },
+		render(|page| {
+			view! { @html{"<b>{}</b><i>{}</i>", a, b} }
+		}),
 		"<b>bold</b><i>italic</i>"
 	);
 }
 
 #[test]
 fn raw_html_expression() {
-	let html = "<em>emphasized</em>";
-	assert_eq!(&view! { @html{html} }, "<em>emphasized</em>");
+	let html = String::from("<em>emphasized</em>");
+	assert_eq!(
+		render(|page| {
+			view! { @html{html} }
+		}),
+		"<em>emphasized</em>"
+	);
 }

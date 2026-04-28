@@ -8,6 +8,7 @@ use syn::Token;
 const COMMAND_PREFIX: char = '#';
 const RAW_HTML_PREFIX: char = '@';
 const RAW_HTML_IDENTIFIER: &str = "html";
+const SLOT_IDENTIFIER: &str = "slot";
 
 impl Parse for Content {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -22,8 +23,9 @@ impl Parse for Content {
 		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == RAW_HTML_PREFIX}
 		{
 			// @html{"<p>Hello world</p>"} @html{"<p>Hello {}</p>", name} @html{ markdown }
+			// @slot{self.body}
 
-			Self::parse_raw_html_statement(input)
+			Self::parse_at_statement(input)
 		} else if input.peek(Brace) && is_cursor_at_command(input.cursor()) {
 			// {#for ... in ... } {#if} {#match}
 
@@ -32,7 +34,6 @@ impl Parse for Content {
 			// {"Hello world"} {"Hello {}", name} { name }
 			let text_content = Self::parse_text_content(input)?;
 			Ok(Content::Text(text_content))
-			// Ok(Content::Expression(input.parse::<Group>()?))
 		} else {
 			// text between tags
 			if let Ok(x) = Self::parse_text_between_tags(input) {
@@ -65,14 +66,10 @@ impl Content {
 				Ok(TextContent::Formatted(base_string, params))
 			}
 		} else {
-			// panic!("hello test");
 			let mut contents = vec![];
 			while let Ok(token) = content.parse::<TokenTree>() {
 				contents.push(token);
 			}
-			// while !input.is_empty() {
-			// 	contents.push(content.parse::<TokenTree>()?);
-			// }
 			Ok(TextContent::Expression(contents))
 		}
 	}
@@ -114,18 +111,35 @@ impl Content {
 		Ok(output)
 	}
 
-	fn parse_raw_html_statement(input: ParseStream) -> syn::Result<Self> {
+	fn parse_at_statement(input: ParseStream) -> syn::Result<Self> {
 		input.parse::<Punct>()?;
 		let ident = input.parse::<Ident>()?;
-		if *ident.to_string() != *RAW_HTML_IDENTIFIER {
-			Err(syn::Error::new(
+		match ident.to_string().as_str() {
+			RAW_HTML_IDENTIFIER => {
+				let text_content = Self::parse_text_content(input)?;
+				Ok(Content::RawHTMLExpression(text_content))
+			}
+			SLOT_IDENTIFIER => {
+				let expr = Self::parse_slot_expr(input)?;
+				Ok(Content::SlotRender(expr))
+			}
+			other => Err(syn::Error::new(
 				ident.span(),
-				format!("Did you mean `{RAW_HTML_IDENTIFIER}`?"),
-			))
-		} else {
-			let text_content = Self::parse_text_content(input)?;
-			Ok(Content::RawHTMLExpression(text_content))
+				format!(
+					"Did you mean `{RAW_HTML_IDENTIFIER}` or `{SLOT_IDENTIFIER}`? Got `{other}`"
+				),
+			)),
 		}
+	}
+
+	fn parse_slot_expr(input: ParseStream) -> syn::Result<Vec<TokenTree>> {
+		let content;
+		syn::braced!(content in input);
+		let mut tokens = vec![];
+		while let Ok(token) = content.parse::<TokenTree>() {
+			tokens.push(token);
+		}
+		Ok(tokens)
 	}
 }
 

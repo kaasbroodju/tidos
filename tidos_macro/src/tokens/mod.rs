@@ -9,6 +9,9 @@ pub use control_tag::*;
 mod attribute;
 pub use attribute::*;
 
+// For some reason, Clippy thinks this is unused.
+#[allow(unfulfilled_lint_expectations)]
+#[expect(dead_code)]
 pub trait IsStatic {
 	fn is_static(&self) -> bool;
 }

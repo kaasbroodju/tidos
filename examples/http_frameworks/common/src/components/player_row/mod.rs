@@ -8,7 +8,7 @@ pub struct PlayerRow {
 }
 
 impl Component for PlayerRow {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <tr class={scoped_css!("./player_row.css")}>
                 <td>
