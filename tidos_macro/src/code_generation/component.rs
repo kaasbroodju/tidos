@@ -118,10 +118,10 @@ fn process_attribute(attr: &Attribute, flat_args: &mut Vec<TokenStream>, result:
 			flat_args.push(quote! { #literal });
 			flat_args.push(quote! { "\" " });
 		}
-		AttributeType::ConstantGroup { contents } => {
+		AttributeType::Expression { content } => {
 			flat_args.push(quote! { #name_trimmed });
 			flat_args.push(quote! { "=\"" });
-			flat_args.push(quote! { tidos::sanitize!(#contents) });
+			text_to_args(content, flat_args);
 			flat_args.push(quote! { "\" " });
 		}
 		AttributeType::ImplicitToggle => {
@@ -165,7 +165,7 @@ fn raw_to_args(text: &TextContent, flat_args: &mut Vec<TokenStream>) {
 			flat_args.push(quote! { format!(#literal #( , #( #contents )* )* ) });
 		}
 		TextContent::Expression(expr) => {
-			flat_args.push(quote! { ::std::string::String::from(#( #expr )*) });
+			flat_args.push(quote! { #( #expr )* });
 		}
 	}
 }

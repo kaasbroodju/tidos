@@ -45,7 +45,7 @@ impl Parse for Content {
 }
 
 impl Content {
-	fn parse_text_content(input: ParseStream) -> syn::Result<TextContent> {
+	pub(crate) fn parse_text_content(input: ParseStream) -> syn::Result<TextContent> {
 		let content;
 		syn::braced!(content in input);
 		if content.peek(syn::LitStr) {

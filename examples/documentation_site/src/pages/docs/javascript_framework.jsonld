@@ -1,0 +1,63 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://tidos.dev/docs/javascript-framework#article",
+      "name": "Reactivity — Tidos",
+      "description": "How to add client-side reactivity to Tidos using Web Components with Svelte, Lit, Angular, Vue, or React.",
+      "url": "https://tidos.dev/docs/javascript-framework",
+      "isPartOf": { "@id": "https://tidos.dev/#website" },
+      "author": { "@id": "https://github.com/kaasbroodju" },
+      "inLanguage": "en",
+      "about": { "@id": "https://tidos.dev/#tidos" }
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://tidos.dev/docs/javascript-framework#howto",
+      "name": "How to add client-side reactivity to a Tidos app",
+      "description": "Embed a JavaScript framework component as a Web Component inside a server-rendered Tidos page.",
+      "inLanguage": "en",
+      "about": { "@id": "https://tidos.dev/#tidos" },
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": "1",
+          "name": "Write a Web Component in your JS framework",
+          "text": "Create your interactive component in Svelte, Lit, Angular, Vue, or React and configure it to compile as a native Web Component (custom element)."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "2",
+          "name": "Compile to dist/ with Vite",
+          "text": "Configure Vite to bundle the component as dist/ComponentName.js using rollupOptions with entryFileNames set to '[name].js'."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "3",
+          "name": "Create a Rust wrapper with #[native_element]",
+          "text": "Define a Rust struct for the component and annotate it with #[native_element]. The macro derives Component, injects the script tag, and renders the kebab-case custom element with all struct fields forwarded as HTML attributes."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "4",
+          "name": "Serve the dist directory",
+          "text": "Mount a static file route in your Rust server so the compiled JS files are reachable at /dist/ComponentName.js."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "5",
+          "name": "Use the component in page! or view!",
+          "text": "Include the #[native_element] struct like any other Tidos component: <GreetUser name={\"Alice\".to_string()} is_admin={false} />."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tidos.dev" },
+        { "@type": "ListItem", "position": 2, "name": "Reactivity", "item": "https://tidos.dev/docs/javascript-framework" }
+      ]
+    }
+  ]
+}

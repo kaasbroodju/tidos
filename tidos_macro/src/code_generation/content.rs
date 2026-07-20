@@ -54,7 +54,7 @@ impl TextContent {
 			}
 			TextContent::Expression(expr) => {
 				quote! {
-					{ let _v = ::std::string::String::from(#( #expr )*); page.push_dynamic(_v); }
+					{ let _v = #( #expr )*; page.push_dynamic(_v); }
 				}
 				.to_tokens(tokens);
 			}

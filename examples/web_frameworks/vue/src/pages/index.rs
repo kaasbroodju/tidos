@@ -1,4 +1,3 @@
-use tidos::Component;
 use tidos::{Page, page};
 use crate::components::hello_world::HelloWorld;
 

@@ -1,0 +1,29 @@
+& {
+    padding: 32px 80px;
+    background: #000814;
+    color: rgba(240, 246, 251, 0.55);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    @media (max-width: 800px) {
+        flex-direction: column;
+        padding: 32px 20px;
+
+        > span {
+            text-align: center;
+        }
+    }
+}
+
+& .links {
+    font-family: 'JetBrains Mono', monospace;
+
+    a {
+        color: rgba(240, 246, 251, 0.55);
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

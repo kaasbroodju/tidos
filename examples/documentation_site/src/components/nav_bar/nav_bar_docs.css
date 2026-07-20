@@ -1,0 +1,112 @@
+& {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    height: 92px;
+    padding: 0 64px;
+    box-sizing: border-box;
+
+    @media (max-width: 800px) {
+        padding: 0 20px;
+    }
+}
+
+/* the hamburger is desktop-hidden; only shown in the mobile breakpoint */
+& mobile-menu {
+    display: none;
+    align-items: center;
+}
+
+& .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+& .inko {
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+}
+
+& .inko img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+& .name {
+    /*font-family: 'Newsreader', serif;*/
+
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: #fff;
+}
+
+& a {
+    text-decoration: none;
+}
+
+& nav {
+    display: flex;
+    font-size: 16px;
+    align-items: stretch;
+}
+
+& nav a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 16px;
+    color: #fff;
+    opacity: 0.92;
+    font-weight: bold;
+}
+
+& nav a > span {
+    display: flex;
+}
+
+& .github-link {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    place-items: center;
+
+    & > span:nth-child(2) {
+        color: #4fd1c5;
+    }
+}
+
+@media (max-width: 800px) {
+    & mobile-menu {
+        display: flex;
+    }
+
+    /* JS has marked the nav collapsible -> hide it and reveal as a drawer */
+    & nav[data-collapsible] {
+        display: none;
+    }
+
+    & nav[data-collapsible][data-open] {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        position: absolute;
+        top: 92px;
+        left: 0;
+        right: 0;
+        background-color: #0d1f2a;
+        padding: 8px 20px 16px;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+        z-index: 50;
+    }
+
+    & nav[data-collapsible][data-open] a {
+        height: auto;
+        padding: 14px 0;
+    }
+}

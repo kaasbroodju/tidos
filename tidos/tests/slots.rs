@@ -1,11 +1,11 @@
 use tidos::{view, Component, Page, Slot};
 
-struct Card {
-	pub header: Slot,
-	pub body: Slot,
+struct Card<'a> {
+	pub header: Slot<'a>,
+	pub body: Slot<'a>,
 }
 
-impl Component for Card {
+impl Component for Card<'_> {
 	fn to_render(&self, page: &mut Page) {
 		view! {
 			<div>
@@ -77,12 +77,12 @@ fn slot_with_empty_content() {
 #[cfg(not(feature = "i18n"))]
 #[test]
 fn slot_alongside_prop() {
-	struct Banner {
+	struct Banner<'a> {
 		pub title: &'static str,
-		pub content: Slot,
+		pub content: Slot<'a>,
 	}
 
-	impl Component for Banner {
+	impl Component for Banner<'_> {
 		fn to_render(&self, page: &mut Page) {
 			view! {
 				<section>

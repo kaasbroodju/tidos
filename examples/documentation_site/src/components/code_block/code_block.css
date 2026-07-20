@@ -1,0 +1,12 @@
+& {
+    background: #0d1117;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    border: 1px solid #30363d;
+
+    @media (max-width: 800px) {
+        width: calc(100% - 40px);
+    }
+}

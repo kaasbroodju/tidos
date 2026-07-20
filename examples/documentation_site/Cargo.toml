@@ -1,0 +1,12 @@
+[package]
+name = "documentation_site"
+version = "0.1.0"
+edition.workspace = true
+
+[[bin]]
+name = "documentation_site"
+doc = false
+
+[dependencies]
+tidos = { workspace = true, features = ["rocket"] }
+rocket = { workspace = true }

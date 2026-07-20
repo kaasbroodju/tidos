@@ -1,4 +1,4 @@
-use crate::tokens::{Attribute, AttributeType};
+use crate::tokens::{Attribute, AttributeType, TextContent};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
 
@@ -35,7 +35,7 @@ impl ToTokens for Attribute {
 					page.push_static(concat!(#attribute_name, "=\"", #literal, "\" "));
 				});
 			}
-			AttributeType::ConstantGroup { contents } => {
+			AttributeType::Expression { content } => {
 				let attribute_name = name
 					.clone()
 					.to_string()
@@ -43,7 +43,7 @@ impl ToTokens for Attribute {
 					.to_string();
 				tokens.append_all(quote! {
 					page.push_static(concat!(#attribute_name, "=\""));
-					{ let _v = tidos::sanitize!(#contents); page.push_dynamic(_v); }
+					#content
 					page.push_static("\" ");
 				});
 			}
@@ -67,9 +67,17 @@ impl Attribute {
 			AttributeType::ConstantLiteral { literal } => {
 				quote! { #name: #literal }
 			}
-			AttributeType::ConstantGroup { contents } => {
-				quote! { #name: #contents }
-			}
+			AttributeType::Expression { content } => match content {
+				TextContent::Literal(literal) => {
+					quote! { #name: #literal }
+				}
+				TextContent::Formatted(literal, contents) => {
+					quote! { #name: format!(#literal #( , #( #contents )* )* ) }
+				}
+				TextContent::Expression(expr) => {
+					quote! { #name: #( #expr )* }
+				}
+			},
 		}
 	}
 }

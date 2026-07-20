@@ -13,11 +13,11 @@ pub(crate) use crate::page::Page;
 /// ```rust,no_run
 /// use tidos::{view, Component, Page, Slot};
 ///
-/// pub struct Card {
-///     pub body: Slot,
+/// pub struct Card<'a> {
+///     pub body: Slot<'a>,
 /// }
 ///
-/// impl Component for Card {
+/// impl Component for Card<'_> {
 ///     fn to_render(&self, page: &mut Page) {
 ///         view! {
 ///             <div class="card">
@@ -27,7 +27,7 @@ pub(crate) use crate::page::Page;
 ///     }
 /// }
 /// ```
-pub type Slot = Box<dyn Fn(&mut Page)>;
+pub type Slot<'render> = Box<dyn Fn(&mut Page) + 'render>;
 
 /// A reusable UI component.
 ///

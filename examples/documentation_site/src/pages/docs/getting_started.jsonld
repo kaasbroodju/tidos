@@ -1,0 +1,57 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://tidos.dev/docs/getting-started#article",
+      "name": "Getting Started — Tidos",
+      "description": "How to add Tidos to your Rust project with Rocket, Actix, Axum, Warp, or standalone.",
+      "url": "https://tidos.dev/docs/getting-started",
+      "isPartOf": { "@id": "https://tidos.dev/#website" },
+      "author": { "@id": "https://github.com/kaasbroodju" },
+      "inLanguage": "en",
+      "about": { "@id": "https://tidos.dev/#tidos" }
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://tidos.dev/docs/getting-started#howto",
+      "name": "How to add Tidos to your Rust project",
+      "description": "Add the Tidos component framework to a Rust web app and render your first page.",
+      "inLanguage": "en",
+      "about": { "@id": "https://tidos.dev/#tidos" },
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": "1",
+          "name": "Choose your web framework",
+          "text": "Select your preferred Rust web framework: Rocket, Actix, Axum, Warp, or use Tidos standalone without a framework."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "2",
+          "name": "Add Tidos to Cargo.toml",
+          "text": "Add tidos as a dependency with the feature flag matching your framework, e.g. tidos = { version = \"0.7.2\", features = [\"rocket\"] }."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "3",
+          "name": "Create a route handler with page!",
+          "text": "Use the page! macro inside a route handler function to produce a Page struct. Return the Page from the handler — your framework serves it directly as an HTML response."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "4",
+          "name": "Run your server",
+          "text": "Start your web server with cargo run and open the rendered page in your browser."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tidos.dev" },
+        { "@type": "ListItem", "position": 2, "name": "Getting Started", "item": "https://tidos.dev/docs/getting-started" }
+      ]
+    }
+  ]
+}

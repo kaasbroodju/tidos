@@ -1,4 +1,4 @@
-use crate::tokens::IsStatic;
+use crate::tokens::{IsStatic, TextContent};
 use proc_macro2::{Literal, Span, TokenStream};
 
 #[derive(Debug)]
@@ -23,7 +23,7 @@ pub enum AttributeType {
 	ConstantLiteral { literal: Literal },
 
 	/// value={ person.name }
-	ConstantGroup { contents: TokenStream },
+	Expression { content: TextContent },
 }
 
 impl IsStatic for Attribute {
@@ -34,7 +34,7 @@ impl IsStatic for Attribute {
 			AttributeType::Constant => true,
 			// todo identifier of scoped css is static
 			AttributeType::ConstantLiteral { .. } => true,
-			AttributeType::ConstantGroup { .. } => false,
+			AttributeType::Expression { content } => content.is_static(),
 		}
 	}
 }

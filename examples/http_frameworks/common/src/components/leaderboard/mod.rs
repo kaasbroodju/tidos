@@ -59,12 +59,12 @@ impl Component for Leaderboard {
     }
 }
 
-pub struct LeaderboardTable {
+pub struct LeaderboardTable<'a> {
     pub headers: Vec<String>,
-    pub body: Slot,
+    pub body: Slot<'a>,
 }
 
-impl Component for LeaderboardTable {
+impl Component for LeaderboardTable<'_> {
     fn to_render(&self, page: &mut Page) {
         view! {
             <table>

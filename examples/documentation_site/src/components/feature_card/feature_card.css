@@ -1,0 +1,30 @@
+& {
+    padding: 16px;
+    border-radius: 16px;
+    background: #020a18;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+& .icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(79, 209, 197, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+& h3 {
+    /*font-family: 'Newsreader', serif;*/
+    font-size: 20px;
+    font-weight: 500;
+    color: #f0f6fb;
+}
+
+& p {
+    /*font-size: 14px;*/
+    line-height: 1.55;
+    color: rgba(240, 246, 251, 0.75);
+    margin: 0;
+}

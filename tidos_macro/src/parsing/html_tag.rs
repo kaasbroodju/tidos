@@ -160,23 +160,23 @@ impl HTMLTag {
 
 					attributes.push(attribute);
 				}
-			} else if let Ok(group) = input.parse::<Group>() {
-				let attribute = if is_toggle_attribute {
-					Attribute {
-						name: attribute_name,
-						name_span: attribute_name_span,
-						attribute_type: AttributeType::ExplicitToggle {
-							value: group.stream(),
-						},
-					}
-				} else {
-					Attribute {
-						name: attribute_name,
-						name_span: attribute_name_span,
-						attribute_type: AttributeType::ConstantGroup {
-							contents: group.stream(),
-						},
-					}
+			} else if input.peek(syn::token::Brace) && is_toggle_attribute {
+				let group = input.parse::<Group>()?;
+				let attribute = Attribute {
+					name: attribute_name,
+					name_span: attribute_name_span,
+					attribute_type: AttributeType::ExplicitToggle {
+						value: group.stream(),
+					},
+				};
+
+				attributes.push(attribute);
+			} else if input.peek(syn::token::Brace) {
+				let content = Content::parse_text_content(input)?;
+				let attribute = Attribute {
+					name: attribute_name,
+					name_span: attribute_name_span,
+					attribute_type: AttributeType::Expression { content },
 				};
 
 				attributes.push(attribute);
