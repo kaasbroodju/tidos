@@ -43,7 +43,9 @@ impl Component for ComponentDocContent {
 
         let pattern_match = "enum Status { Active, Banned, Guest }\nlet status = Status::Active;\n\nview! {\n    {#match status}\n        {:case Status::Active}\n            <span data-status=\"active\">{\"Active\"}</span>\n        {:case Status::Banned}\n            <span data-status=\"banned\">{\"Banned\"}</span>\n        {:case _}\n            <span data-status=\"guest\">{\"Guest\"}</span>\n    {/match}\n}";
 
-        let slots = "// Parent\nview! {\n    <Card title={\"News\".to_string()}>\n        {#slot:body}\n            <p>{\"This content goes into the card body.\"}</p>\n        {/slot}\n    </Card>\n}\n\n// Child component\npub struct Card<'a> {\n    pub title: String,\n    pub body: Slot<'a>,\n}\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                <h2>{&self.title}</h2>\n                <div class=\"body\">\n                    @slot{self.body}\n                </div>\n            </div>\n        }\n    }\n}";
+        let named_slots = "// Parent\nview! {\n    <Card title={\"News\".to_string()}>\n        {#slot:body}\n            <p>{\"This content goes into the card body.\"}</p>\n        {/slot}\n    </Card>\n}\n\n// Child component\npub struct Card<'a> {\n    pub title: String,\n    pub body: Slot<'a>,\n}\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                <h2>{&self.title}</h2>\n                <div class=\"body\">\n                    @slot{self.body}\n                </div>\n            </div>\n        }\n    }\n}";
+
+        let unnamed_slots = "// Parent — content is passed straight in, no {#slot:name} wrapper\nview! {\n    <Card>\n        <p>{\"This content goes straight into the card.\"}</p>\n    </Card>\n}\n\n// Child component — a tuple struct with Slot<'a> as field 0\npub struct Card<'a>(pub Slot<'a>);\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                @slot{self.0}\n            </div>\n        }\n    }\n}";
 
         let default_props = "use tidos::{view, Component, Page};\n\n#[derive(Default)]\npub struct Button {\n    pub label: String,\n    pub disabled: bool,\n    pub variant: String,\n}\n\nimpl Component for Button {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <button data-variant={&self.variant}>\n                {&self.label}\n            </button>\n        }\n    }\n}\n\n// Only set label — the rest use Default::default()\nview! { <Button label={\"Save\".to_string()} .. /> }\n\n// All fields use Default\nview! { <Button .. /> }";
 
@@ -77,8 +79,13 @@ impl Component for ComponentDocContent {
                 <CodeBlock code={pattern_match.to_string()} />
 
                 <h3 id="control-tags-slots">{"Slots"}</h3>
-                <p>{"Named slots let a parent pass rendered HTML content into a child component. Use {#slot:name}...{/slot} in the parent and @slot{self.name} in the child:"}</p>
-                <CodeBlock code={slots.to_string()} />
+                <p>{"Slots let a parent pass rendered content into a child component. A component field of type Slot<'a> receives the content and renders it with @slot{self.field}. There are two forms — pick based on how many slots the component takes and whether it has other props:"}</p>
+                <h4>{"Named slots"}</h4>
+                <p>{"Use these when a component has multiple slots, or a single slot alongside other attributes/props. Declare a regular Slot<'a> field and fill it from the parent with {#slot:name}...{/slot}:"}</p>
+                <CodeBlock code={named_slots.to_string()} />
+                <h4>{"Unnamed slots"}</h4>
+                <p>{"Unnamed slot: use this only when a component takes exactly one slot and has no other props. Declare the component as a tuple struct with Slot<'a> as field 0 — the parent then passes content directly as children, with no {#slot:name} wrapper:"}</p>
+                <CodeBlock code={unnamed_slots.to_string()} />
 
                 <h2 id="default-props">{"Default Properties"}</h2>
                 <p>{"Components whose struct derives Default can use .. after the explicit props to fill all remaining fields with their default values. The struct must implement Default, either via #[derive(Default)] or manually:"}</p>

@@ -2,6 +2,7 @@ pub mod v0_7_0;
 pub mod v0_7_5;
 pub mod v0_7_6;
 pub mod v0_8_0_rc1;
+pub mod v0_8_0_rc2;
 
 use crate::components::nav_bar::NavBarDocs;
 use crate::components::news_layout::NewsLayout;
@@ -39,6 +40,15 @@ impl Component for NewsIndexContent {
             <p class="news-intro">{"Latest releases and updates from the Tidos project."}</p>
 
             <div class="news-list">
+                <a class="news-card" href="/news/v0-8-0-rc2">
+                    <div class="news-card-header">
+                        <span class="news-version">{"v0.8.0-rc.2"}</span>
+                        <span class="news-date">{"July 20, 2026"}</span>
+                    </div>
+                    <h2>{"Components Render Directly Into Page"}</h2>
+                    <p>{"to_render no longer returns a String, attributes gain the full text-content syntax, Slot's lifetime is fixed so it can finally borrow, and components can now take a single unnamed slot."}</p>
+                </a>
+
                 <a class="news-card" href="/news/v0-8-0-rc1">
                     <div class="news-card-header">
                         <span class="news-version">{"v0.8.0-rc.1"}</span>

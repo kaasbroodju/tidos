@@ -29,13 +29,22 @@ fn custom_element_to_tokens(html_tag: &HTMLTag) -> TokenStream {
 		.map(Attribute::to_tokens_custom_element)
 		.collect::<Vec<_>>();
 
-	for child in &html_tag.children {
-		if let Content::ControlTag(ControlTag::Slot { name, contents }) = child {
-			let body = to_push_stmts(contents);
-			attributes.push(quote! {
-				#name: Box::new(move |page: &mut tidos::Page| { #body })
-			});
+	if matches!(
+		html_tag.children.first(),
+		Some(Content::ControlTag(ControlTag::Slot { .. }))
+	) {
+		for child in &html_tag.children {
+			if let Content::ControlTag(ControlTag::Slot { name, contents }) = child {
+				let body = to_push_stmts(contents);
+				attributes
+					.push(quote! { #name: Box::new(move |page: &mut tidos::Page| { #body }) });
+			}
 		}
+	} else if !html_tag.children.is_empty() {
+		let body = to_push_stmts(&html_tag.children);
+		attributes.push(quote! {
+			0: Box::new(move |page: &mut tidos::Page| { #body })
+		});
 	}
 
 	let component_name = Ident::new(tag, html_tag.tag_span).to_token_stream();

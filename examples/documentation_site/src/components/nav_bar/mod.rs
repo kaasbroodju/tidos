@@ -22,7 +22,7 @@ impl Component for NavBar {
                 <nav id="main-nav">
                     <a href="/docs/getting-started">{"documentation"}</a>
                     <a href="/news">{"news"}</a>
-                    <a href="https://github.com/kaasbroodju/tidos" aria-label="Tidos Github repository" class="github-link" target="_blank"><span>@html{include_str!("./github.svg")}</span><span>{"v0.8.0-rc.1"}</span></a>
+                    <a href="https://github.com/kaasbroodju/tidos" aria-label="Tidos Github repository" class="github-link" target="_blank"><span>@html{include_str!("./github.svg")}</span><span>{"v0.8.0-rc.2"}</span></a>
                 </nav>
             </header>
         }
@@ -49,7 +49,7 @@ impl Component for NavBarDocs {
                 <nav id="docs-nav">
                     <a href="/docs/getting-started">{"documentation"}</a>
                     <a href="/news">{"news"}</a>
-                    <a href="https://github.com/kaasbroodju/tidos" aria-label="Tidos Github repository" class="github-link" target="_blank"><span>@html{include_str!("./github.svg")}</span><span>{"v0.8.0-rc.1"}</span></a>
+                    <a href="https://github.com/kaasbroodju/tidos" aria-label="Tidos Github repository" class="github-link" target="_blank"><span>@html{include_str!("./github.svg")}</span><span>{"v0.8.0-rc.2"}</span></a>
                 </nav>
             </header>
         }

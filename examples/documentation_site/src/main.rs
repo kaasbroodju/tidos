@@ -21,6 +21,7 @@ use crate::pages::news::v0_7_0::news_v0_7_0;
 use crate::pages::news::v0_7_5::news_v0_7_5;
 use crate::pages::news::v0_7_6::news_v0_7_6;
 use crate::pages::news::v0_8_0_rc1::news_v0_8_0_rc1;
+use crate::pages::news::v0_8_0_rc2::news_v0_8_0_rc2;
 
 #[rocket::main]
 async fn main() {
@@ -37,6 +38,7 @@ async fn main() {
                 javascript_framework,
                 internationalization,
                 news_index,
+                news_v0_8_0_rc2,
                 news_v0_8_0_rc1,
                 news_v0_7_6,
                 news_v0_7_5,

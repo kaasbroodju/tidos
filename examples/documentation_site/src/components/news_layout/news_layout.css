@@ -146,6 +146,32 @@
     vertical-align: middle;
 }
 
+& .article-content .fix-badge {
+    display: inline-block;
+    background-color: #23863622;
+    color: #3fb950;
+    border: 1px solid #238636;
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+& .article-content .qol-badge {
+    display: inline-block;
+    background-color: #1f6feb22;
+    color: #58a6ff;
+    border: 1px solid #1f6feb;
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
 & .article-content .back-link {
     display: inline-block;
     color: #4fd1c5;

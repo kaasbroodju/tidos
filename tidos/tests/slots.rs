@@ -16,6 +16,18 @@ impl Component for Card<'_> {
 	}
 }
 
+struct AnonymousCard<'a>(Slot<'a>);
+
+impl Component for AnonymousCard<'_> {
+	fn to_render(&self, page: &mut Page) {
+		view! {
+			<div>
+				@slot{self.0}
+			</div>
+		}
+	}
+}
+
 #[cfg(not(feature = "i18n"))]
 #[test]
 fn single_slot() {

@@ -103,6 +103,31 @@ fn data_attribute() {
 }
 
 #[test]
+fn attribute_literal_in_braces() {
+	assert_eq!(
+		render(|page| {
+			view! {
+				<input type="radio" name="day" value="monday" data-tidos={"css-420"} />
+			}
+		}),
+		r#"<input type="radio" name="day" value="monday" data-tidos="css-420" />"#
+	);
+}
+
+#[test]
+fn attribute_formatted_string() {
+	let variant = 420;
+	assert_eq!(
+		render(|page| {
+			view! {
+				<input type="radio" name="day" value="monday" data-tidos={"css-{}", variant} />
+			}
+		}),
+		r#"<input type="radio" name="day" value="monday" data-tidos="css-420" />"#
+	);
+}
+
+#[test]
 fn custom_element_all_attribute_styles() {
 	let active = true;
 	let label = String::from("hello");
@@ -163,6 +188,53 @@ fn struct_component_all_prop_styles() {
 		page_output.into_html(),
 		"class=wrapper label=hello disabled=true active=true visible=true"
 	);
+}
+
+#[cfg(not(feature = "i18n"))]
+#[test]
+fn struct_component_literal_prop() {
+	struct Widget {
+		pub class: &'static str,
+	}
+
+	impl Component for Widget {
+		fn to_render(&self, page: &mut Page) {
+			page.push_dynamic(format!("class={}", self.class));
+		}
+	}
+
+	let mut page_output = Page::new();
+	let page = &mut page_output;
+
+	view! {
+		<Widget class={"wrapper"} />
+	};
+
+	assert_eq!(page_output.into_html(), "class=wrapper");
+}
+
+#[cfg(not(feature = "i18n"))]
+#[test]
+fn struct_component_formatted_prop() {
+	struct Widget {
+		pub label: String,
+	}
+
+	impl Component for Widget {
+		fn to_render(&self, page: &mut Page) {
+			page.push_dynamic(format!("label={}", self.label));
+		}
+	}
+
+	let variant = 420;
+	let mut page_output = Page::new();
+	let page = &mut page_output;
+
+	view! {
+		<Widget label={"css-{}", variant} />
+	};
+
+	assert_eq!(page_output.into_html(), "label=css-420");
 }
 
 #[cfg(not(feature = "i18n"))]

@@ -15,7 +15,7 @@ categories = ["web-programming"]
 
 [dependencies]
 proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
-syn = { version = "2.0.116", features = ["full"] }
+syn = { version = "3.0.2", features = ["full"] }
 quote = "1.0.44"
 cargo-expand = "1.0.74"
 
