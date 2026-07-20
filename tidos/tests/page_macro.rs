@@ -7,14 +7,14 @@ fn renders_basic_html() {
 	let result = page! {
 		<main><h1>{"Hello"}</h1></main>
 	};
-	assert_eq!(result.template, "<main><h1>Hello</h1></main>");
+	assert_eq!(result.into_html(), "<main><h1>Hello</h1></main>");
 }
 
 #[test]
 fn empty_page() {
 	let result = page! {};
-	assert_eq!(result.template, "");
 	assert_eq!(result.head, "");
+	assert_eq!(result.into_html(), "");
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn renders_expression() {
 	let result = page! {
 		<p>{name}</p>
 	};
-	assert_eq!(result.template, "<p>world</p>");
+	assert_eq!(result.into_html(), "<p>world</p>");
 }
 
 #[test]
@@ -41,15 +41,17 @@ fn renders_component() {
 	}
 
 	impl Component for Greeting {
-		fn to_render(&self, _page: &mut Page) -> String {
-			format!("<span>{}</span>", &self.name)
+		fn to_render(&self, page: &mut Page) {
+			page.push_static("<span>");
+			page.push_dynamic(self.name.clone());
+			page.push_static("</span>");
 		}
 	}
 
 	let result = page! {
 		<Greeting name={ String::from("Alice") } />
 	};
-	assert_eq!(result.template, "<span>Alice</span>");
+	assert_eq!(result.into_html(), "<span>Alice</span>");
 }
 
 // head! tests
@@ -59,7 +61,7 @@ fn head_injects_into_page() {
 	let mut page_output = Page::new();
 	let page = &mut page_output;
 	head! { <title>{"My Title"}</title> }
-	assert!(page.head.contains("<title>My Title</title>"));
+	assert!(page_output.head.contains("<title>My Title</title>"));
 }
 
 #[test]
@@ -69,7 +71,10 @@ fn head_deduplicates_same_invocation() {
 	for _ in 0..3 {
 		head! { <title>{"My Title"}</title> }
 	}
-	assert_eq!(page.head.matches("<title>My Title</title>").count(), 1);
+	assert_eq!(
+		page_output.head.matches("<title>My Title</title>").count(),
+		1
+	);
 }
 
 #[test]
@@ -78,8 +83,8 @@ fn head_multiple_different_invocations_both_inject() {
 	let page = &mut page_output;
 	head! { <link rel="stylesheet" href="/style.css" /> }
 	head! { <title>{"My Page"}</title> }
-	assert!(page.head.contains("<link"));
-	assert!(page.head.contains("<title>My Page</title>"));
+	assert!(page_output.head.contains("<link"));
+	assert!(page_output.head.contains("<title>My Page</title>"));
 }
 
 #[test]
@@ -88,7 +93,7 @@ fn head_with_expression() {
 	let page = &mut page_output;
 	let title = "Dynamic Title";
 	head! { <title>{title}</title> }
-	assert!(page.head.contains("<title>Dynamic Title</title>"));
+	assert!(page_output.head.contains("<title>Dynamic Title</title>"));
 }
 
 #[test]
@@ -98,9 +103,8 @@ fn head_injected_via_component_renders_on_page() {
 	}
 
 	impl Component for TitleComponent {
-		fn to_render(&self, page: &mut Page) -> String {
+		fn to_render(&self, page: &mut Page) {
 			head! { <title>{&self.title}</title> }
-			String::new()
 		}
 	}
 
@@ -108,5 +112,5 @@ fn head_injected_via_component_renders_on_page() {
 		<TitleComponent title={ String::from("Hello World") } />
 	};
 	assert!(result.head.contains("<title>Hello World</title>"));
-	assert_eq!(result.template, "");
+	assert_eq!(result.into_html(), "");
 }

@@ -1,0 +1,50 @@
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition {
+    background-color: #0d1f2a;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    mix-blend-mode: normal;
+}
+
+@keyframes slide-out-up {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-100vh); }
+}
+
+@keyframes slide-in-up {
+    from { transform: translateY(100vh); }
+    to   { transform: translateY(0); }
+}
+
+@keyframes slide-out-down {
+    from { transform: translateY(0); }
+    to   { transform: translateY(100vh); }
+}
+
+@keyframes slide-in-down {
+    from { transform: translateY(-100vh); }
+    to   { transform: translateY(0); }
+}
+
+/* Forward navigation (default) */
+::view-transition-old(root) {
+    animation: slide-out-up .65s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+::view-transition-new(root) {
+    animation: slide-in-up .65s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+/* Back navigation — triggered via viewTransition.types.add('back') */
+:active-view-transition-type(back)::view-transition-old(root) {
+    animation: slide-out-down .65s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+:active-view-transition-type(back)::view-transition-new(root) {
+    animation: slide-in-down .65s cubic-bezier(.4, 0, .2, 1) forwards;
+}

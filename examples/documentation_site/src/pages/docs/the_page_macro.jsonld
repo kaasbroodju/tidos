@@ -1,0 +1,57 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://tidos.dev/docs/the-page-macro#article",
+      "name": "page! macro — Tidos",
+      "description": "How to use the page! macro to render a full HTML page in Tidos.",
+      "url": "https://tidos.dev/docs/the-page-macro",
+      "isPartOf": { "@id": "https://tidos.dev/#website" },
+      "author": { "@id": "https://github.com/kaasbroodju" },
+      "inLanguage": "en",
+      "about": { "@id": "https://tidos.dev/#tidos" }
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://tidos.dev/docs/the-page-macro#howto",
+      "name": "How to render a full HTML page with the page! macro",
+      "description": "Use the page! macro inside a Rust route handler to produce and serve a complete HTML page.",
+      "inLanguage": "en",
+      "about": { "@id": "https://tidos.dev/#tidos" },
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": "1",
+          "name": "Import page! and Page",
+          "text": "Add use tidos::{page, Page}; to your route file to bring the macro and return type into scope."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "2",
+          "name": "Call page! inside a route handler",
+          "text": "Invoke page! with HTML and Rust expressions inside a route handler function. The macro produces a Page struct that your framework can return directly as an HTML response."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "3",
+          "name": "Use components inside page!",
+          "text": "Include any struct that implements Component using JSX-like self-closing syntax: <MyComponent prop={value} />. The Component trait must be in scope."
+        },
+        {
+          "@type": "HowToStep",
+          "position": "4",
+          "name": "Inject head elements with head!",
+          "text": "Call head! after page! to add title, meta, stylesheet, and script tags to the rendered document head."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tidos.dev" },
+        { "@type": "ListItem", "position": 2, "name": "page! macro", "item": "https://tidos.dev/docs/the-page-macro" }
+      ]
+    }
+  ]
+}

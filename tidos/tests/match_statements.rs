@@ -1,4 +1,10 @@
-use tidos_macro::view;
+use tidos::{view, Page};
+
+fn render(f: impl FnOnce(&mut Page)) -> String {
+	let mut p = Page::new();
+	f(&mut p);
+	p.into_html()
+}
 
 #[allow(unused)]
 #[test]
@@ -13,7 +19,7 @@ fn a_simple_match_statement() {
 	let my_pet = Dog;
 
 	assert_eq!(
-		&view! {
+		render(|page| view! {
 			{#match my_pet}
 				{:case Fish}
 					<p>{"Blub!"}</p>
@@ -24,7 +30,7 @@ fn a_simple_match_statement() {
 				{:case _}
 					<p>{"Is it a snake or a spider?"}</p>
 			{/match}
-		},
+		}),
 		"<p>Good boy!</p>"
 	)
 }
@@ -44,7 +50,7 @@ fn a_complex_match_statement() {
 	};
 
 	assert_eq!(
-		&view! {
+		render(|page| view! {
 			{#match my_pet}
 				{:case Fish}
 					<p>{"Blub!"}</p>
@@ -58,7 +64,7 @@ fn a_complex_match_statement() {
 					<p>{"What is that?"}</p>
 					<p>{format!("It is a {name}!")}</p>
 			{/match}
-		},
+		}),
 		"<p>What is that?</p><p>It is a spider!</p>"
 	)
 }

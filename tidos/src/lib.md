@@ -22,7 +22,7 @@ tidos = "0.7.2"
 
 | Item | Description |
 |---|---|
-| [`view!`] | Renders a fragment of HTML. Returns a `String`. |
+| [`view!`] | Renders a fragment of HTML into the current [`Page`]. |
 | [`page!`] | Wraps a full page. Returns a [`Page`] ready to return from a route. |
 | [`Component`] | Trait for reusable components; implement [`to_render`](Component::to_render). |
 | [`Page`] | Collects rendered HTML and `<head>` elements for a full page response. |
@@ -45,7 +45,7 @@ pub struct Card {
 }
 
 impl Component for Card {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <div class="card">
                 <h2>{&self.title}</h2>
@@ -61,7 +61,7 @@ impl Component for Card {
 Use [`page!`] in a route handler to produce a full [`Page`] response.
 Embed components with JSX-like self-closing tags:
 
-```rust,no_run
+```rust,ignore
 use tidos::{page, Component, Page};
 
 #[get("/")]
@@ -89,10 +89,12 @@ braces causes a compile-time panic. There are four forms:
 | `@html{expr}` | Trusted raw HTML — not escaped | No |
 
 ```rust,no_run
-use tidos::view;
+use tidos::{view, Page};
 
 let name = "Alice";
 let count = 42_usize;
+let mut page = Page::new();
+let page = &mut page;
 
 view! {
     <p>{"Hello world"}</p>
@@ -104,9 +106,11 @@ view! {
 ### `{#for}` — loops
 
 ```rust,no_run
-use tidos::view;
+use tidos::{view, Page};
 
 let fruits = vec!["apple", "banana", "cherry"];
+let mut page = Page::new();
+let page = &mut page;
 
 view! {
     <ul>
@@ -120,10 +124,12 @@ view! {
 ### `{#if}` — conditionals
 
 ```rust,no_run
-use tidos::view;
+use tidos::{view, Page};
 
 let age = 20_u32;
 let is_american = false;
+let mut page = Page::new();
+let page = &mut page;
 
 view! {
     {#if age >= 18 && !is_american}
@@ -139,10 +145,12 @@ view! {
 ### `{#match}` — pattern matching
 
 ```rust,no_run
-use tidos::view;
+use tidos::{view, Page};
 
 enum Status { Active, Banned, Guest }
 let status = Status::Active;
+let mut page = Page::new();
+let page = &mut page;
 
 view! {
     {#match status}
@@ -172,7 +180,7 @@ pub struct Coordinate {
 }
 
 impl Component for Coordinate {
-    fn to_render(&self, _page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <span>{self.x.to_string()}</span>
             <span>{self.y.to_string()}</span>
@@ -180,6 +188,8 @@ impl Component for Coordinate {
     }
 }
 
+let mut page = Page::new();
+let page = &mut page;
 // Only set x; y defaults to 0
 view! {
     <Coordinate x={1} .. />
@@ -196,7 +206,7 @@ returns the class name as a `&'static str`; apply it to the component's
 root element. [`Page::add_elements_to_head`] deduplicates by UUID, so
 calling `scoped_css!` inside a loop is safe.
 
-```rust,no_run
+```rust,ignore
 use tidos::{scoped_css, view, Component, Page};
 
 pub struct Card {
@@ -204,7 +214,7 @@ pub struct Card {
 }
 
 impl Component for Card {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <div class={scoped_css!("./card.css")}>
                 <h2>{&self.title}</h2>
@@ -240,11 +250,10 @@ pub struct Title {
 }
 
 impl Component for Title {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         head! {
             <title>{&self.title}</title>
         }
-        String::new()
     }
 }
 ```
@@ -258,7 +267,7 @@ See the [`mod@i18n`] module for full details. Enable the feature flag and call
 tidos = { version = "0.7.2", features = ["rocket", "i18n"] }
 ```
 
-```rust,no_run
+```rust,ignore
 use tidos::i18n::{enable_i18n, i18n, Lang};
 use tidos::{view, page, Component, Page};
 
@@ -267,7 +276,7 @@ enable_i18n!();
 pub struct Greeting;
 
 impl Component for Greeting {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <h1>{i18n!("greeting")}</h1>
         }

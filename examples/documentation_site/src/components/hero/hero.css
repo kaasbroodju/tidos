@@ -1,0 +1,106 @@
+& {
+    /*position: relative;*/
+    /*overflow: hidden;*/
+    /*background: linear-gradient(180deg, #0d4a6f 0%, #001528 70%, #001528 100%);*/
+    background-image: url('/hero.svg');
+    background-size: 100vw 100vh;
+    background-repeat: no-repeat;
+    color: #f0f6fb;
+    height: 100vh;
+    padding-top: 120px;
+}
+
+& .hero-content {
+    /*position: absolute;*/
+
+    /*top: 175px;*/
+    /*left: 0;*/
+    /*right: 0;*/
+    /*bottom: 0;*/
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 80px;
+    align-items: start;
+
+    @media (max-width: 800px) {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+    }
+    /*z-index: 2;*/
+}
+
+& .copy {
+    padding-top: 30px;
+}
+
+& .headline {
+    font-family: 'Newsreader', serif;
+    font-size: 110px;
+    line-height: 0.94;
+    font-weight: 400;
+    letter-spacing: -3.5px;
+    margin: 0 0 28px;
+    color: #fff;
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+& .headline em {
+    font-style: italic;
+    color: #4fd1c5;
+}
+
+& .tagline {
+    /*font-family: 'Newsreader', serif;*/
+    font-size: 19px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.92);
+    max-width: 480px;
+    margin: 0 0 36px;
+    font-weight: 300;
+}
+
+& .cta-group {
+    display: flex;
+    gap: 14px;
+
+    @media (max-width: 800px) {
+        flex-direction: column;
+    }
+}
+
+& .btn-primary {
+    background: #4fd1c5;
+    color: #001528;
+    padding: 14px 26px;
+    border-radius: 999px;
+    font-weight: 600;
+    /*font-size: 14px;*/
+    box-shadow: 0 8px 24px rgba(79, 209, 197, 0.33);
+    place-items: center;
+    display: inline-flex;
+    align-self: flex-start;
+
+    & > svg {
+        margin-left: .5rem;
+    }
+}
+
+& .btn-secondary {
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 999px;
+    /*font-size: 14px;*/
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+& .version-badge {
+    margin-top: 28px;
+    /*font-size: 13px;*/
+    color: rgba(255, 255, 255, 0.7);
+    /*font-family: 'JetBrains Mono', monospace;*/
+}
+
+& .ver {
+    color: #4fd1c5;
+}

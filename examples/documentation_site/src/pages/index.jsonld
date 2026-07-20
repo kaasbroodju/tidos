@@ -1,0 +1,94 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://tidos.dev/#website",
+      "name": "Tidos",
+      "alternateName": "Tidos — Ride the tide.",
+      "url": "https://tidos.dev",
+      "description": "A component framework for Rust that makes it simple to write fast, type-safe, expressive web UIs — and plays nicely with the framework you already use.",
+      "inLanguage": "en",
+      "author": { "@id": "https://github.com/kaasbroodju" },
+      "creator": { "@id": "https://github.com/kaasbroodju" },
+      "about": { "@id": "https://tidos.dev/#tidos" }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://tidos.dev/#tidos",
+      "name": "Tidos",
+      "description": "A component framework for Rust that makes it simple to write fast, type-safe, expressive web UIs — and plays nicely with the framework you already use.",
+      "url": "https://tidos.dev",
+      "codeRepository": "https://github.com/kaasbroodju/tidos",
+      "programmingLanguage": [{ "@type": "ComputerLanguage", "name": "Rust" }],
+      "runtimePlatform": ["Rocket", "Actix", "Axum", "Warp"],
+      "version": "0.8.0-rc.1",
+      "license": "https://github.com/kaasbroodju/tidos/blob/main/LICENSE",
+      "author": { "@id": "https://github.com/kaasbroodju" },
+      "copyrightYear": "2026",
+      "copyrightHolder": { "@id": "https://github.com/kaasbroodju" },
+      "sameAs": [
+        "https://crates.io/crates/tidos",
+        "https://docs.rs/tidos/latest/tidos/"
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://tidos.dev/#application",
+      "name": "Tidos",
+      "description": "A component framework for Rust that makes it simple to write fast, type-safe, expressive web UIs — and plays nicely with the framework you already use.",
+      "url": "https://tidos.dev",
+      "downloadUrl": "https://crates.io/crates/tidos",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux, macOS, Windows",
+      "softwareHelp": { "url": "https://docs.rs/tidos/latest/tidos/" },
+      "programmingLanguage": [{ "@type": "ComputerLanguage", "name": "Rust" }],
+      "author": { "@id": "https://github.com/kaasbroodju" },
+      "sameAs": [
+        "https://crates.io/crates/tidos",
+        "https://docs.rs/tidos/latest/tidos/"
+      ]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://github.com/kaasbroodju",
+      "name": "Morris Waaijer",
+      "alternateName": "kaasbroodju",
+      "email": "tidos@morriswaaijer.nl",
+      "url": "https://github.com/kaasbroodju",
+      "sameAs": [
+        "https://github.com/kaasbroodju",
+        "https://crates.io/users/kaasbroodju"
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://tidos.dev/#webpage",
+      "url": "https://tidos.dev",
+      "name": "Tidos — Ride the tide.",
+      "description": "A component framework for Rust that makes it simple to write fast, type-safe, expressive web UIs — and plays nicely with the framework you already use.",
+      "isPartOf": { "@id": "https://tidos.dev/#website" },
+      "about": { "@id": "https://tidos.dev/#tidos" },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "ItemList",
+      "@id": "https://tidos.dev/#navigation",
+      "name": "Main Navigation",
+      "itemListElement": [
+        {
+          "@type": "SiteNavigationElement",
+          "position": 1,
+          "name": "Home",
+          "url": "https://tidos.dev/"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 2,
+          "name": "Getting Started",
+          "url": "https://tidos.dev/docs/getting-started"
+        }
+      ]
+    }
+  ]
+}

@@ -11,7 +11,7 @@ members = [
     "web_frameworks/lit",
     "web_frameworks/react",
     "web_frameworks/svelte",
-    "web_frameworks/vue",
+    "web_frameworks/vue", "documentation_site",
 ]
 
 [workspace.package]

@@ -27,7 +27,8 @@ fn pascal_case_struct_name_becomes_kebab_case_tag() {
 		is_shiny: false,
 	};
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert!(html.starts_with("<greet-user"));
 }
 
@@ -35,7 +36,8 @@ fn pascal_case_struct_name_becomes_kebab_case_tag() {
 fn multi_word_pascal_case_becomes_kebab_tag() {
 	let component = MyToggleSwitch;
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert!(html.starts_with("<my-toggle-switch"));
 }
 
@@ -48,7 +50,8 @@ fn string_field_renders_as_attribute() {
 		is_shiny: false,
 	};
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert_eq!(html, r#"<greet-user name="Alice" ></greet-user>"#);
 }
 
@@ -59,7 +62,8 @@ fn bool_true_renders_toggle_attribute() {
 		is_shiny: true,
 	};
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert_eq!(html, r#"<greet-user name="Alice" is-shiny ></greet-user>"#);
 }
 
@@ -70,7 +74,8 @@ fn bool_false_omits_toggle_attribute() {
 		is_shiny: false,
 	};
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert_eq!(html, r#"<greet-user name="Alice" ></greet-user>"#);
 	assert!(!html.contains("is-shiny"));
 }
@@ -82,7 +87,8 @@ fn snake_case_field_name_becomes_kebab_case_attribute() {
 		is_shiny: true,
 	};
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	// is_shiny → is-shiny
 	assert!(html.contains("is-shiny"));
 	assert!(!html.contains("is_shiny"));
@@ -92,7 +98,8 @@ fn snake_case_field_name_becomes_kebab_case_attribute() {
 fn unit_struct_renders_empty_element() {
 	let component = MyToggleSwitch;
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert_eq!(html, "<my-toggle-switch></my-toggle-switch>");
 }
 
@@ -148,7 +155,8 @@ fn attribute_value_is_sanitized() {
 		is_shiny: false,
 	};
 	let mut page = Page::new();
-	let html = component.to_render(&mut page);
+	component.to_render(&mut page);
+	let html = page.into_html();
 	assert!(!html.contains("<script>"));
 	assert!(html.contains("&lt;script&gt;"));
 }

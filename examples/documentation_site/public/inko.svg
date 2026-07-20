@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Inko - Tidos mascot</title>
+<defs>
+  <mask id="m">
+    <rect x="-15" y="-15" width="130" height="130" fill="black"></rect>
+    <path d="M 18 52 Q 18 15 50 15 Q 82 15 82 52 L 82 63 Q 74 75 66 63 Q 58 75 50 63 Q 42 75 34 63 Q 26 75 18 63 Z" fill="white"></path>
+    <g fill="none" stroke="white" stroke-width="7.5" stroke-linecap="round">
+      <path d="M 23 50 C 11 50 6 40 12 31"></path>
+      <path d="M 77 50 C 89 50 94 40 88 31"></path>
+    </g>
+    <circle cx="39" cy="40" r="6.6" fill="black"></circle>
+    <circle cx="61" cy="40" r="6.6" fill="black"></circle>
+    <path d="M 41 50 Q 50 57 59 50" fill="none" stroke="black" stroke-width="3.2" stroke-linecap="round"></path>
+  </mask>
+</defs>
+  <g transform="translate(0 8)">
+    <rect x="-15" y="-15" width="130" height="130" fill="#4fd1c5" mask="url(#m)"></rect>
+    <g fill="#4fd1c5">
+      <circle cx="37.4" cy="38" r="1.8"></circle>
+      <circle cx="59.4" cy="38" r="1.8"></circle>
+    </g>
+  </g>
+
+<!--  <circle cx="50" cy="50" r="5" fill="black"></circle>-->
+<!--  <rect x="0" y="5" width="130" height="10" fill="black"></rect>-->
+<!--  <rect x="0" y="69" width="130" height="10" fill="black"></rect>-->
+
+</svg>

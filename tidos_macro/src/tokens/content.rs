@@ -13,23 +13,14 @@ pub enum Content {
 	// {#slot:name} ... {/slot}
 	ControlTag(ControlTag),
 
-	// // <Custom></Custom>
-	// Custom,
-
-	// // <tidos:self></tidos:self>
-	// Instruction,
-
 	// text
 	Text(TextContent),
 
-	// text
-	// Literal(String),
-	//
-	// // expression <p>{ format!("Hello {}", name) }</p>
-	// Expression(Group),
-
 	// <p>@html{"<p>potential danger"}</p>
 	RawHTMLExpression(TextContent),
+
+	// @slot{self.field_name}
+	SlotRender(Vec<TokenTree>),
 }
 
 impl IsStatic for Content {
@@ -38,9 +29,8 @@ impl IsStatic for Content {
 			Content::Tag(element) => element.is_static(),
 			Content::ControlTag(_) => false,
 			Content::Text(content) => content.is_static(),
-			// Content::Literal(_) => true,
-			// Content::Expression(_) => false,
 			Content::RawHTMLExpression(content) => content.is_static(),
+			Content::SlotRender(_) => false,
 		}
 	}
 }

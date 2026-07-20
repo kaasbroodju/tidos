@@ -6,7 +6,7 @@ pub struct NavBar {
 }
 
 impl Component for NavBar {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <nav class={scoped_css!("./nav_bar.css")}>
                 <span>{&self.title}</span>

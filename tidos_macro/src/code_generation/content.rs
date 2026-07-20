@@ -8,9 +8,10 @@ impl ToTokens for Content {
 			Content::Tag(html_tag) => html_tag.to_tokens(tokens),
 			Content::ControlTag(control_tag) => control_tag.to_tokens(tokens),
 			Content::Text(text_content) => text_content.to_tokens(tokens),
-			// Content::Literal(literal) => literal.to_tokens(tokens),
-			// Content::Expression(expr) => quote!(tidos::sanitize!(#expr)).to_tokens(tokens),
-			Content::RawHTMLExpression(text_content) => text_content.to_tokens_unsanitized(tokens),
+			Content::RawHTMLExpression(text_content) => text_content.to_tokens_raw(tokens),
+			Content::SlotRender(expr) => {
+				quote! { (#( #expr )*)(page); }.to_tokens(tokens);
+			}
 		}
 	}
 }
@@ -20,32 +21,47 @@ impl ToTokens for TextContent {
 		match self {
 			TextContent::Literal(literal) => {
 				let literal = TextContent::sanitize_literal(literal.clone());
-				quote! { #literal }.to_tokens(tokens)
+				quote! { page.push_static(#literal); }.to_tokens(tokens);
 			}
 			TextContent::Formatted(literal, contents) => {
 				let literal = TextContent::sanitize_literal(literal.clone());
-				quote!(tidos::sanitize!(format!(#literal #( , #( #contents )* )* )))
-					.to_tokens(tokens)
+				quote! {
+					{ let _v = format!(#literal #( , #( #contents )* )* ); page.push_dynamic(_v); }
+				}
+				.to_tokens(tokens);
 			}
 			TextContent::Expression(expr) => {
-				quote!(tidos::sanitize!( #( #expr )* )).to_tokens(tokens)
+				quote! {
+					{ let _v = tidos::sanitize!( #( #expr )* ); page.push_dynamic(_v); }
+				}
+				.to_tokens(tokens);
 			}
 		}
 	}
 }
 
 impl TextContent {
-	fn to_tokens_unsanitized(&self, tokens: &mut TokenStream) {
+	pub fn to_tokens_raw(&self, tokens: &mut TokenStream) {
 		match self {
-			TextContent::Literal(literal) => quote! { #literal }.to_tokens(tokens),
-			TextContent::Formatted(literal, contents) => {
-				quote!(format!(#literal #( , #( #contents )* )* )).to_tokens(tokens)
+			TextContent::Literal(literal) => {
+				quote! { page.push_static(#literal); }.to_tokens(tokens);
 			}
-			TextContent::Expression(expr) => quote!( #( #expr )* ).to_tokens(tokens),
+			TextContent::Formatted(literal, contents) => {
+				quote! {
+					{ let _v = format!(#literal #( , #( #contents )* )* ); page.push_dynamic(_v); }
+				}
+				.to_tokens(tokens);
+			}
+			TextContent::Expression(expr) => {
+				quote! {
+					{ let _v = #( #expr )*; page.push_dynamic(_v); }
+				}
+				.to_tokens(tokens);
+			}
 		}
 	}
 
-	fn sanitize_literal(literal: Literal) -> Literal {
+	pub(crate) fn sanitize_literal(literal: Literal) -> Literal {
 		let input = &literal.to_string();
 		let input = &input[1..input.len() - 1];
 

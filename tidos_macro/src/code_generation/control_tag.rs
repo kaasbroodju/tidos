@@ -1,4 +1,5 @@
-use crate::tokens::{Content, ControlTag, IsStatic};
+use crate::code_generation::component::to_push_stmts;
+use crate::tokens::{Content, ControlTag};
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{quote, ToTokens, TokenStreamExt};
 
@@ -44,17 +45,12 @@ impl ControlTag {
 		contents: &[Content],
 		tokens: &mut TokenStream,
 	) {
-		let tokens_children = contents
-			.iter()
-			.fold(&mut TokenStream::new(), |acc, child| {
-				child.to_tokens(acc);
-				acc
-			})
-			.to_owned();
+		let body = to_push_stmts(contents);
 
 		let output = quote! {
-
-			&( #( #right_side )* ).into_iter().fold(String::new(), |acc, ( #( #left_side )* )| { tidos::combine!(acc, #tokens_children) })
+			for ( #( #left_side )* ) in ( #( #right_side )* ).into_iter() {
+				#body
+			}
 		};
 
 		tokens.append_all(output);
@@ -67,64 +63,25 @@ impl ControlTag {
 		else_content: &Option<Vec<Content>>,
 		tokens: &mut TokenStream,
 	) {
-		let if_content_tokens = if_content
-			.iter()
-			.fold(&mut TokenStream::new(), |acc, child| {
-				let content = if child.is_static() {
-					quote! { String::from(concat!( #child ) ) }
-				} else {
-					quote! { tidos::combine!(String::new(), #child) }
-				};
-				content.to_tokens(acc);
-				acc
-			})
-			.to_owned();
+		let if_body = to_push_stmts(if_content);
 
 		let if_else_chain_tokens = if_else_chain
 			.iter()
 			.fold(&mut TokenStream::new(), |acc, (statement, contents)| {
-				let chain_contents_tokens = contents
-					.iter()
-					.fold(&mut TokenStream::new(), |acc, child| {
-						let content = if child.is_static() {
-							quote! { String::from(concat!( #child ) ) }
-						} else {
-							quote! { tidos::combine!(String::new(), #child) }
-						};
-						content.to_tokens(acc);
-						acc
-					})
-					.to_owned();
-
-				let chain = quote! {
-					else if #( #statement )* { #chain_contents_tokens }
-				};
-
-				chain.to_tokens(acc);
+				let body = to_push_stmts(contents);
+				quote! { else if #( #statement )* { #body } }.to_tokens(acc);
 				acc
 			})
 			.to_owned();
 
 		let output = if let Some(else_content) = else_content {
-			let else_content_tokens = else_content
-				.iter()
-				.fold(&mut TokenStream::new(), |acc, child| {
-					let content = if child.is_static() {
-						quote! { String::from(concat!( #child ) ) }
-					} else {
-						quote! { tidos::combine!(String::new(), #child) }
-					};
-					content.to_tokens(acc);
-					acc
-				})
-				.to_owned();
-
+			let else_body = to_push_stmts(else_content);
 			quote! {
-				if #( #if_statement )* { #if_content_tokens } #if_else_chain_tokens else { #else_content_tokens }
+				if #( #if_statement )* { #if_body } #if_else_chain_tokens else { #else_body }
 			}
 		} else {
 			quote! {
-				if #( #if_statement )* { #if_content_tokens } #if_else_chain_tokens else { String::new() }
+				if #( #if_statement )* { #if_body } #if_else_chain_tokens
 			}
 		};
 
@@ -139,26 +96,15 @@ impl ControlTag {
 		let cases = cases
 			.iter()
 			.map(|(case_statement, case_content)| {
-				let is_static = case_content.iter().all(|content| content.is_static());
-
-				if is_static {
-					quote! {
-						#( #case_statement )* => {
-							String::from(concat!( #( #case_content ),* ))
-						}
-					}
-				} else {
-					quote! {
-						#( #case_statement )* => {
-							tidos::combine!(String::new(), #( #case_content ),*)
-						}
-					}
+				let body = to_push_stmts(case_content);
+				quote! {
+					#( #case_statement )* => { #body }
 				}
 			})
 			.collect::<Vec<_>>();
 
 		let output = quote! {
-			&match #( #match_statement )* {
+			match #( #match_statement )* {
 				#( #cases )*
 			}
 		};
