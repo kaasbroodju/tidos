@@ -35,6 +35,7 @@ impl Parse for Content {
 			let text_content = Self::parse_text_content(input)?;
 			Ok(Content::Text(text_content))
 		} else {
+			// TODO: legacy code remove after release candidate.
 			// text between tags
 			if let Ok(x) = Self::parse_text_between_tags(input) {
 				panic!("Raw text between tags is no longer supported. Use `{{\"{x}\"}}` instead.")

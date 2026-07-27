@@ -1,6 +1,6 @@
 error: Unable to have a toggle attribute from a literal, change it into the following:
        :checked
-       :checked={ bool }
+       :checked={ boolean expression }
        checked="not a bool"
        checked={ "not a bool" }
  --> tests/attributes/panics/invalid_toggle_value.rs:6:59

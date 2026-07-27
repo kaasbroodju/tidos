@@ -1,6 +1,6 @@
+use crate::parsing::attribute::parse_attributes;
 use crate::parsing::utils::{matches_tag, peek_closing_tag_name};
-use crate::tokens::{Attribute, AttributeType, Attributes, Content, HTMLTag};
-use proc_macro2::{Group, Literal};
+use crate::tokens::{Content, HTMLTag};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::token::Lt;
@@ -12,7 +12,7 @@ impl Parse for HTMLTag {
 		let start_first_tag_token = input.parse::<Token![<]>()?;
 		let (tag, tag_span) = Self::extract_name(input)?;
 		let is_component = tag.chars().next().unwrap().is_ascii_uppercase();
-		let attributes = Self::parse_attributes(input, &tag, start_first_tag_token.span())?;
+		let attributes = parse_attributes(input, &tag, start_first_tag_token.span())?;
 
 		if !is_component && attributes.has_default_flag {
 			return Err(syn::Error::new(
@@ -65,7 +65,9 @@ impl Parse for HTMLTag {
 }
 
 impl HTMLTag {
-	fn extract_name(input: ParseStream) -> Result<(String, proc_macro2::Span), syn::Error> {
+	pub(crate) fn extract_name(
+		input: ParseStream,
+	) -> Result<(String, proc_macro2::Span), syn::Error> {
 		input.step(|cursor| {
 			let mut rest = *cursor;
 			let mut output = String::new();
@@ -96,103 +98,8 @@ impl HTMLTag {
 		})
 	}
 
-	fn is_peeking_at_self_closing_tag(input: ParseStream) -> bool {
+	pub(crate) fn is_peeking_at_self_closing_tag(input: ParseStream) -> bool {
 		input.peek(Token![/]) && input.peek2(Token![>])
-	}
-
-	fn parse_attributes(
-		input: ParseStream,
-		tag: &str,
-		tag_span: proc_macro2::Span,
-	) -> Result<Attributes, syn::Error> {
-		let mut attributes = Vec::new();
-		let mut has_default_flag = false;
-		while !(Self::is_peeking_at_self_closing_tag(input) || input.peek(Token![>])) {
-			if input.is_empty() {
-				return Err(syn::Error::new(
-					tag_span,
-					format!("missing closing `>` for `<{tag}>` tag"),
-				));
-			}
-
-			if input.parse::<Token![.]>().is_ok() && input.parse::<Token![.]>().is_ok() {
-				has_default_flag = true;
-				continue;
-			}
-
-			let is_toggle_attribute = input.parse::<Token![:]>().is_ok();
-
-			let Ok((attribute_name, attribute_name_span)) = Self::extract_name(input) else {
-				return Err(syn::Error::new(
-					input.span(),
-					"Expected an attribute like `class` or `data-tidos`",
-				));
-			};
-
-			let Ok(equal_sign_token) = input.parse::<Token![=]>() else {
-				let attribute = if is_toggle_attribute {
-					Attribute {
-						name: attribute_name,
-						name_span: attribute_name_span,
-						attribute_type: AttributeType::ImplicitToggle,
-					}
-				} else {
-					Attribute {
-						name: attribute_name,
-						name_span: attribute_name_span,
-						attribute_type: AttributeType::Constant,
-					}
-				};
-
-				attributes.push(attribute);
-				continue;
-			};
-
-			if let Ok(literal) = input.parse::<Literal>() {
-				if is_toggle_attribute {
-					return Err(syn::Error::new(literal.span(), format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}")));
-				} else {
-					let attribute = Attribute {
-						name: attribute_name,
-						name_span: attribute_name_span,
-						attribute_type: AttributeType::ConstantLiteral { literal },
-					};
-
-					attributes.push(attribute);
-				}
-			} else if input.peek(syn::token::Brace) && is_toggle_attribute {
-				let group = input.parse::<Group>()?;
-				let attribute = Attribute {
-					name: attribute_name,
-					name_span: attribute_name_span,
-					attribute_type: AttributeType::ExplicitToggle {
-						value: group.stream(),
-					},
-				};
-
-				attributes.push(attribute);
-			} else if input.peek(syn::token::Brace) {
-				let content = Content::parse_text_content(input)?;
-				let attribute = Attribute {
-					name: attribute_name,
-					name_span: attribute_name_span,
-					attribute_type: AttributeType::Expression { content },
-				};
-
-				attributes.push(attribute);
-			} else {
-				let message = if is_toggle_attribute {
-					format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}")
-				} else {
-					format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}")
-				};
-				return Err(syn::Error::new(equal_sign_token.span(), message));
-			}
-		}
-		Ok(Attributes {
-			attributes,
-			has_default_flag,
-		})
 	}
 
 	fn parse_body(
