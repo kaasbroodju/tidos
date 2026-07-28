@@ -1,6 +1,7 @@
-use crate::tokens::{Attribute, AttributeType, Attributes, Content, HTMLTag};
+use crate::parsing::utils::HTMLutils;
+use crate::tokens::{Attribute, AttributeType, Attributes, TextContent};
 use proc_macro2::{Group, Ident, Literal};
-use syn::parse::ParseStream;
+use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
 
@@ -10,7 +11,7 @@ pub(crate) fn parse_attributes(
 	tag_span: proc_macro2::Span,
 ) -> Result<Attributes, syn::Error> {
 	let mut attributes = Vec::new();
-	while !(HTMLTag::is_peeking_at_self_closing_tag(input)
+	while !(HTMLutils::is_peeking_at_self_closing_tag(input)
 		|| input.peek(Token![>])
 		|| input.peek(Token![.]))
 	{
@@ -21,7 +22,7 @@ pub(crate) fn parse_attributes(
 			));
 		}
 
-		let attribute = parse_attribute(input)?;
+		let attribute = input.parse::<Attribute>()?;
 		attributes.push(attribute);
 	}
 
@@ -45,99 +46,101 @@ pub(crate) fn parse_attributes(
 	})
 }
 
-fn parse_attribute(input: ParseStream) -> Result<Attribute, syn::Error> {
-	let toggle_token = input.parse::<Token![:]>();
-	let is_toggle_attribute = toggle_token.is_ok();
+impl Parse for Attribute {
+	fn parse(input: ParseStream) -> syn::Result<Self> {
+		let toggle_token = input.parse::<Token![:]>();
+		let is_toggle_attribute = toggle_token.is_ok();
 
-	let Ok((attribute_name, attribute_name_span)) = HTMLTag::extract_name(input) else {
-		return Err(syn::Error::new(
-			input.span(),
-			"Expected an attribute like `class` or `data-tidos`",
-		));
-	};
+		let Ok((attribute_name, attribute_name_span)) = HTMLutils::extract_name(input) else {
+			return Err(syn::Error::new(
+				input.span(),
+				"Expected an attribute like `class` or `data-tidos`",
+			));
+		};
 
-	let equal_sign_token = input.parse::<Token![=]>();
+		let equal_sign_token = input.parse::<Token![=]>();
 
-	if is_toggle_attribute {
-		match equal_sign_token {
-			Err(_) => {
-				// :disabled, shorthand for :disabled={disabled}
-				Ok(Attribute {
-					name: attribute_name,
-					name_span: attribute_name_span,
-					attribute_type: AttributeType::ImplicitToggle,
-				})
-			}
-			Ok(_) => {
-				if let Ok(literal) = input.parse::<Literal>() {
-					return Err(syn::Error::new(
-                        literal.span(),
-                        format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ boolean expression }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}"),
-                    ));
-				}
-
-				if let Ok(ident) = input.parse::<Ident>() {
-					return Err(syn::Error::new(
-                        ident.span(),
-                        format!("Unable to have a toggle attribute from a ident, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ {ident} }}\n{attribute_name}={{ {ident} }}"),
-                    ));
-				}
-
-				match input.parse::<Group>() {
-                    Ok(group) => {
-                        Ok(Attribute {
-                            name: attribute_name,
-                            name_span: attribute_name_span,
-                            attribute_type: AttributeType::ExplicitToggle {
-                                value: group.stream(),
-                            },
-                        })
-                    }
-                    Err(error) => {
-                        Err(syn::Error::new(
-                            error.span(),
-                            format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ boolean expression }}\n{attribute_name}={{ expression }}"),
-                        ))
-                    }
-                }
-			}
-		}
-	} else {
-		match equal_sign_token {
-			Err(_) => {
-				// disabled
-				Ok(Attribute {
-					name: attribute_name,
-					name_span: attribute_name_span,
-					attribute_type: AttributeType::Constant,
-				})
-			}
-			Ok(equal_sign_token) => {
-				if let Ok(literal) = input.parse::<Literal>() {
-					let attribute = Attribute {
+		if is_toggle_attribute {
+			match equal_sign_token {
+				Err(_) => {
+					// :disabled, shorthand for :disabled={disabled}
+					Ok(Attribute {
 						name: attribute_name,
 						name_span: attribute_name_span,
-						attribute_type: AttributeType::ConstantLiteral { literal },
-					};
+						attribute_type: AttributeType::ImplicitToggle,
+					})
+				}
+				Ok(_) => {
+					if let Ok(literal) = input.parse::<Literal>() {
+						return Err(syn::Error::new(
+							literal.span(),
+							format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ boolean expression }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}"),
+						));
+					}
 
-					Ok(attribute)
-				} else if input.peek(syn::token::Brace) {
-					let content = Content::parse_text_content(input)?;
-					let attribute = Attribute {
+					if let Ok(ident) = input.parse::<Ident>() {
+						return Err(syn::Error::new(
+							ident.span(),
+							format!("Unable to have a toggle attribute from a ident, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ {ident} }}\n{attribute_name}={{ {ident} }}"),
+						));
+					}
+
+					match input.parse::<Group>() {
+						Ok(group) => {
+							Ok(Attribute {
+								name: attribute_name,
+								name_span: attribute_name_span,
+								attribute_type: AttributeType::ExplicitToggle {
+									value: group.stream(),
+								},
+							})
+						}
+						Err(error) => {
+							Err(syn::Error::new(
+								error.span(),
+								format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ boolean expression }}\n{attribute_name}={{ expression }}"),
+							))
+						}
+					}
+				}
+			}
+		} else {
+			match equal_sign_token {
+				Err(_) => {
+					// disabled
+					Ok(Attribute {
 						name: attribute_name,
 						name_span: attribute_name_span,
-						attribute_type: AttributeType::Expression { content },
-					};
+						attribute_type: AttributeType::Constant,
+					})
+				}
+				Ok(equal_sign_token) => {
+					if let Ok(literal) = input.parse::<Literal>() {
+						let attribute = Attribute {
+							name: attribute_name,
+							name_span: attribute_name_span,
+							attribute_type: AttributeType::ConstantLiteral { literal },
+						};
 
-					Ok(attribute)
-				} else {
-					let message = if is_toggle_attribute {
-						format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}")
+						Ok(attribute)
+					} else if input.peek(syn::token::Brace) {
+						let content = input.parse::<TextContent>()?;
+						let attribute = Attribute {
+							name: attribute_name,
+							name_span: attribute_name_span,
+							attribute_type: AttributeType::Expression { content },
+						};
+
+						Ok(attribute)
 					} else {
-						format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}")
-					};
+						let message = if is_toggle_attribute {
+							format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}")
+						} else {
+							format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}")
+						};
 
-					Err(syn::Error::new(equal_sign_token.span(), message))
+						Err(syn::Error::new(equal_sign_token.span(), message))
+					}
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-use crate::tokens::{Attribute, AttributeType, Component, Content, HTMLTag, TextContent};
+use crate::tokens::{Attribute, AttributeType, Component, Content, NativeContent, TextContent};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
 
@@ -42,6 +42,13 @@ pub(crate) fn flush_flat(flat_args: &mut Vec<TokenStream>, result: &mut TokenStr
 /// (if it's a control tag, slot render, or component).
 fn process_content(child: &Content, flat_args: &mut Vec<TokenStream>, result: &mut TokenStream) {
 	match child {
+		Content::NativeElement(content) => {
+			process_native_tag(content, flat_args, result);
+		}
+		Content::CustomComponent(content) => {
+			flush_flat(flat_args, result);
+			content.to_tokens(result);
+		}
 		Content::ControlTag(ct) => {
 			flush_flat(flat_args, result);
 			ct.to_tokens(result);
@@ -49,13 +56,6 @@ fn process_content(child: &Content, flat_args: &mut Vec<TokenStream>, result: &m
 		Content::SlotRender(expr) => {
 			flush_flat(flat_args, result);
 			result.append_all(quote! { (#( #expr )*)(page); });
-		}
-		Content::Tag(tag) if tag.is_component() => {
-			flush_flat(flat_args, result);
-			tag.to_tokens(result);
-		}
-		Content::Tag(tag) => {
-			process_native_tag(tag, flat_args, result);
 		}
 		Content::Text(text) => {
 			text_to_args(text, flat_args);
@@ -70,7 +70,7 @@ fn process_content(child: &Content, flat_args: &mut Vec<TokenStream>, result: &m
 /// are all added to `flat_args` so the caller's `combine!` can merge adjacent
 /// literals across tag boundaries.
 pub(crate) fn process_native_tag(
-	tag: &HTMLTag,
+	tag: &NativeContent,
 	flat_args: &mut Vec<TokenStream>,
 	result: &mut TokenStream,
 ) {
@@ -79,11 +79,11 @@ pub(crate) fn process_native_tag(
 	flat_args.push(quote! { "<" });
 	flat_args.push(quote! { #tag_name });
 
-	if !tag.attributes.attributes.is_empty() {
+	if !tag.attributes.is_empty() {
 		flat_args.push(quote! { " " });
 	}
 
-	for attr in &tag.attributes.attributes {
+	for attr in &tag.attributes {
 		process_attribute(attr, flat_args, result);
 	}
 

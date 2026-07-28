@@ -5,7 +5,8 @@ use quote::{quote, ToTokens};
 impl ToTokens for Content {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
-			Content::Tag(html_tag) => html_tag.to_tokens(tokens),
+			Content::NativeElement(html_content) => html_content.to_tokens(tokens),
+			Content::CustomComponent(component_content) => component_content.to_tokens(tokens),
 			Content::ControlTag(control_tag) => control_tag.to_tokens(tokens),
 			Content::Text(text_content) => text_content.to_tokens(tokens),
 			Content::RawHTMLExpression(text_content) => text_content.to_tokens_raw(tokens),

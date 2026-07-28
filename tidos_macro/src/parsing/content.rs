@@ -1,6 +1,7 @@
-use crate::tokens::{Content, ControlTag};
-use crate::tokens::{HTMLTag, TextContent};
-use proc_macro2::{Delimiter, Ident, Literal, Punct, Spacing, TokenTree};
+use crate::parsing::utils::HTMLutils;
+use crate::tokens::TextContent;
+use crate::tokens::{ComponentContent, Content, ControlTag, NativeContent};
+use proc_macro2::{Delimiter, Ident, Punct, Spacing, TokenTree};
 use syn::parse::{Parse, ParseStream};
 use syn::token::{Brace, Token};
 use syn::Token;
@@ -17,9 +18,13 @@ impl Parse for Content {
 				"Content::parse called on empty stream — callers must check is_empty() first"
 			);
 		} else if input.peek(Token![<]) {
-			// <p></p>
-
-			Ok(Content::Tag(input.parse::<HTMLTag>()?))
+			if HTMLutils::peek_is_component(input) {
+				// <Custom></Custom>
+				Ok(Content::CustomComponent(input.parse::<ComponentContent>()?))
+			} else {
+				// <p></p>
+				Ok(Content::NativeElement(input.parse::<NativeContent>()?))
+			}
 		} else if matches! { input.cursor().punct(), Some((punct, _)) if punct.as_char() == RAW_HTML_PREFIX}
 		{
 			// @html{"<p>Hello world</p>"} @html{"<p>Hello {}</p>", name} @html{ markdown }
@@ -29,11 +34,11 @@ impl Parse for Content {
 		} else if input.peek(Brace) && is_cursor_at_command(input.cursor()) {
 			// {#for ... in ... } {#if} {#match}
 
-			Ok(Content::ControlTag(ControlTag::parse(input)?))
+			Ok(Content::ControlTag(input.parse::<ControlTag>()?))
 		} else if input.peek(Brace) && !is_cursor_at_command(input.cursor()) {
 			// {"Hello world"} {"Hello {}", name} { name }
-			let text_content = Self::parse_text_content(input)?;
-			Ok(Content::Text(text_content))
+
+			Ok(Content::Text(input.parse::<TextContent>()?))
 		} else {
 			// TODO: legacy code remove after release candidate.
 			// text between tags
@@ -46,35 +51,6 @@ impl Parse for Content {
 }
 
 impl Content {
-	pub(crate) fn parse_text_content(input: ParseStream) -> syn::Result<TextContent> {
-		let content;
-		syn::braced!(content in input);
-		if content.peek(syn::LitStr) {
-			let base_string = content.parse::<Literal>()?;
-			let mut params = vec![];
-			while !content.is_empty() && content.peek(Token![,]) {
-				content.parse::<Token![,]>()?;
-				let mut contents = vec![];
-				while !content.is_empty() && !content.peek(Token![,]) {
-					contents.push(content.parse::<TokenTree>()?);
-				}
-				params.push(contents);
-			}
-
-			if params.is_empty() {
-				Ok(TextContent::Literal(base_string))
-			} else {
-				Ok(TextContent::Formatted(base_string, params))
-			}
-		} else {
-			let mut contents = vec![];
-			while let Ok(token) = content.parse::<TokenTree>() {
-				contents.push(token);
-			}
-			Ok(TextContent::Expression(contents))
-		}
-	}
-
 	fn parse_text_between_tags(input: ParseStream) -> syn::Result<String> {
 		let mut output = String::new();
 		while !(input.is_empty() || input.peek(Token![<]) || input.peek(Brace)) {
@@ -117,7 +93,7 @@ impl Content {
 		let ident = input.parse::<Ident>()?;
 		match ident.to_string().as_str() {
 			RAW_HTML_IDENTIFIER => {
-				let text_content = Self::parse_text_content(input)?;
+				let text_content = input.parse::<TextContent>()?;
 				Ok(Content::RawHTMLExpression(text_content))
 			}
 			SLOT_IDENTIFIER => {

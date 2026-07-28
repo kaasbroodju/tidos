@@ -1,11 +1,14 @@
-use crate::tokens::HTMLTag;
+use crate::tokens::{ComponentContent, NativeContent};
 use crate::tokens::{ControlTag, IsStatic};
 use proc_macro2::{Ident, Literal, TokenTree};
 
 #[derive(Debug)]
 pub enum Content {
 	// <p>...</p>
-	Tag(HTMLTag),
+	NativeElement(NativeContent),
+
+	// <Custom>...<Custom>
+	CustomComponent(ComponentContent),
 
 	// {#if x > 10} ... {/if}
 	// {#for x in numbers} ... {/for}
@@ -16,7 +19,7 @@ pub enum Content {
 	// text
 	Text(TextContent),
 
-	// <p>@html{"<p>potential danger"}</p>
+	// <p>@html{"<b>potential danger</b>"}</p>
 	RawHTMLExpression(TextContent),
 
 	// @slot{self.field_name}
@@ -26,7 +29,8 @@ pub enum Content {
 impl IsStatic for Content {
 	fn is_static(&self) -> bool {
 		match self {
-			Content::Tag(element) => element.is_static(),
+			Content::NativeElement(element) => element.is_static(),
+			Content::CustomComponent(component) => component.is_static(),
 			Content::ControlTag(_) => false,
 			Content::Text(content) => content.is_static(),
 			Content::RawHTMLExpression(content) => content.is_static(),

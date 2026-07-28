@@ -57,10 +57,10 @@ i18n!("greeting")
 You can pass optional key-value parameters for Fluent variables:
 
 ```rust
-i18n!("shared-photos", "userName", "Anne", "userGender", "female", "photoCount", 3)
+i18n!("shared-photos", ("userName", "Anne"), ("userGender", "female"), ("photoCount", 3))
 ```
 
-Parameters are passed as alternating key-value pairs after the message key.
+Parameters are passed as `("key", value)` tuples after the message key.
 
 ### Fluent file example
 

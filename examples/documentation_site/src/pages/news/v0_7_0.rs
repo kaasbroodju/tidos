@@ -34,7 +34,7 @@ impl Component for ArticleContent {
         let code_tidos_toml = "[default]\nresource_location = \"translations\"\ndefault_locale = \"en-US\"\nresources = [\"common.ftl\"]";
         let code_enable = "use tidos::i18n::enable_i18n;\n\nenable_i18n!();\n\n#[rocket::main]\nasync fn main() { /* ... */ }";
         let code_simple = "use tidos::i18n::i18n;\n\nimpl Component for Greeting {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <h1>{i18n!(\"greeting\")}</h1>\n        }\n    }\n}";
-        let code_vars = "// Fluent message with variable:\n// welcome = Welcome back, { $name }!\n\nview! {\n    <p>{i18n!(\"welcome\", \"name\", &self.username)}</p>\n}";
+        let code_vars = "// Fluent message with variable:\n// welcome = Welcome back, { $name }!\n\nview! {\n    <p>{i18n!(\"welcome\", (\"name\", &self.username))}</p>\n}";
         let code_ftl_dir = "translations/\n  en-US/\n    common.ftl\n  nl-NL/\n    common.ftl";
         let code_plural = "new-messages =\n    { $count ->\n        [one]  You have one new message.\n       *[other] You have { $count } new messages.\n    }";
         let code_lang = "use tidos::i18n::Lang;\n\n#[get(\"/<lang>/dashboard\")]\npub fn dashboard(lang: Lang) -> Page {\n    page! {\n        <main>\n            <h1>{i18n!(\"dashboard-title\")}</h1>\n        </main>\n    }\n}";
@@ -63,7 +63,7 @@ impl Component for ArticleContent {
                 <h2>{"Translating strings with i18n!"}</h2>
                 <p>{"Inside any component, import and call i18n! with a Fluent message key:"}</p>
                 <CodeBlock code={code_simple.to_string()} />
-                <p>{"Variables are passed as alternating key-value pairs after the message key:"}</p>
+                <p>{"Variables are passed as (\"key\", value) tuples after the message key:"}</p>
                 <CodeBlock code={code_vars.to_string()} />
 
                 <h2>{"Translation files"}</h2>
