@@ -4,7 +4,7 @@
     {
       "@type": "TechArticle",
       "@id": "https://tidos.dev/docs/internationalization#article",
-      "name": "Internationalization — Tidos",
+      "name": "Internationalization - Tidos",
       "description": "How to add i18n support to a Tidos app using Fluent (.ftl) files and the i18n! macro.",
       "url": "https://tidos.dev/docs/internationalization",
       "isPartOf": { "@id": "https://tidos.dev/#website" },

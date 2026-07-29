@@ -212,7 +212,7 @@ pub fn native_element(_args: TokenStream, input: TokenStream) -> TokenStream {
 			&input_struct.ident,
 			format!(
 				"#[native_element] generated the tag name '{}', which is not a valid custom \
-				 element name — custom elements must contain at least one '-'. \
+				 element name, but custom elements must contain at least one '-'. \
 				 Use a multi-word struct name (e.g. 'App{}' → 'app-{}').",
 				kebab_name, struct_name_str, kebab_name
 			),

@@ -1,8 +1,19 @@
+//! Parses the contents of a `{ ... }` text block into a [`TextContent`]:
+//! either a bare string literal, a format-string literal followed by
+//! comma-separated parameter expressions, or a single arbitrary Rust
+//! expression. Used both for plain `{...}` text and, via
+//! `Content::parse_at_statement`, for `@html{...}`.
+
 use crate::tokens::TextContent;
 use proc_macro2::{Literal, TokenTree};
 use syn::parse::{Parse, ParseStream};
 use syn::Token;
 
+/// Distinguishes the three `TextContent` forms by whether the brace starts
+/// with a string literal: `{"lit"}` / `{"fmt {}", args...}` if so (further
+/// split into `Literal` vs `Formatted` by whether any `,`-separated params
+/// follow), otherwise `{expr}` is parsed as a raw token stream and kept
+/// unparsed (it's re-parsed as a Rust expression later by `code_generation`).
 impl Parse for TextContent {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		let content;

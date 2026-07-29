@@ -1,5 +1,11 @@
 use tidos::{scoped_css, view, Component, Page};
 
+/// A single tile in the homepage features grid: icon, title, and a short
+/// description.
+///
+/// `icon` must be one of the names handled by `icon_svg` below ("shield",
+/// "wand", "plug", "bolt", "speed"); any other value silently renders no
+/// icon.
 pub struct FeatureCard {
     pub title: String,
     pub body: String,

@@ -53,7 +53,7 @@ impl TextContent {
 	}
 }
 
-/// Sanitized (HTML-escaped) rendering of a [`TextContent`] — used for `{...}`
+/// Sanitized (HTML-escaped) rendering of a [`TextContent`], used for `{...}`
 /// text expressions.
 impl ToFlatArgs for TextContent {
 	fn to_flat_args(&self, flat_args: &mut Vec<FlatArg>, _result: &mut TokenStream) {
@@ -75,7 +75,7 @@ impl ToFlatArgs for TextContent {
 	}
 }
 
-/// Marks a [`TextContent`] as raw (unsanitized) — used for `@html{...}`
+/// Marks a [`TextContent`] as raw (unsanitized), used for `@html{...}`
 /// expressions, where the caller is asserting the content is already-trusted
 /// HTML. A separate wrapper type rather than a second inherent method, since
 /// a type can only implement a given trait once.

@@ -30,16 +30,16 @@ pub fn index() -> Page {
 
             <meta property="og:type" content="website" />
             <meta property="og:site_name" content="Tidos" />
-            <meta property="og:title" content="Tidos — Ride the tide." />
+            <meta property="og:title" content="Tidos: Ride the tide." />
             <meta property="og:description" content={description} />
             <meta property="og:url" content="https://tidos.dev/" />
             <meta property="og:image" content="https://tidos.dev/inko.png" />
             <meta property="og:image:width" content="1000" />
             <meta property="og:image:height" content="1000" />
-            <meta property="og:image:alt" content="Tidos — the Inko mascot" />
+            <meta property="og:image:alt" content="Tidos, the Inko mascot" />
 
             <meta name="twitter:card" content="summary" />
-            <meta name="twitter:title" content="Tidos — Ride the tide." />
+            <meta name="twitter:title" content="Tidos: Ride the tide." />
             <meta name="twitter:description" content={description} />
             <meta name="twitter:image" content="https://tidos.dev/inko.png" />
 

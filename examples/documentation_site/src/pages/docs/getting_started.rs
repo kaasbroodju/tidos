@@ -81,7 +81,7 @@ impl Component for GettingStartedContent {
         view! {
             <div class="doc-content">
                 <h1>{"Getting Started"}</h1>
-                <p>{"Tidos is a SSR component framework. It lets you write HTML components directly in Rust. Tidos works with your favourite frameworks."}</p>
+                <p>{"Tidos is a server-side rendering (SSR) component framework for Rust. It lets you write HTML components directly in Rust, using regular Rust syntax and control flow instead of a separate template language, and it plugs into the web framework you're already using."}</p>
                 <FrameworkTabs frameworks={frameworks_str} active={active_clone} />
                 <h2>{"1. Add to Cargo.toml"}</h2>
                 {#for fw in &frameworks}
@@ -101,7 +101,7 @@ impl Component for GettingStartedContent {
                 <CodeBlock code={dev_loop.to_string()} />
 
                 <h2>{"Next steps"}</h2>
-                <p>{"You now have a page rendering. Next, learn how to build reusable "}<a href="/docs/component">{"Components"}</a>{" with the view! macro, control flow, slots, and scoped CSS."}</p>
+                <p>{"You've got a page rendering. Next, learn how to build reusable "}<a href="/docs/component">{"Components"}</a>{" with the view! macro, control flow, slots, and scoped CSS."}</p>
             </div>
         }
     }

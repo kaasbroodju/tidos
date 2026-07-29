@@ -2,9 +2,9 @@ use std::borrow::Cow;
 
 /// Sanitize `input` for safe HTML output.
 ///
-/// Returns `Cow::Borrowed(input)` — **zero allocation** — when no characters
-/// need escaping.  Only allocates an owned `String` when one of `& < > " '`
-/// is present and needs to be replaced with its HTML entity.
+/// Returns `Cow::Borrowed(input)` (zero allocation) when no characters need
+/// escaping. Only allocates an owned `String` when one of `& < > " '` is
+/// present and needs to be replaced with its HTML entity.
 #[inline]
 pub fn sanitize<S: AsRef<str> + ?Sized>(input: &S) -> Cow<'_, str> {
 	let input = input.as_ref();

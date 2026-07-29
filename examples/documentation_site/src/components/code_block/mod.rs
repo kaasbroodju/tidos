@@ -1,5 +1,13 @@
+//! A small, dependency-free syntax highlighter for the Rust/JS/TOML code
+//! samples shown throughout the docs site. It recognizes just enough of each
+//! language (keywords, strings, numbers, comments, capitalized identifiers)
+//! to look right for the curated snippets on this site; it is not a general
+//! purpose highlighter.
+
 use tidos::{scoped_css, view, Component, Page};
 
+/// Renders `code` as syntax-highlighted, line-numbered HTML inside a
+/// scrollable block.
 pub struct CodeBlock {
     pub code: String,
 }

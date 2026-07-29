@@ -1,3 +1,9 @@
+//! The homepage "hero code" showcase: a single fixed Rust snippet rendered
+//! inside a faux editor window (traffic-light dots + filename). Deliberately
+//! separate from [`crate::components::code_block::CodeBlock`]: it highlights
+//! one hardcoded sample with its own minimal keyword list, rather than
+//! accepting arbitrary code at runtime.
+
 use tidos::{scoped_css, view, Component, Page};
 
 const CODE_SAMPLE: &str = r#"use tidos::{view, Component, Page};
@@ -90,6 +96,8 @@ fn code_block(code: &str) -> String {
     html
 }
 
+/// Homepage section pairing the "Components, the way Rust wants them" copy
+/// with the highlighted `CODE_SAMPLE` snippet.
 pub struct CodeSection;
 
 impl Component for CodeSection {

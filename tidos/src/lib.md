@@ -2,7 +2,7 @@
 
 Tidos is a Rust **server-side rendering (SSR)** component framework.
 Write type-safe HTML components directly in Rust using the [`view!`] and
-[`page!`] macros — with full support for loops, conditionals, and pattern
+[`page!`] macros, with full support for loops, conditionals, and pattern
 matching inside your templates.
 
 ## Getting started
@@ -86,7 +86,7 @@ braces causes a compile-time panic. There are four forms:
 | `{"literal"}` | Static string | No (emitted as-is) |
 | `{"Hello {}", name}` | Format string with comma-separated params | Yes |
 | `{expr}` | Any Rust expression | Yes |
-| `@html{expr}` | Trusted raw HTML — not escaped | No |
+| `@html{expr}` | Trusted raw HTML | No |
 
 ```rust,no_run
 use tidos::{view, Page};
@@ -103,7 +103,7 @@ view! {
 }
 ```
 
-### `{#for}` — loops
+### `{#for}`: loops
 
 ```rust,no_run
 use tidos::{view, Page};
@@ -121,7 +121,7 @@ view! {
 }
 ```
 
-### `{#if}` — conditionals
+### `{#if}`: conditionals
 
 ```rust,no_run
 use tidos::{view, Page};
@@ -142,7 +142,7 @@ view! {
 }
 ```
 
-### `{#match}` — pattern matching
+### `{#match}`: pattern matching
 
 ```rust,no_run
 use tidos::{view, Page};
@@ -167,7 +167,7 @@ view! {
 ## Default trait support
 
 Components that implement [`Default`] can use the `..` shorthand to fill
-unspecified props with their default values — mirroring Rust's struct update
+unspecified props with their default values, mirroring Rust's struct update
 syntax:
 
 ```rust,no_run

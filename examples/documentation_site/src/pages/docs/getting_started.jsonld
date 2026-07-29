@@ -4,7 +4,7 @@
     {
       "@type": "TechArticle",
       "@id": "https://tidos.dev/docs/getting-started#article",
-      "name": "Getting Started — Tidos",
+      "name": "Getting Started - Tidos",
       "description": "How to add Tidos to your Rust project with Rocket, Actix, Axum, Warp, or standalone.",
       "url": "https://tidos.dev/docs/getting-started",
       "isPartOf": { "@id": "https://tidos.dev/#website" },
@@ -36,7 +36,7 @@
           "@type": "HowToStep",
           "position": "3",
           "name": "Create a route handler with page!",
-          "text": "Use the page! macro inside a route handler function to produce a Page struct. Return the Page from the handler — your framework serves it directly as an HTML response."
+          "text": "Use the page! macro inside a route handler function to produce a Page struct. Return the Page from the handler, and your framework serves it directly as an HTML response."
         },
         {
           "@type": "HowToStep",

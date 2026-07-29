@@ -49,7 +49,7 @@ impl Component for ArticleContent {
 
                 <h2>{"Compile-time string concatenation"}</h2>
                 <p>{"Tidos now merges adjacent static HTML segments at compile time. Previously, every HTML tag and text node was concatenated at runtime using String::push_str calls. Now, consecutive static strings are folded into a single string literal by the macro, so the generated code produces fewer allocations and runs faster."}</p>
-                <p>{"This is a purely internal improvement — your component code does not change. Pages with many static elements will see the most benefit."}</p>
+                <p>{"This is a purely internal improvement: your component code does not change. Pages with many static elements will see the most benefit."}</p>
 
                 <h2>{"Breaking change: text must be wrapped in curly braces"}<span class="breaking-badge">{"Breaking"}</span></h2>
                 <p>{"To enable compile-time safety and the new optimisation, all text content inside view! must now be explicitly wrapped in curly braces. Raw text between tags is no longer allowed:"}</p>

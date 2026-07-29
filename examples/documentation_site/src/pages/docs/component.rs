@@ -35,7 +35,7 @@ impl Component for ComponentDocContent {
 
         let component_trait = "use tidos::{view, Component, Page};\n\npub struct Alert {\n    pub message: String,\n    pub kind: String,\n}\n\nimpl Component for Alert {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"alert\" data-kind={&self.kind}>\n                <p>{&self.message}</p>\n            </div>\n        }\n    }\n}";
 
-        let view_text = "let count = 42_usize;\nlet name = \"Alice\";\nlet is_loading = true;\n\nview! {\n    // --- Text content ---\n\n    // Static text\n    <p>{\"Hello world\"}</p>\n\n    // Formatted, with {} placeholders\n    <p>{\"Hello {}, you have {} items.\", name, count}</p>\n\n    // Any Rust expression\n    <p>{count.to_string()}</p>\n\n    // Raw HTML (not sanitized) — use with care!\n    <div>@html{\"<em>italic</em>\"}</div>\n\n    // --- Attributes share the exact same content syntax ---\n\n    // Static value\n    <span class={\"rounded\"}></span>\n\n    // Formatted value (here combined with scoped_css!)\n    <span class={\"rounded {}\", scoped_css!(\"./mod.css\")}></span>\n\n    // Any Rust expression\n    <div data-count={count.to_string()}></div>\n\n    // Toggle attribute: present or absent, like `disabled`.\n    // `:disabled` reads a bool; `disabled={true}` would render disabled=\"true\" instead.\n    <button :disabled={is_loading}>{\"Save\"}</button>\n}";
+        let view_text = "let count = 42_usize;\nlet name = \"Alice\";\nlet is_loading = true;\n\nview! {\n    // --- Text content ---\n\n    // Static text\n    <p>{\"Hello world\"}</p>\n\n    // Formatted, with {} placeholders\n    <p>{\"Hello {}, you have {} items.\", name, count}</p>\n\n    // Any Rust expression\n    <p>{count.to_string()}</p>\n\n    // Raw HTML (not sanitized), use with care!\n    <div>@html{\"<em>italic</em>\"}</div>\n\n    // --- Attributes share the exact same content syntax ---\n\n    // Static value\n    <span class={\"rounded\"}></span>\n\n    // Formatted value (here combined with scoped_css!)\n    <span class={\"rounded {}\", scoped_css!(\"./mod.css\")}></span>\n\n    // Any Rust expression\n    <div data-count={count.to_string()}></div>\n\n    // Toggle attribute: present or absent, like `disabled`.\n    // `:disabled` reads a bool; `disabled={true}` would render disabled=\"true\" instead.\n    <button :disabled={is_loading}>{\"Save\"}</button>\n}";
 
         let conditions = "let logged_in = true;\nlet is_admin = false;\n\nview! {\n    {#if logged_in && is_admin}\n        <span>{\"Admin Panel\"}</span>\n    {:else if logged_in}\n        <span>{\"Dashboard\"}</span>\n    {:else}\n        <a href=\"/login\">{\"Sign in\"}</a>\n    {/if}\n}";
 
@@ -45,9 +45,9 @@ impl Component for ComponentDocContent {
 
         let named_slots = "// Parent\nview! {\n    <Card title={\"News\".to_string()}>\n        {#slot:body}\n            <p>{\"This content goes into the card body.\"}</p>\n        {/slot}\n    </Card>\n}\n\n// Child component\npub struct Card<'a> {\n    pub title: String,\n    pub body: Slot<'a>,\n}\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                <h2>{&self.title}</h2>\n                <div class=\"body\">\n                    @slot{self.body}\n                </div>\n            </div>\n        }\n    }\n}";
 
-        let unnamed_slots = "// Parent — content is passed straight in, no {#slot:name} wrapper\nview! {\n    <Card>\n        <p>{\"This content goes straight into the card.\"}</p>\n    </Card>\n}\n\n// Child component — a tuple struct with Slot<'a> as field 0\npub struct Card<'a>(pub Slot<'a>);\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                @slot{self.0}\n            </div>\n        }\n    }\n}";
+        let unnamed_slots = "// Parent: content is passed straight in, no {#slot:name} wrapper\nview! {\n    <Card>\n        <p>{\"This content goes straight into the card.\"}</p>\n    </Card>\n}\n\n// Child component: a tuple struct with Slot<'a> as field 0\npub struct Card<'a>(pub Slot<'a>);\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                @slot{self.0}\n            </div>\n        }\n    }\n}";
 
-        let default_props = "use tidos::{view, Component, Page};\n\n#[derive(Default)]\npub struct Button {\n    pub label: String,\n    pub disabled: bool,\n    pub variant: String,\n}\n\nimpl Component for Button {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <button data-variant={&self.variant}>\n                {&self.label}\n            </button>\n        }\n    }\n}\n\n// Only set label — the rest use Default::default()\nview! { <Button label={\"Save\".to_string()} .. /> }\n\n// All fields use Default\nview! { <Button .. /> }";
+        let default_props = "use tidos::{view, Component, Page};\n\n#[derive(Default)]\npub struct Button {\n    pub label: String,\n    pub disabled: bool,\n    pub variant: String,\n}\n\nimpl Component for Button {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <button data-variant={&self.variant}>\n                {&self.label}\n            </button>\n        }\n    }\n}\n\n// Only set label, the rest use Default::default()\nview! { <Button label={\"Save\".to_string()} .. /> }\n\n// All fields use Default\nview! { <Button .. /> }";
 
         let head_macro ="use tidos::{head, view, Component, Page};\n\nimpl Component for MyComponent {\n    fn to_render(&self, page: &mut Page) {\n        head! {\n            <link rel=\"stylesheet\" href=\"/fonts.css\" />\n            <script src=\"/analytics.js\"></script>\n        }\n        view! {\n            <section>{\"Content here\"}</section>\n        }\n    }\n}";
 
@@ -56,14 +56,14 @@ impl Component for ComponentDocContent {
         view! {
             <div class="doc-content">
                 <h1>{"Component"}</h1>
-                <p>{"A component is any Rust struct that implements the Component trait. Components are the building blocks of Tidos, they encapsulate HTML structure, styles, and logic."}</p>
+                <p>{"A component is any Rust struct that implements the Component trait. Components are the building blocks of Tidos: each one encapsulates its own HTML structure, styles, and logic."}</p>
 
                 <h2 id="the-view-macro">{"The view! Macro"}</h2>
-                <p>{"view! is the templating macro. Use it inside the to_render function of the Component trait to write HTML with Rust expressions. All text between tags must be in {}. Attribute values use that same {} syntax — literals, formatted strings, or any expression — and a : prefix turns an attribute into a toggle that is either present or absent (like disabled), rather than set to a string value:"}</p>
+                <p>{"view! is the templating macro. Use it inside a component's to_render method to write HTML mixed with Rust expressions. All text between tags must be wrapped in {}. Attribute values use that same {} syntax: a literal, a formatted string, or any expression. A : prefix turns an attribute into a toggle that's either present or absent (like disabled), instead of being set to a string value:"}</p>
                 <CodeBlock code={view_text.to_string()} />
 
                 <h2>{"The Component Trait"}</h2>
-                <p>{"Implement Component on any struct. The to_render method receives a mutable Page reference so child components can inject CSS or head elements:"}</p>
+                <p>{"Implement Component for any struct. The to_render method receives a mutable reference to the Page, so a component (and any children it renders) can inject CSS or head elements while it runs:"}</p>
                 <CodeBlock code={component_trait.to_string()} />
 
                 <h2 id="control-tags">{"Control Tags"}</h2>
@@ -79,12 +79,12 @@ impl Component for ComponentDocContent {
                 <CodeBlock code={pattern_match.to_string()} />
 
                 <h3 id="control-tags-slots">{"Slots"}</h3>
-                <p>{"Slots let a parent pass rendered content into a child component. A component field of type Slot<'a> receives the content and renders it with @slot{self.field}. There are two forms — pick based on how many slots the component takes and whether it has other props:"}</p>
+                <p>{"Slots let a parent pass rendered content into a child component. A component field of type Slot<'a> receives that content and renders it with @slot{self.field}. There are two forms, and which one you use depends on how many slots the component takes and whether it has other props:"}</p>
                 <h4>{"Named slots"}</h4>
                 <p>{"Use these when a component has multiple slots, or a single slot alongside other attributes/props. Declare a regular Slot<'a> field and fill it from the parent with {#slot:name}...{/slot}:"}</p>
                 <CodeBlock code={named_slots.to_string()} />
                 <h4>{"Unnamed slots"}</h4>
-                <p>{"Unnamed slot: use this only when a component takes exactly one slot and has no other props. Declare the component as a tuple struct with Slot<'a> as field 0 — the parent then passes content directly as children, with no {#slot:name} wrapper:"}</p>
+                <p>{"Unnamed slot: use this only when a component takes exactly one slot and has no other props. Declare the component as a tuple struct with Slot<'a> as field 0. The parent then passes content directly as children, with no {#slot:name} wrapper:"}</p>
                 <CodeBlock code={unnamed_slots.to_string()} />
 
                 <h2 id="default-props">{"Default Properties"}</h2>

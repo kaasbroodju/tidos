@@ -11,7 +11,7 @@ impl ToTokens for Component {
 /// A single pending contribution to a `combine!` call.
 ///
 /// `Literal` values are known as plain Rust strings at macro-expansion time,
-/// so adjacent ones can be merged into one string right here — no need to
+/// so adjacent ones can be merged into one string right here, no need to
 /// defer that merging to `concat!` in the generated code. `Expr` is anything
 /// that can only be evaluated at runtime (control flow, sanitized/formatted
 /// values, attribute value literals of unknown literal kind).
@@ -25,11 +25,11 @@ pub(crate) enum FlatArg {
 ///
 /// Adjacent static literals are merged into a single Rust `String` here, at
 /// macro-expansion time, before being handed to one `combine!(page, ...)`
-/// call — see [`flush_flat`]. This keeps the number of arguments `combine!`
+/// call, see [`flush_flat`]. This keeps the number of arguments `combine!`
 /// itself ever has to process small and bounded by the number of *dynamic*
-/// pieces in a template, regardless of how much static markup surrounds
-/// them, which is what let arbitrarily large static templates blow the
-/// macro recursion limit before.
+/// pieces in a template, regardless of how much static markup surrounds them.
+/// Previously, large static templates could blow the macro recursion limit
+/// before reaching `combine!` at all.
 pub(crate) fn to_push_stmts(contents: &[Content]) -> TokenStream {
 	let mut result = TokenStream::new();
 	let mut flat_args: Vec<FlatArg> = vec![];

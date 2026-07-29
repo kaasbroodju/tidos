@@ -1,5 +1,12 @@
 use tidos::{head, scoped_css, view, Component, Page, Slot};
 
+/// Shared chrome for every `/docs/*` page: sets shared `<head>` tags
+/// (OG/meta, prefetch links for all docs routes) and renders the left-hand
+/// navigation alongside the page's own `content`.
+///
+/// The nav tree below is written out by hand, it isn't generated from the
+/// route table, so adding a new docs page or section means updating this
+/// list too.
 pub struct DocsLayout<'a> {
     pub(crate) content: Slot<'a>
 }
@@ -7,7 +14,7 @@ pub struct DocsLayout<'a> {
 impl Component for DocsLayout<'_> {
     fn to_render(&self, page: &mut Page) {
 
-        let description = "Documentation for Tidos — the SSR component framework for Rust.";
+        let description = "Documentation for Tidos, the SSR component framework for Rust.";
         head! {
 
             <meta name="description" content={description} />
@@ -18,7 +25,7 @@ impl Component for DocsLayout<'_> {
             <meta property="og:image" content="https://tidos.dev/inko.png" />
             <meta property="og:image:width" content="1000" />
             <meta property="og:image:height" content="1000" />
-            <meta property="og:image:alt" content="Tidos — the Inko mascot" />
+            <meta property="og:image:alt" content="Tidos, the Inko mascot" />
             <meta name="twitter:card" content="summary" />
             <meta name="twitter:title" content="Tidos Documentation" />
             <meta name="twitter:description" content={description} />

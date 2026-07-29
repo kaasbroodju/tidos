@@ -1,3 +1,10 @@
+//! Generates code for a single [`Attribute`], in two different contexts:
+//! `ToFlatArgs` renders it as part of a native HTML tag's opening tag string
+//! (`name="value"`), while `to_tokens_custom_element` renders it as a
+//! component struct field initializer (`name: value`). Components don't go
+//! through string rendering for their props at all, since they're
+//! constructed as real Rust struct literals.
+
 use crate::code_generation::component::{flush_flat, FlatArg, ToFlatArgs};
 use crate::tokens::{Attribute, AttributeType, TextContent};
 use proc_macro2::{Ident, TokenStream};
@@ -56,6 +63,12 @@ impl ToFlatArgs for Attribute {
 }
 
 impl Attribute {
+	/// Renders this attribute as a component struct field initializer
+	/// (`name: value`), for splicing into a `ComponentName { name: value, ... }`
+	/// struct literal. Unlike the `ToFlatArgs` impl above, toggle attributes
+	/// become plain boolean fields here (`name` shorthand for `true`, or the
+	/// expression directly) rather than conditional `if` statements, since
+	/// there's no HTML string being built to toggle a fragment of.
 	pub fn to_tokens_custom_element(&self) -> TokenStream {
 		let name = Ident::new(&self.name, self.name_span).to_token_stream();
 		match &self.attribute_type {

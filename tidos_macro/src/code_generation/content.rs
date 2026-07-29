@@ -1,3 +1,9 @@
+//! Dispatches each [`Content`] variant to the code generator for its
+//! underlying type (native tag, component, control tag, slot render, text).
+//! This is the code-generation-side counterpart to `parsing::content`: where
+//! that file decides what to parse next, this one decides how to render what
+//! was parsed.
+
 use crate::code_generation::component::{flush_flat, FlatArg, ToFlatArgs};
 use crate::code_generation::text_content::RawTextContent;
 use crate::tokens::Content;

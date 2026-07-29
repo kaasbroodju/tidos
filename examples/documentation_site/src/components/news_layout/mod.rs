@@ -1,5 +1,7 @@
 use tidos::{head, scoped_css, view, Component, Page, Slot};
 
+/// Shared chrome for `/news` and `/news/*` pages: sets base page styles and
+/// renders whichever article (or the news index) is passed in via `content`.
 pub struct NewsLayout<'a> {
     pub content: Slot<'a>,
 }

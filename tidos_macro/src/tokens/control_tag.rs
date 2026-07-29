@@ -1,6 +1,13 @@
+//! The [`ControlTag`] AST node: a fully parsed control-flow construct,
+//! header and body together. Produced by `parsing::control_tag`.
+
 use crate::tokens::Content;
 use proc_macro2::{Ident, TokenTree};
 
+/// A parsed control-flow construct with its body already collected. Unlike
+/// [`crate::tokens::TypeOfCommandTag`] (just the header), each variant here
+/// also holds the nested [`Content`] for its branch(es)/body, ready for
+/// `code_generation` to splice into a real `for`/`if`/`match`.
 #[derive(Debug)]
 pub enum ControlTag {
 	/// {#if ... } ... {:else if ... } ... {:else} ... {/if}

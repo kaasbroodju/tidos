@@ -20,10 +20,10 @@ mod warp_impl;
 /// A fully rendered page ready to be returned from a route handler.
 ///
 /// `Page` renders HTML by appending every fragment directly into a single
-/// growing `String` buffer.  Static and dynamic content both go through
+/// growing `String` buffer. Static and dynamic content both go through
 /// [`push_static`](Page::push_static), so there is at most one allocation for
 /// the buffer itself (plus amortised reallocations as it grows) and zero
-/// per-fragment allocations.  The final HTML is obtained by calling
+/// per-fragment allocations. The final HTML is obtained by calling
 /// [`into_html`](Page::into_html), which moves the buffer out without copying.
 #[cfg(not(feature = "i18n"))]
 pub struct Page {
@@ -32,17 +32,17 @@ pub struct Page {
 	pub head_ids: HashSet<&'static str>,
 	/// Accumulated HTML content for the `<head>` element.
 	pub head: String,
-	/// The HTML output buffer.  All push operations append directly here.
+	/// The HTML output buffer. All push operations append directly here.
 	pub template: String,
 }
 
 /// A fully rendered page ready to be returned from a route handler.
 ///
 /// `Page` renders HTML by appending every fragment directly into a single
-/// growing `String` buffer.  Static and dynamic content both go through
+/// growing `String` buffer. Static and dynamic content both go through
 /// [`push_static`](Page::push_static), so there is at most one allocation for
 /// the buffer itself (plus amortised reallocations as it grows) and zero
-/// per-fragment allocations.  The final HTML is obtained by calling
+/// per-fragment allocations. The final HTML is obtained by calling
 /// [`into_html`](Page::into_html), which moves the buffer out without copying.
 #[cfg(feature = "i18n")]
 pub struct Page {
@@ -53,7 +53,7 @@ pub struct Page {
 	pub lang: LanguageIdentifier,
 	/// Accumulated HTML content for the `<head>` element.
 	pub head: String,
-	/// The HTML output buffer.  All push operations append directly here.
+	/// The HTML output buffer. All push operations append directly here.
 	pub template: String,
 }
 
@@ -84,7 +84,7 @@ impl Page {
 	/// Append a string slice to the template buffer.
 	///
 	/// Both static (`&'static str`) and dynamic (`&str`, `String`) content
-	/// flow through this method — with the `String` buffer design there is no
+	/// flow through this method. With the `String` buffer design there is no
 	/// reason to distinguish the two at runtime.
 	#[inline]
 	pub fn push_static(&mut self, s: &str) {
@@ -113,7 +113,7 @@ impl Page {
 
 	/// Consume the page and return the rendered HTML.
 	///
-	/// This simply moves the internal buffer — no additional allocation or
+	/// This simply moves the internal buffer; no additional allocation or
 	/// copying occurs.
 	pub fn into_html(self) -> String {
 		self.template
@@ -170,15 +170,15 @@ impl<'a> PushIntoPage for Cow<'a, str> {
 /// [`LanguageIdentifier`] and made available on the [`Page`] so that
 /// [`i18n!`](crate::i18n::i18n) can resolve translations.
 ///
-/// **Rocket** — use as a `FromParam` route parameter: `#[get("/<lang>")]`.
+/// **Rocket**: use as a `FromParam` route parameter: `#[get("/<lang>")]`.
 ///
-/// **Axum** — use as a `FromRequestParts` extractor; route must have a
+/// **Axum**: use as a `FromRequestParts` extractor; route must have a
 /// `:lang` path segment (e.g. `"/:lang"`).
 ///
-/// **Actix Web** — use as a `FromRequest` extractor; route must have a
+/// **Actix Web**: use as a `FromRequest` extractor; route must have a
 /// `{lang}` path segment (e.g. `"/{lang}"`).
 ///
-/// **Warp** — use `warp::path::param::<Lang>()` or
+/// **Warp**: use `warp::path::param::<Lang>()` or
 /// `warp::header::<Lang>("accept-language")`.
 #[cfg(feature = "i18n")]
 pub struct Lang(pub LanguageIdentifier);

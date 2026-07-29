@@ -1,8 +1,17 @@
+//! Turns a parsed [`ControlTag`] back into a real Rust `for`/`if`/`match`.
+//! The header tokens were kept unparsed by `parsing::control_tag` for exactly
+//! this moment: they're spliced directly into a `quote!` template here,
+//! without this crate ever needing its own expression/pattern parser.
+
 use crate::code_generation::component::to_push_stmts;
 use crate::tokens::{Content, ControlTag};
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{quote, ToTokens, TokenStreamExt};
 
+/// Renders the control tag's own construct (`for`/`if`/`match`); `Slot` has no
+/// standalone rendering because its contents are only ever pulled out by the
+/// parent's [`crate::code_generation::html_tag`] logic and boxed into a prop
+/// closure, never emitted at the slot's own position in the tree.
 impl ToTokens for ControlTag {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
@@ -39,6 +48,11 @@ impl ToTokens for ControlTag {
 }
 
 impl ControlTag {
+	/// Emits `for (left_side) in (right_side).into_iter() { body }`. Wrapping
+	/// `left_side` in parens lets it be a tuple-destructuring pattern (e.g.
+	/// `(k, v)`) as well as a single binding; wrapping `right_side` and
+	/// calling `.into_iter()` lets the iterator expression be anything
+	/// `IntoIterator`-compatible (a `Vec`, a `&Vec`, a range, ...).
 	fn to_tokens_for_loop(
 		left_side: &Vec<TokenTree>,
 		right_side: &Vec<TokenTree>,
@@ -56,6 +70,10 @@ impl ControlTag {
 		tokens.append_all(output);
 	}
 
+	/// Emits `if if_statement { if_body } else if ... { ... } else { else_body }`.
+	/// The `{:else if}` branches are folded into one `TokenStream` of chained
+	/// `else if` clauses first, then spliced between the `if` and the final
+	/// `else` (only emitted if an `{:else}` was present).
 	fn to_tokens_if_chain(
 		if_statement: &Vec<TokenTree>,
 		if_content: &[Content],
@@ -88,6 +106,8 @@ impl ControlTag {
 		tokens.append_all(output);
 	}
 
+	/// Emits `match match_statement { case_statement => { body }, ... }`, one
+	/// arm per `{:case ...}`.
 	fn to_tokens_match(
 		match_statement: &Vec<TokenTree>,
 		cases: &[(Vec<TokenTree>, Vec<Content>)],

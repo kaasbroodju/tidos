@@ -1,3 +1,13 @@
+//! Parses the attribute list of an opening tag (`<tag attr1 attr2="v" ..>`)
+//! into `tokens::Attributes`, and implements `Parse` for a single
+//! `tokens::Attribute`.
+//!
+//! An attribute comes in five forms: a bare name (`disabled`), a string
+//! literal value (`class="wrapper"`), a braced expression value
+//! (`value={ expr }`), or either of the last two prefixed with `:` to mark it
+//! as a boolean "toggle" attribute (`:disabled`, `:disabled={ expr }`) that is
+//! rendered conditionally rather than as `name="value"`.
+
 use crate::parsing::utils::HTMLutils;
 use crate::tokens::{Attribute, AttributeType, Attributes, TextContent};
 use proc_macro2::{Group, Ident, Literal};
@@ -5,6 +15,10 @@ use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
 
+/// Parses zero or more attributes after a tag name, stopping at `/>`, `>`, or
+/// the `..` default-fill marker (recorded as `Attributes::has_default_flag`).
+/// Shared by both native element and component tag parsing since the grammar
+/// is identical for both.
 pub(crate) fn parse_attributes(
 	input: ParseStream,
 	tag: &str,
@@ -46,6 +60,14 @@ pub(crate) fn parse_attributes(
 	})
 }
 
+/// Parses one `name`, `name="literal"`, `name={expr}`, `:name`, or
+/// `:name={expr}` attribute. The leading `:` (if present) is consumed first
+/// and only changes how the *value* is interpreted afterwards: a toggle
+/// attribute's value must be a braced boolean expression (`{ expr }`), never
+/// a bare literal or identifier, since those would be ambiguous with the
+/// non-toggle forms. The branches that reject a literal/ident after `:name=`
+/// exist purely to turn that ambiguity into an actionable compile error
+/// instead of a confusing parse failure further down.
 impl Parse for Attribute {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		let toggle_token = input.parse::<Token![:]>();

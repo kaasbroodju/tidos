@@ -67,7 +67,7 @@
         flex-direction: column;
         justify-content: center;
         gap: 5px;
-        /* 44px touch target — WCAG 2.5.5 / 2.5.8 */
+        /* 44px touch target (WCAG 2.5.5 / 2.5.8) */
         width: 44px;
         height: 44px;
         padding: 0;

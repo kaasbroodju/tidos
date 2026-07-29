@@ -31,6 +31,8 @@ const FEATURES: &[Feature] = &[
     },
 ];
 
+/// Homepage section that renders the fixed `FEATURES` list as a grid of
+/// [`FeatureCard`]s.
 pub struct FeaturesSection;
 
 impl Component for FeaturesSection {

@@ -2,6 +2,8 @@ use tidos::{head, scoped_css, view, Component, Page};
 
 use crate::components::mobile_menu::MobileMenu;
 
+/// Site header for the marketing homepage. Rendered transparently over the
+/// hero section's dark background.
 pub struct NavBar;
 
 impl Component for NavBar {
@@ -29,6 +31,9 @@ impl Component for NavBar {
     }
 }
 
+/// Header variant for documentation and news pages. Same links and mobile
+/// menu as [`NavBar`], but paints its own solid background and points the
+/// logo back to `/`, since docs pages have no hero section behind them.
 pub struct NavBarDocs;
 
 impl Component for NavBarDocs {

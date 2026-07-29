@@ -47,7 +47,7 @@ impl Component for ArticleContent {
                 <p>{"v0.7.6 adds support for the Default trait in component syntax, letting you omit props that have sensible defaults."}</p>
 
                 <h2>{"The .. syntax"}</h2>
-                <p>{"When a component struct derives or implements Default, you can now use .. after any explicit props to fill the remaining fields with their default values — identical to Rust's struct update syntax:"}</p>
+                <p>{"When a component struct derives or implements Default, you can now use .. after any explicit props to fill the remaining fields with their default values. It's identical to Rust's own struct update syntax:"}</p>
                 <CodeBlock code={code_alert.to_string()} />
                 <p>{"The .. shorthand must appear after all explicit props and before the closing />"}</p>
 

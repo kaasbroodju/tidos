@@ -50,7 +50,7 @@ impl Component for I18nContent {
         view! {
             <div class="doc-content">
                 <h1>{"Internationalization"}</h1>
-                <p>{"Tidos provides built-in i18n support via "}<a href="https://projectfluent.org/">{"Fluent"}</a>{". Enable it with the i18n feature flag to get locale-aware translations, pluralization, and gender variants."}</p>
+                <p>{"Tidos has built-in support for internationalization (i18n), powered by "}<a href="https://projectfluent.org/">{"Fluent"}</a>{". Turn on the i18n feature flag and you get locale-aware translations, pluralization, and gender variants without writing any of that logic yourself."}</p>
 
                 <h2>{"1. Enable the Feature"}</h2>
                 <CodeBlock code={cargo_toml.to_string()} />

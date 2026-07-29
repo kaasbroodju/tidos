@@ -4,7 +4,7 @@
     {
       "@type": "TechArticle",
       "@id": "https://tidos.dev/docs/component#article",
-      "name": "Component — Tidos",
+      "name": "Component - Tidos",
       "description": "How to build reusable components in Tidos using the Component trait, view! macro, control tags, slots, head!, and scoped_css!.",
       "url": "https://tidos.dev/docs/component",
       "isPartOf": { "@id": "https://tidos.dev/#website" },

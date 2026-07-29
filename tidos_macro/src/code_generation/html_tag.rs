@@ -3,7 +3,7 @@ use crate::tokens::{Attribute, ComponentContent, Content, ControlTag, NativeCont
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 
-/// Expand a native HTML tag inline — tag open, attributes, children, tag close
+/// Expand a native HTML tag inline: tag open, attributes, children, tag close
 /// are all added to `flat_args` so [`flush_flat`] can merge adjacent literals
 /// across tag boundaries.
 impl ToFlatArgs for NativeContent {
@@ -35,6 +35,27 @@ impl ToFlatArgs for NativeContent {
 	}
 }
 
+/// Expands a component tag into `ComponentName { field: value, ... }.to_render(page);`.
+///
+/// Children are turned into extra struct-literal fields, not rendered
+/// inline, since a component's children have to reach it as data (a boxed
+/// render closure) rather than as surrounding markup:
+/// - If the first child is a `{#slot:name}` control tag, every top-level
+///   `{#slot:name}` child becomes a `name: Box::new(move |page| { .. })`
+///   field, one per named slot.
+/// - Otherwise, if there are any children at all, they're treated as a
+///   single default/unnamed slot and become field `0`, using Rust's
+///   tuple-struct field-index literal syntax (`StructName { 0: value, .. }`)
+///   — so a component that accepts unnamed children must be a tuple struct
+///   whose first field is that boxed closure type.
+///
+/// `closing_tag_span` (present unless the tag was self-closing) is used to
+/// synthesize `let _: ClosingIdent;` ahead of the constructor call. By the
+/// time parsing reaches this point the closing tag's name is already
+/// guaranteed to equal the opening tag's (`parsing::utils::matches_tag` is
+/// what stops the children-parsing loop), so this isn't a name-equality
+/// check; it forces the closing identifier to resolve to a real type, giving
+/// tooling (rust-analyzer, etc.) a type-checked span to hover/navigate on.
 impl ToTokens for ComponentContent {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		let tag = self.tag.as_str();

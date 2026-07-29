@@ -40,9 +40,9 @@ impl Component for ArticleContent {
 
         let code_named_slot = "// Named: use this when a component has more than one slot,\n// or a single slot alongside other props.\npub struct Card<'a> {\n    pub title: String,\n    pub body: Slot<'a>,\n}\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                <h2>{&self.title}</h2>\n                @slot{self.body}\n            </div>\n        }\n    }\n}\n\n// Parent:\nview! {\n    <Card title={\"My Card\".to_string()}>\n        {#slot:body}<p>{\"Content\"}</p>{/slot}\n    </Card>\n}";
 
-        let code_unnamed_slot = "// Unnamed: use this only when a component takes exactly\n// one slot and has no other props.\npub struct Card<'a>(pub Slot<'a>);\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                @slot{self.0}\n            </div>\n        }\n    }\n}\n\n// Parent — content passed straight in, no {#slot:name} wrapper:\nview! {\n    <Card>\n        <p>{\"Content\"}</p>\n    </Card>\n}";
+        let code_unnamed_slot = "// Unnamed: use this only when a component takes exactly\n// one slot and has no other props.\npub struct Card<'a>(pub Slot<'a>);\n\nimpl Component for Card<'_> {\n    fn to_render(&self, page: &mut Page) {\n        view! {\n            <div class=\"card\">\n                @slot{self.0}\n            </div>\n        }\n    }\n}\n\n// Parent: content passed straight in, no {#slot:name} wrapper:\nview! {\n    <Card>\n        <p>{\"Content\"}</p>\n    </Card>\n}";
 
-        let code_page_import = "// Before\nuse tidos::{page, Component, Page};\n\n// After — page! imports Component for you\nuse tidos::{page, Page};";
+        let code_page_import = "// Before\nuse tidos::{page, Component, Page};\n\n// After: page! imports Component for you\nuse tidos::{page, Page};";
 
         let code_cargo = "[dependencies]\ntidos = \"0.8.0-rc.2\"";
 
@@ -57,13 +57,13 @@ impl Component for ArticleContent {
                     <span>{"Second release candidate"}</span>
                 </div>
 
-                <p>{"v0.8.0-rc.2 continues the work started in rc.1: cutting out runtime overhead and unnecessary intermediate allocations from HTML generation. The biggest change is how components hand off their output — they no longer build and return a String, they write straight into the page buffer."}</p>
+                <p>{"v0.8.0-rc.2 continues the work started in rc.1: cutting out runtime overhead and unnecessary intermediate allocations from HTML generation. The biggest change is how components hand off their output: they no longer build and return a String, they write straight into the page buffer."}</p>
 
                 <h2>{"Breaking change: to_render no longer returns String"}<span class="breaking-badge">{"Breaking"}</span></h2>
-                <p>{"Component::to_render used to build a String and return it, which every parent then had to copy into its own buffer. It now renders directly into the page: &mut Page argument and returns nothing — one buffer for the whole page, not one per component:"}</p>
+                <p>{"Component::to_render used to build a String and return it, which every parent then had to copy into its own buffer. Now it renders directly into the page: it takes a &mut Page argument and returns nothing, so there's one buffer for the whole page instead of one per component:"}</p>
                 <CodeBlock code={code_render_before.to_string()} />
                 <CodeBlock code={code_render_after.to_string()} />
-                <p>{"Drop the -> String from every Component impl you've written, and remove any explicit return value — view! and head! already push into page for you. Nothing about the view! syntax itself changes."}</p>
+                <p>{"Drop the -> String from every Component impl you've written, and remove any explicit return value. view! and head! already push into page for you, so nothing about the view! syntax itself changes."}</p>
 
                 <h2>{"Attributes now share the text-content syntax"}</h2>
                 <p>{"Attribute values used to be piped straight through sanitize!, so an attribute expression had to already produce a string. Attributes now go through the same parser as text content between tags, so they accept a literal, a format string, or any expression:"}</p>
@@ -72,13 +72,13 @@ impl Component for ArticleContent {
                 <p>{"This applies equally to native HTML attributes and to props on your own components."}</p>
 
                 <h2>{"Slot's lifetime"}<span class="fix-badge">{"Fix"}</span></h2>
-                <p>{"Slot was defined as Box<dyn Fn(&mut Page)>, which is implicitly 'static — a slot closure could never borrow anything shorter-lived than the whole program. That was never the intent; slots were always meant to be able to borrow from their surrounding scope. Slot now carries an explicit lifetime, fixing that:"}</p>
+                <p>{"Slot was defined as Box<dyn Fn(&mut Page)>, which is implicitly 'static: a slot closure could never borrow anything shorter-lived than the whole program. That was never the intent; slots were always meant to be able to borrow from their surrounding scope. Slot now carries an explicit lifetime, fixing that:"}</p>
                 <CodeBlock code={code_slot_lifetime.to_string()} />
 
                 <h2>{"New: unnamed slots"}</h2>
                 <p>{"Components that take a single slot and no other props no longer need a named field and a {#slot:name} wrapper. Declare the component as a tuple struct with Slot<'a> as field 0, and the parent passes content directly as children:"}</p>
                 <CodeBlock code={code_unnamed_slot.to_string()} />
-                <p>{"Named slots are still there for the cases unnamed slots don't cover — multiple slots on one component, or a single slot alongside other props:"}</p>
+                <p>{"Named slots are still there for the cases unnamed slots don't cover: multiple slots on one component, or a single slot alongside other props:"}</p>
                 <CodeBlock code={code_named_slot.to_string()} />
                 <p>{"The two forms don't mix within a single tag: if a component tag's first child is a {#slot:name} block, the whole tag is treated as named-slot mode, and any other top-level children are silently ignored. Pick one form per component."}</p>
 
@@ -88,15 +88,15 @@ impl Component for ArticleContent {
                 <p>{"Component structs and their attributes also keep their original source spans through macro expansion, so 'go to definition' and ctrl-click navigation in your IDE now jump to the right place on both a component tag and its individual attributes."}</p>
 
                 <h2>{"Under the hood"}</h2>
-                <p>{"A criterion + allocation-tracking benchmark suite was added (tidos/benches/page_rendering.rs) covering flat lists, static pages, borrowed data, and conditional rendering, so future changes to the code generator can be checked against real numbers instead of guesswork. The IsStatic trait used by the compile-time HTML folding introduced in rc.1 was also unified across all content and attribute kinds — it isn't wired into a new optimization yet, but it's the groundwork for folding fully-static components into a single concat! at compile time."}</p>
+                <p>{"A criterion + allocation-tracking benchmark suite was added (tidos/benches/page_rendering.rs) covering flat lists, static pages, borrowed data, and conditional rendering, so future changes to the code generator can be checked against real numbers instead of guesswork. The IsStatic trait used by the compile-time HTML folding introduced in rc.1 was also unified across all content and attribute kinds. It isn't wired into a new optimization yet, but it's the groundwork for folding fully-static components into a single concat! at compile time."}</p>
 
                 <h2>{"New documentation site"}</h2>
-                <p>{"The site you're reading this on is new this cycle — a Tidos site, written in Tidos, covering the view! and page! syntax, components, slots, scoped CSS, and internationalization."}</p>
+                <p>{"The site you're reading this on is new this cycle: a Tidos site, written in Tidos, covering the view! and page! syntax, components, slots, scoped CSS, and internationalization."}</p>
 
                 <h2>{"Upgrading"}</h2>
                 <p>{"Update your Cargo.toml to the second release candidate:"}</p>
                 <CodeBlock code={code_cargo.to_string()} />
-                <p>{"Then, for every Component you've implemented: remove -> String from to_render's signature, and remove any explicit return of the rendered string — view!/head! already write into page. If you pass attribute values that aren't already string-like, you can now drop the manual .to_string()/format!() wrapping in most cases, since attributes accept expressions directly."}</p>
+                <p>{"Then, for every Component you've implemented: remove -> String from to_render's signature, and remove any explicit return of the rendered string; view!/head! already write into page for you. If you pass attribute values that aren't already string-like, you can now drop the manual .to_string()/format!() wrapping in most cases, since attributes accept expressions directly."}</p>
             </div>
         }
     }

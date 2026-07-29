@@ -103,7 +103,7 @@ view! {
 Components whose struct implements [`Default`] can use `..` to fill any
 unspecified props with their default values, mirroring Rust's struct update
 syntax. The `..` must appear after all explicit props and is only valid on
-custom components — native HTML tags do not support it.
+custom components; native HTML tags do not support it.
 
 ```rust,no_run
 use tidos_macro::view;

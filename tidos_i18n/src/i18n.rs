@@ -1,13 +1,21 @@
+//! Parsing and code generation for the `i18n!` macro, in one file since both
+//! sides are small. Unlike `tidos_macro`, there's no separate AST module:
+//! [`I18n`] is parsed directly from the macro input and, at the same time,
+//! is the type whose `ToTokens` impl generates the Fluent lookup code.
+
 use proc_macro2::{Literal, TokenStream, TokenTree};
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::parse::{Parse, ParseStream};
 use syn::Token;
 
+/// The parsed arguments to `i18n!("key", ("var", value), ...)`: the message
+/// key plus zero or more `(name, value)` Fluent variable pairs.
 pub struct I18n {
 	pub key: Literal,
 	pub params: Vec<(Literal, TokenTree)>,
 }
 
+/// Parses `"key"` followed by zero or more `, ("param-name", value)` pairs.
 impl Parse for I18n {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		let result = input
@@ -34,6 +42,16 @@ impl Parse for I18n {
 	}
 }
 
+/// Expands to a block that loads the Fluent resource bundle, resolves the
+/// caller's locale, looks up `key`, and writes the resolved message to a
+/// `String`. Requires a `page` binding in scope (relies on `page.lang` for
+/// locale negotiation), just like `scoped_css!`/`head!` in `tidos_macro` rely
+/// on `page` being bound by `view!`/`page!`.
+///
+/// The with-params and without-params cases are generated as two separate
+/// (near-duplicate) blocks rather than one block with an `Option<&FluentArgs>`
+/// built conditionally, so that the no-params call site never has to
+/// construct an empty `FluentArgs` at all.
 impl ToTokens for I18n {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		let key = &self.key;

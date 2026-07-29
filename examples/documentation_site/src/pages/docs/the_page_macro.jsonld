@@ -4,7 +4,7 @@
     {
       "@type": "TechArticle",
       "@id": "https://tidos.dev/docs/the-page-macro#article",
-      "name": "page! macro — Tidos",
+      "name": "page! macro - Tidos",
       "description": "How to use the page! macro to render a full HTML page in Tidos.",
       "url": "https://tidos.dev/docs/the-page-macro",
       "isPartOf": { "@id": "https://tidos.dev/#website" },

@@ -28,10 +28,10 @@ macro_rules! sanitize {
 #[macro_export]
 macro_rules! combine {
 	// -----------------------------------------------------------------------
-	// Public entry point — push arguments into `page`.
+	// Public entry point: push arguments into `page`.
 	//
 	// Adjacent string literals are merged at compile time via `concat!` into
-	// a single `push_static` call.  Dynamic values are dispatched through
+	// a single `push_static` call. Dynamic values are dispatched through
 	// `PushIntoPage` so `String`, `&str`, and `&'static str` all work.
 	//
 	// combine!(page, "<p>", "Hello", "</p>") => page.push_static("<p>Hello</p>")
@@ -48,7 +48,7 @@ macro_rules! combine {
 	};
 
 	// -----------------------------------------------------------------------
-	// @process — walks arguments left to right.
+	// @process: walks arguments left to right.
 	// Two adjacent literals hand off to @collect for batch merging.
 	// -----------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ macro_rules! combine {
 	(@process $page:expr;) => {};
 
 	// -----------------------------------------------------------------------
-	// @collect — accumulates adjacent literals for a single concat! flush.
+	// @collect: accumulates adjacent literals for a single concat! flush.
 	// -----------------------------------------------------------------------
 
 	// Next is also a literal → keep collecting.

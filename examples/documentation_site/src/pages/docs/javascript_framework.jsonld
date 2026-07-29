@@ -4,7 +4,7 @@
     {
       "@type": "TechArticle",
       "@id": "https://tidos.dev/docs/javascript-framework#article",
-      "name": "Reactivity — Tidos",
+      "name": "Reactivity - Tidos",
       "description": "How to add client-side reactivity to Tidos using Web Components with Svelte, Lit, Angular, Vue, or React.",
       "url": "https://tidos.dev/docs/javascript-framework",
       "isPartOf": { "@id": "https://tidos.dev/#website" },

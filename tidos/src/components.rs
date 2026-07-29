@@ -1,6 +1,6 @@
 pub(crate) use crate::page::Page;
 
-/// Type alias for a slot closure — a boxed function that pushes rendered HTML
+/// Type alias for a slot closure: a boxed function that pushes rendered HTML
 /// into a [`Page`] when called.
 ///
 /// Use this as a field type on components that accept slot content passed in
@@ -8,16 +8,16 @@ pub(crate) use crate::page::Page;
 /// (which the `view!` macro expands to a call of the closure). A component
 /// can take its slot content in one of two shapes:
 ///
-/// - **Unnamed** — a single slot, tuple struct with `Slot<'render>` as field
+/// - **Unnamed**: a single slot, tuple struct with `Slot<'render>` as field
 ///   `0`. The parent passes children directly, with no `{#slot:name}`
 ///   wrapper. Use this only when the component needs exactly one slot and
 ///   has no other props.
-/// - **Named** — a regular struct field, filled by a `{#slot:name} … {/slot}`
+/// - **Named**: a regular struct field, filled by a `{#slot:name} … {/slot}`
 ///   block on the parent side. Use this when the component has more than one
 ///   slot, or a single slot alongside other props/attributes (an unnamed
 ///   tuple field can't coexist with named fields in the same tag).
 ///
-/// # Example — unnamed slot
+/// # Example: unnamed slot
 ///
 /// ```rust,no_run
 /// use tidos::{view, Component, Page, Slot};
@@ -34,7 +34,7 @@ pub(crate) use crate::page::Page;
 ///     }
 /// }
 ///
-/// // Parent side — children are passed straight in, no {#slot:name} needed:
+/// // Parent side: children are passed straight in, no {#slot:name} needed:
 /// // view! {
 /// //     <Card>
 /// //         <p>{"Card content"}</p>
@@ -42,7 +42,7 @@ pub(crate) use crate::page::Page;
 /// // }
 /// ```
 ///
-/// # Example — named slots
+/// # Example: named slots
 ///
 /// ```rust,no_run
 /// use tidos::{view, Component, Page, Slot};

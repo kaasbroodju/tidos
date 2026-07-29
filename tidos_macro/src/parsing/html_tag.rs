@@ -1,3 +1,13 @@
+//! Parses opening/closing tag pairs and self-closing tags for both native
+//! HTML elements (`<p>...</p>`, `<img/>`) and custom components
+//! (`<MyComp>...</MyComp>`). The two share an identical open-tag →
+//! attributes → children → close-tag grammar (both call
+//! [`HTMLutils::parse_body`] for their children), but produce different AST
+//! nodes because native tags forbid the `..` default-fill flag and don't need
+//! a tracked span for their tag name, whereas components do (see
+//! `ComponentContent::tag_span` / `closing_tag_span`, used later by
+//! `code_generation` to splice the identifier back into real Rust code).
+
 use crate::parsing::attribute::parse_attributes;
 use crate::parsing::utils::HTMLutils;
 use crate::tokens::{ComponentContent, NativeContent};
@@ -5,6 +15,9 @@ use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
 
+/// Parses a native HTML element: `<tag attrs>children</tag>` or the
+/// self-closing `<tag attrs/>`. Which of the two applies is decided by
+/// peeking for `/>` right after the attributes.
 impl Parse for NativeContent {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>
@@ -58,6 +71,12 @@ impl Parse for NativeContent {
 	}
 }
 
+/// Parses a custom component tag: `<Tag attrs>children</Tag>` or the
+/// self-closing `<Tag attrs/>`. Structurally identical to [`NativeContent`]
+/// parsing, except the tag name's span is kept (`tag_span`,
+/// `closing_tag_span`) so `code_generation` can re-emit the identifier with
+/// correct error-reporting/IDE-navigation spans when it constructs the
+/// component struct literal.
 impl Parse for ComponentContent {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>

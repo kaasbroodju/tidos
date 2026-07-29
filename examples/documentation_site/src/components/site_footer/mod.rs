@@ -1,5 +1,7 @@
 use tidos::{scoped_css, view, Component, Page};
 
+/// Site-wide footer: copyright line and links to GitHub, crates.io, and
+/// docs.rs.
 pub struct SiteFooter;
 
 impl Component for SiteFooter {

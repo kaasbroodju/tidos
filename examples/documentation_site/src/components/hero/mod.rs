@@ -3,6 +3,13 @@ use tidos::{scoped_css, view, Component, Page};
 
 use crate::components::nav_bar::NavBar;
 
+/// The homepage hero section: headline, tagline, and the primary
+/// "Get started" / install call-to-action.
+///
+/// Its head injections go through [`tidos::Page::add_elements_to_head`]
+/// directly instead of the `head!` macro, so each one keeps a fixed,
+/// human-readable id (`"global-styles"`, `"google-fonts"`, ...) as its dedup
+/// key, rather than the UUID `head!` would generate per call site.
 pub struct Hero;
 
 impl Component for Hero {

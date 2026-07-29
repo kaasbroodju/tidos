@@ -42,7 +42,7 @@ impl Component for PageMacroContent {
         view! {
             <div class="doc-content">
                 <h1>{"The page! Macro"}</h1>
-                <p>{"The page! macro is the entry point for rendering a full HTML page. Use it inside route handlers to produce a Page struct that your framework serves directly."}</p>
+                <p>{"The page! macro is where a Tidos page starts. Call it inside a route handler to build a Page struct, and hand that struct straight back to your web framework, no extra conversion needed."}</p>
 
                 <h2>{"Basic Usage"}</h2>
                 <p>{"page! accepts the same template syntax as "}<a href="/docs/component#the-view-macro">{"the view! macro"}</a>{": HTML tags, Rust expressions, and control-flow blocks. It creates and returns a Page struct."}</p>

@@ -59,11 +59,11 @@ impl Component for ArticleContent {
                 <h2>{"JavaScript framework examples"}</h2>
                 <p>{"The repository now includes complete working examples showing how to pair Tidos SSR with the most popular JS frameworks for client-side interactivity:"}</p>
                 <ul>
-                    <li>{"Svelte — embed compiled Svelte components via native_element"}</li>
-                    <li>{"Lit Element — lightweight web components with reactive properties"}</li>
-                    <li>{"Vue — Vue custom elements with defineCustomElement"}</li>
-                    <li>{"React — React components mounted inside a custom element shell"}</li>
-                    <li>{"Angular — Angular elements via createCustomElement"}</li>
+                    <li>{"Svelte: embed compiled Svelte components via native_element"}</li>
+                    <li>{"Lit Element: lightweight web components with reactive properties"}</li>
+                    <li>{"Vue: Vue custom elements with defineCustomElement"}</li>
+                    <li>{"React: React components mounted inside a custom element shell"}</li>
+                    <li>{"Angular: Angular elements via createCustomElement"}</li>
                 </ul>
                 <p>{"Each example lives under examples/ in the repository and shows a full Cargo.toml, route handler, and client bundle setup."}</p>
 

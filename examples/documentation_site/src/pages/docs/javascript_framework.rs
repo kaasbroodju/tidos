@@ -52,7 +52,7 @@ impl Component for JsFrameworkContent {
         
         let native_element_rs = "use tidos::native_element;\n\n// GreetUser -> /dist/GreetUser.js -> <greet-user>\n#[native_element]\npub struct GreetUser {\n    pub name: String,\n    pub is_admin: bool,\n}\n\n// Output of macro\nimpl tidos::Component for GreetUser {\n    fn to_render(&self, page: &mut tidos::Page) {\n        tidos::head!{ <script r#type=\"module\" src=\"/dist/GreetUser.js\"></script> };\n        tidos::view!{ <greet-user name={self.name} :is-admin={self.is_admin}></greet-user> };\n    }\n}";
 
-        let serve_dist = "// Rocket — serve compiled JS from the dist folder\n#[get(\"/dist/<file..>\")]\nasync fn dist_files(file: std::path::PathBuf) -> Option<rocket::fs::NamedFile> {\n    rocket::fs::NamedFile::open(std::path::Path::new(\"dist/\").join(file)).await.ok()\n}";
+        let serve_dist = "// Rocket: serve compiled JS from the dist folder\n#[get(\"/dist/<file..>\")]\nasync fn dist_files(file: std::path::PathBuf) -> Option<rocket::fs::NamedFile> {\n    rocket::fs::NamedFile::open(std::path::Path::new(\"dist/\").join(file)).await.ok()\n}";
 
         // The full, working Vite configs, pulled straight from the example
         // projects so they stay in sync and can be copy-pasted as-is.
@@ -78,12 +78,12 @@ impl Component for JsFrameworkContent {
             },
             JsFwDocs {
                 name: "Angular",
-                code: "// app.module.ts — register as Angular Element\nimport { createCustomElement } from '@angular/elements';\nimport { GreetUserComponent } from './greet-user.component';\n\n@NgModule({ ... })\nexport class AppModule {\n    constructor(private injector: Injector) {}\n    ngDoBootstrap() {\n        const el = createCustomElement(GreetUserComponent, { injector: this.injector });\n        customElements.define('greet-user', el);\n    }\n}",
+                code: "// app.module.ts: register as Angular Element\nimport { createCustomElement } from '@angular/elements';\nimport { GreetUserComponent } from './greet-user.component';\n\n@NgModule({ ... })\nexport class AppModule {\n    constructor(private injector: Injector) {}\n    ngDoBootstrap() {\n        const el = createCustomElement(GreetUserComponent, { injector: this.injector });\n        customElements.define('greet-user', el);\n    }\n}",
                 vite_config: vite_angular,
             },
             JsFwDocs {
                 name: "Vue",
-                code: "<!-- src/components/GreetUser.vue -->\n<template>\n    <div>\n        <p>Hello, {{ name }}!</p>\n        <span v-if=\"isAdmin\" class=\"badge\">Admin</span>\n    </div>\n</template>\n\n<script setup>\ndefineProps({\n    name: { type: String, default: '' },\n    isAdmin: { type: Boolean, default: false },\n});\n</script>\n\n<!-- src/components/GreetUser.js — wrapper that registers the SFC as a custom element -->\nimport { defineCustomElement } from 'vue';\nimport GreetUser from './GreetUser.vue';\n\ncustomElements.define('greet-user', defineCustomElement(GreetUser));",
+                code: "<!-- src/components/GreetUser.vue -->\n<template>\n    <div>\n        <p>Hello, {{ name }}!</p>\n        <span v-if=\"isAdmin\" class=\"badge\">Admin</span>\n    </div>\n</template>\n\n<script setup>\ndefineProps({\n    name: { type: String, default: '' },\n    isAdmin: { type: Boolean, default: false },\n});\n</script>\n\n<!-- src/components/GreetUser.js: wrapper that registers the SFC as a custom element -->\nimport { defineCustomElement } from 'vue';\nimport GreetUser from './GreetUser.vue';\n\ncustomElements.define('greet-user', defineCustomElement(GreetUser));",
                 vite_config: vite_vue,
             },
             JsFwDocs {
@@ -100,7 +100,7 @@ impl Component for JsFrameworkContent {
         view! {
             <div class="doc-content">
                 <h1>{"Reactivity"}</h1>
-                <p>{"Tidos renders HTML on the server. For client-side interactivity, compile any JavaScript framework component as a "}<a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements">{"Web Component"}</a>{" and embed it using #[native_element]."}</p>
+                <p>{"Tidos renders HTML on the server, so it has no built-in notion of client-side state or reactivity. When you need interactivity in the browser, bring in the JavaScript framework you like, compile the component as a "}<a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements">{"Web Component"}</a>{", and embed it in your Tidos page with #[native_element]."}</p>
 
                 <h2>{"How It Works"}</h2>
                 <ol>
