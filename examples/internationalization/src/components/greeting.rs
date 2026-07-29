@@ -4,8 +4,7 @@ use tidos::i18n::i18n;
 pub struct Greeting;
 
 impl Component for Greeting {
-    fn to_render(&self, page: &mut Page) -> String {
-
+    fn to_render(&self, page: &mut Page) {
         view! {
 			<section>
 				<h1>{i18n!("greeting")}</h1>

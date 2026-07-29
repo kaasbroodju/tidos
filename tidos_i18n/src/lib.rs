@@ -42,7 +42,7 @@ use syn::parse_macro_input;
 /// pub struct Greeting;
 ///
 /// impl Component for Greeting {
-///     fn to_render(&self, page: &mut Page) -> String {
+///     fn to_render(&self, page: &mut Page) {
 ///         view! {
 ///             <h1>{i18n!("greeting")}</h1>
 ///             <p>{i18n!("shared-photos", ("userName", "Anne"), ("photoCount", 3))}</p>

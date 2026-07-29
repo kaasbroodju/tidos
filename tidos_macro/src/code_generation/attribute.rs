@@ -25,9 +25,11 @@ impl ToFlatArgs for Attribute {
 					unreachable!("ConstantLiteral is always a string literal")
 				};
 
+				let lit = TextContent::sanitize_lit_str(value.clone());
+
 				flat_args.push(FlatArg::Literal(name_trimmed.to_string()));
 				flat_args.push(FlatArg::Literal("=\"".to_string()));
-				flat_args.push(FlatArg::Literal(value.value()));
+				flat_args.push(FlatArg::Literal(lit));
 				flat_args.push(FlatArg::Literal("\" ".to_string()));
 			}
 			AttributeType::Expression { content } => {
@@ -40,7 +42,7 @@ impl ToFlatArgs for Attribute {
 				flush_flat(flat_args, result);
 				let ident = format_ident!("{}", name);
 				result.append_all(quote! {
-					if #ident { page.push_static(concat!(#name, " ")); }
+					if #ident { page.push_static(concat!(#name_trimmed, " ")); }
 				});
 			}
 			AttributeType::ExplicitToggle { value } => {

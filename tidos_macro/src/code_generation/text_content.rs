@@ -2,6 +2,7 @@ use crate::code_generation::component::{FlatArg, ToFlatArgs};
 use crate::tokens::TextContent;
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
+use syn::LitStr;
 
 impl TextContent {
 	pub(crate) fn sanitize_literal(literal: Literal) -> Literal {
@@ -27,6 +28,29 @@ impl TextContent {
 
 		Literal::string(result.as_str())
 	}
+
+	pub(crate) fn sanitize_lit_str(literal: LitStr) -> String {
+		let input = literal.value();
+
+		if !input.contains(['&', '<', '>', '"', '\'']) {
+			return input;
+		}
+
+		let mut result = String::new();
+
+		for c in input.chars() {
+			match c {
+				'&' => result.push_str("&amp;"),
+				'<' => result.push_str("&lt;"),
+				'>' => result.push_str("&gt;"),
+				'"' => result.push_str("&quot;"),
+				'\'' => result.push_str("&#x27;"),
+				_ => result.push(c),
+			}
+		}
+
+		result
+	}
 }
 
 /// Sanitized (HTML-escaped) rendering of a [`TextContent`] — used for `{...}`
@@ -41,7 +65,7 @@ impl ToFlatArgs for TextContent {
 			TextContent::Formatted(literal, contents) => {
 				let lit = TextContent::sanitize_literal(literal.clone());
 				flat_args.push(FlatArg::Expr(
-					quote! { format!(#lit #( , #( #contents )* )* ) },
+					quote! { tidos::sanitize!(format!(#lit #( , #( #contents )* )* )) },
 				));
 			}
 			TextContent::Expression(expr) => {

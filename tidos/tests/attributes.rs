@@ -72,6 +72,32 @@ fn toggle_attribute_implicit_variable_name() {
 	);
 }
 
+// Implicit toggles named after a Rust keyword must be written as a raw
+// identifier (`r#type`) to bind the variable, but the emitted HTML attribute
+// name must drop the `r#` prefix.
+#[test]
+fn toggle_attribute_implicit_raw_identifier_name() {
+	let r#type = true;
+	assert_eq!(
+		render(|page| {
+			view! {
+				<input name="day" :r#type />
+			}
+		}),
+		r#"<input name="day" type />"#
+	);
+
+	let r#type = false;
+	assert_eq!(
+		render(|page| {
+			view! {
+				<input name="day" :r#type />
+			}
+		}),
+		r#"<input name="day" />"#
+	);
+}
+
 #[test]
 fn missing_variable_defined_toggle() {
 	let t = trybuild::TestCases::new();

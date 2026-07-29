@@ -18,7 +18,6 @@ use tokens::Component;
 use uuid::Uuid;
 
 mod code_generation;
-mod i18n;
 mod page_wrapper;
 mod parsing;
 mod tokens;
@@ -86,11 +85,10 @@ pub fn page(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// impl Component for Title {
-///     fn to_render(&self, page: &mut Page) -> String {
+///     fn to_render(&self, page: &mut Page) {
 ///         head! {
 ///             <title>{&self.title}</title>
 ///         }
-///         String::new()
 ///     }
 /// }
 /// ```
@@ -131,7 +129,7 @@ pub fn head(input: TokenStream) -> TokenStream {
 /// pub struct Card { pub title: String }
 ///
 /// impl Component for Card {
-///     fn to_render(&self, page: &mut Page) -> String {
+///     fn to_render(&self, page: &mut Page) {
 ///         view! {
 ///             <div class={scoped_css!("./card.css")}>
 ///                 <h2>{&self.title}</h2>
@@ -195,7 +193,7 @@ pub fn scoped_css(input: TokenStream) -> TokenStream {
 /// # use tidos::{Component, Page};
 /// # pub struct GreetName { pub name: String, pub is_shiny: bool }
 /// impl tidos::Component for GreetName {
-///     fn to_render(&self, page: &mut tidos::Page) -> String {
+///     fn to_render(&self, page: &mut tidos::Page) {
 ///         tidos::head! { <script type="module" src="/dist/GreetName.js"> }
 ///         tidos::view! { <greet-name name="Alice" is-shiny></greet-name> }
 ///     }

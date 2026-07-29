@@ -28,7 +28,7 @@ pub struct Greet {
 }
 
 impl Component for Greet {
-    fn to_render(&self, page: &mut Page) -> String {
+    fn to_render(&self, page: &mut Page) {
         view! {
             <section>
                 <h1>{"Hello {}!", &self.name}</h1>
