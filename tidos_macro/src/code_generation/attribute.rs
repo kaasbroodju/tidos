@@ -1,50 +1,52 @@
+use crate::code_generation::component::{flush_flat, FlatArg, ToFlatArgs};
 use crate::tokens::{Attribute, AttributeType, TextContent};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
 
-impl ToTokens for Attribute {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
-		let name = &self.name;
+/// Contribute an attribute's value(s) to `flat_args`.
+/// Toggle attributes (ImplicitToggle / ExplicitToggle) are always boundaries:
+/// they flush `flat_args` and emit a direct `if … { page.push_static(…); }`.
+impl ToFlatArgs for Attribute {
+	fn to_flat_args(&self, flat_args: &mut Vec<FlatArg>, result: &mut TokenStream) {
+		let name = self.name.as_str();
+		let name_trimmed = name.trim_start_matches("r#");
+
 		match &self.attribute_type {
+			AttributeType::Constant => {
+				flat_args.push(FlatArg::Literal(name_trimmed.to_string()));
+				flat_args.push(FlatArg::Literal(" ".to_string()));
+			}
+			AttributeType::ConstantLiteral { literal } => {
+				// The parser only ever accepts a string literal here (see
+				// `parsing::attribute`), so this always matches and can be
+				// merged into the surrounding literal run like any other
+				// static text.
+				let syn::Lit::Str(value) = syn::Lit::new(literal.clone()) else {
+					unreachable!("ConstantLiteral is always a string literal")
+				};
+
+				flat_args.push(FlatArg::Literal(name_trimmed.to_string()));
+				flat_args.push(FlatArg::Literal("=\"".to_string()));
+				flat_args.push(FlatArg::Literal(value.value()));
+				flat_args.push(FlatArg::Literal("\" ".to_string()));
+			}
+			AttributeType::Expression { content } => {
+				flat_args.push(FlatArg::Literal(name_trimmed.to_string()));
+				flat_args.push(FlatArg::Literal("=\"".to_string()));
+				content.to_flat_args(flat_args, result);
+				flat_args.push(FlatArg::Literal("\" ".to_string()));
+			}
 			AttributeType::ImplicitToggle => {
+				flush_flat(flat_args, result);
 				let ident = format_ident!("{}", name);
-				let attribute_name = name.to_string();
-				tokens.append_all(quote! {
-					if #ident { page.push_static(concat!(#attribute_name, " ")); }
+				result.append_all(quote! {
+					if #ident { page.push_static(concat!(#name, " ")); }
 				});
 			}
 			AttributeType::ExplicitToggle { value } => {
-				let attribute_name = name.to_string();
-				tokens.append_all(quote! {
-					if #value { page.push_static(concat!(#attribute_name, " ")); }
-				});
-			}
-			AttributeType::Constant => {
-				let attribute_name = name.to_string();
-				tokens.append_all(quote! {
-					page.push_static(concat!(#attribute_name, " "));
-				});
-			}
-			AttributeType::ConstantLiteral { literal } => {
-				let attribute_name = name
-					.clone()
-					.to_string()
-					.trim_start_matches("r#")
-					.to_string();
-				tokens.append_all(quote! {
-					page.push_static(concat!(#attribute_name, "=\"", #literal, "\" "));
-				});
-			}
-			AttributeType::Expression { content } => {
-				let attribute_name = name
-					.clone()
-					.to_string()
-					.trim_start_matches("r#")
-					.to_string();
-				tokens.append_all(quote! {
-					page.push_static(concat!(#attribute_name, "=\""));
-					#content
-					page.push_static("\" ");
+				flush_flat(flat_args, result);
+				result.append_all(quote! {
+					if #value { page.push_static(concat!(#name_trimmed, " ")); }
 				});
 			}
 		}

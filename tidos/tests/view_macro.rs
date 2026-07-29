@@ -92,6 +92,12 @@ fn empty_closing_tag() {
 }
 
 #[test]
+fn raw_text_between_tags() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/raw_text_between_tags.rs");
+}
+
+#[test]
 fn text_literal() {
 	assert_eq!(
 		render(|page| {
@@ -164,5 +170,30 @@ fn raw_html_expression() {
 			view! { @html{html} }
 		}),
 		"<em>emphasized</em>"
+	);
+}
+
+#[test]
+fn large_amount_of_adjacent_static_content_does_not_hit_recursion_limit() {
+	// Regression test: each <span> contributes several adjacent literal
+	// tokens ("<", "span", ">", "x", "</", "span", ">"), so this exceeds
+	// the default macro recursion_limit (128) if they are not merged into
+	// a single string before being handed to `combine!`.
+	assert_eq!(
+		render(|page| {
+			view! {
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+				<span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span> <span>{"x"}</span>
+			}
+		}),
+		"<span>x</span>".repeat(60)
 	);
 }

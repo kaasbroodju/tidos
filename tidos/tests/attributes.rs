@@ -91,6 +91,12 @@ fn attribute_value_without_delimiters() {
 }
 
 #[test]
+fn non_string_attribute_literal() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/non_string_attribute_literal.rs");
+}
+
+#[test]
 fn data_attribute() {
 	assert_eq!(
 		render(|page| {

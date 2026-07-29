@@ -1,88 +1,36 @@
-use crate::tokens::{Content, TextContent};
-use proc_macro2::{Literal, TokenStream};
-use quote::{quote, ToTokens};
+use crate::code_generation::component::{flush_flat, FlatArg, ToFlatArgs};
+use crate::code_generation::text_content::RawTextContent;
+use crate::tokens::Content;
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens, TokenStreamExt};
 
-impl ToTokens for Content {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
+/// Process a single `Content` item: either add its value as args to `flat_args`
+/// (if it's a literal or expression), or flush `flat_args` and emit a statement
+/// (if it's a control tag, slot render, or component).
+impl ToFlatArgs for Content {
+	fn to_flat_args(&self, flat_args: &mut Vec<FlatArg>, result: &mut TokenStream) {
 		match self {
-			Content::NativeElement(html_content) => html_content.to_tokens(tokens),
-			Content::CustomComponent(component_content) => component_content.to_tokens(tokens),
-			Content::ControlTag(control_tag) => control_tag.to_tokens(tokens),
-			Content::Text(text_content) => text_content.to_tokens(tokens),
-			Content::RawHTMLExpression(text_content) => text_content.to_tokens_raw(tokens),
+			Content::NativeElement(content) => {
+				content.to_flat_args(flat_args, result);
+			}
+			Content::CustomComponent(content) => {
+				flush_flat(flat_args, result);
+				content.to_tokens(result);
+			}
+			Content::ControlTag(ct) => {
+				flush_flat(flat_args, result);
+				ct.to_tokens(result);
+			}
 			Content::SlotRender(expr) => {
-				quote! { (#( #expr )*)(page); }.to_tokens(tokens);
+				flush_flat(flat_args, result);
+				result.append_all(quote! { (#( #expr )*)(page); });
+			}
+			Content::Text(text) => {
+				text.to_flat_args(flat_args, result);
+			}
+			Content::RawHTMLExpression(text) => {
+				RawTextContent(text).to_flat_args(flat_args, result);
 			}
 		}
-	}
-}
-
-impl ToTokens for TextContent {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
-		match self {
-			TextContent::Literal(literal) => {
-				let literal = TextContent::sanitize_literal(literal.clone());
-				quote! { page.push_static(#literal); }.to_tokens(tokens);
-			}
-			TextContent::Formatted(literal, contents) => {
-				let literal = TextContent::sanitize_literal(literal.clone());
-				quote! {
-					{ let _v = format!(#literal #( , #( #contents )* )* ); page.push_dynamic(_v); }
-				}
-				.to_tokens(tokens);
-			}
-			TextContent::Expression(expr) => {
-				quote! {
-					{ let _v = tidos::sanitize!( #( #expr )* ); page.push_dynamic(_v); }
-				}
-				.to_tokens(tokens);
-			}
-		}
-	}
-}
-
-impl TextContent {
-	pub fn to_tokens_raw(&self, tokens: &mut TokenStream) {
-		match self {
-			TextContent::Literal(literal) => {
-				quote! { page.push_static(#literal); }.to_tokens(tokens);
-			}
-			TextContent::Formatted(literal, contents) => {
-				quote! {
-					{ let _v = format!(#literal #( , #( #contents )* )* ); page.push_dynamic(_v); }
-				}
-				.to_tokens(tokens);
-			}
-			TextContent::Expression(expr) => {
-				quote! {
-					{ let _v = #( #expr )*; page.push_dynamic(_v); }
-				}
-				.to_tokens(tokens);
-			}
-		}
-	}
-
-	pub(crate) fn sanitize_literal(literal: Literal) -> Literal {
-		let input = &literal.to_string();
-		let input = &input[1..input.len() - 1];
-
-		if !input.contains(['&', '<', '>', '"', '\'']) {
-			return literal;
-		}
-
-		let mut result = String::new();
-
-		for c in input.chars() {
-			match c {
-				'&' => result.push_str("&amp;"),
-				'<' => result.push_str("&lt;"),
-				'>' => result.push_str("&gt;"),
-				'"' => result.push_str("&quot;"),
-				'\'' => result.push_str("&#x27;"),
-				_ => result.push(c),
-			}
-		}
-
-		Literal::string(result.as_str())
 	}
 }

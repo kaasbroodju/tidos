@@ -119,3 +119,18 @@ fn slot_alongside_prop() {
 		"<section><h1>My Banner</h1><div><p>Slot content</p></div></section>"
 	);
 }
+
+#[cfg(not(feature = "i18n"))]
+#[test]
+fn unnamed_slot() {
+	let mut page_output = Page::new();
+	let page = &mut page_output;
+
+	view! {
+		<AnonymousCard>
+			<p>{"Hello world"}</p>
+		</AnonymousCard>
+	};
+
+	assert_eq!(page_output.into_html(), "<div><p>Hello world</p></div>");
+}

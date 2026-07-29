@@ -116,6 +116,13 @@ impl Parse for Attribute {
 				}
 				Ok(equal_sign_token) => {
 					if let Ok(literal) = input.parse::<Literal>() {
+						if !matches!(syn::Lit::new(literal.clone()), syn::Lit::Str(_)) {
+							return Err(syn::Error::new(
+								literal.span(),
+								format!("Attribute values must be a string, change it into the following:\n{attribute_name}={{ {literal} }}"),
+							));
+						}
+
 						let attribute = Attribute {
 							name: attribute_name,
 							name_span: attribute_name_span,

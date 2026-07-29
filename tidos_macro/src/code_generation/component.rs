@@ -1,6 +1,6 @@
-use crate::tokens::{Attribute, AttributeType, Component, Content, NativeContent, TextContent};
+use crate::tokens::{Component, Content};
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, ToTokens, TokenStreamExt};
+use quote::{quote, ToTokens, TokenStreamExt};
 
 impl ToTokens for Component {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -8,164 +8,75 @@ impl ToTokens for Component {
 	}
 }
 
+/// A single pending contribution to a `combine!` call.
+///
+/// `Literal` values are known as plain Rust strings at macro-expansion time,
+/// so adjacent ones can be merged into one string right here — no need to
+/// defer that merging to `concat!` in the generated code. `Expr` is anything
+/// that can only be evaluated at runtime (control flow, sanitized/formatted
+/// values, attribute value literals of unknown literal kind).
+pub(crate) enum FlatArg {
+	Literal(String),
+	Expr(TokenStream),
+}
+
 /// Converts a slice of `Content` into a `TokenStream` of push statements
 /// that write into a `page: &mut Page` variable in scope.
 ///
-/// Adjacent static literals are grouped into a single `combine!(page, ...)` call
-/// so the Rust compiler can merge them at compile time via `concat!`.
-/// Dynamic content (control tags, slot renders, component tags) is flushed as
-/// its own statement and acts as a boundary between literal groups.
+/// Adjacent static literals are merged into a single Rust `String` here, at
+/// macro-expansion time, before being handed to one `combine!(page, ...)`
+/// call — see [`flush_flat`]. This keeps the number of arguments `combine!`
+/// itself ever has to process small and bounded by the number of *dynamic*
+/// pieces in a template, regardless of how much static markup surrounds
+/// them, which is what let arbitrarily large static templates blow the
+/// macro recursion limit before.
 pub(crate) fn to_push_stmts(contents: &[Content]) -> TokenStream {
 	let mut result = TokenStream::new();
-	let mut flat_args: Vec<TokenStream> = vec![];
+	let mut flat_args: Vec<FlatArg> = vec![];
 
 	for child in contents {
-		process_content(child, &mut flat_args, &mut result);
+		child.to_flat_args(&mut flat_args, &mut result);
 	}
 	flush_flat(&mut flat_args, &mut result);
 	result
 }
 
 /// Emit `tidos::combine!(page, arg1, arg2, ...)` from the accumulated args and
-/// clear the buffer. Does nothing if the buffer is empty.
-pub(crate) fn flush_flat(flat_args: &mut Vec<TokenStream>, result: &mut TokenStream) {
+/// clear the buffer. Adjacent `FlatArg::Literal`s are merged into a single
+/// string argument first. Does nothing if the buffer is empty.
+pub(crate) fn flush_flat(flat_args: &mut Vec<FlatArg>, result: &mut TokenStream) {
 	if flat_args.is_empty() {
 		return;
 	}
-	let args: Vec<TokenStream> = std::mem::take(flat_args);
-	// let args: Vec<TokenStream> = flat_args.drain(..).collect();
+
+	let mut args: Vec<TokenStream> = vec![];
+	let mut pending = String::new();
+
+	for arg in std::mem::take(flat_args) {
+		match arg {
+			FlatArg::Literal(lit) => pending.push_str(&lit),
+			FlatArg::Expr(expr) => {
+				if !pending.is_empty() {
+					args.push(quote! { #pending });
+					pending = String::new();
+				}
+				args.push(expr);
+			}
+		}
+	}
+	if !pending.is_empty() {
+		args.push(quote! { #pending });
+	}
+
 	result.append_all(quote! { tidos::combine!(page, #(#args),*); });
 }
 
-/// Process a single `Content` item: either add its value as args to `flat_args`
-/// (if it's a literal or expression), or flush `flat_args` and emit a statement
-/// (if it's a control tag, slot render, or component).
-fn process_content(child: &Content, flat_args: &mut Vec<TokenStream>, result: &mut TokenStream) {
-	match child {
-		Content::NativeElement(content) => {
-			process_native_tag(content, flat_args, result);
-		}
-		Content::CustomComponent(content) => {
-			flush_flat(flat_args, result);
-			content.to_tokens(result);
-		}
-		Content::ControlTag(ct) => {
-			flush_flat(flat_args, result);
-			ct.to_tokens(result);
-		}
-		Content::SlotRender(expr) => {
-			flush_flat(flat_args, result);
-			result.append_all(quote! { (#( #expr )*)(page); });
-		}
-		Content::Text(text) => {
-			text_to_args(text, flat_args);
-		}
-		Content::RawHTMLExpression(text) => {
-			raw_to_args(text, flat_args);
-		}
-	}
-}
-
-/// Expand a native HTML tag inline — tag open, attributes, children, tag close
-/// are all added to `flat_args` so the caller's `combine!` can merge adjacent
-/// literals across tag boundaries.
-pub(crate) fn process_native_tag(
-	tag: &NativeContent,
-	flat_args: &mut Vec<TokenStream>,
-	result: &mut TokenStream,
-) {
-	let tag_name = tag.tag.as_str();
-
-	flat_args.push(quote! { "<" });
-	flat_args.push(quote! { #tag_name });
-
-	if !tag.attributes.is_empty() {
-		flat_args.push(quote! { " " });
-	}
-
-	for attr in &tag.attributes {
-		process_attribute(attr, flat_args, result);
-	}
-
-	if tag.is_self_closing {
-		flat_args.push(quote! { "/>" });
-	} else {
-		flat_args.push(quote! { ">" });
-		for child in &tag.children {
-			process_content(child, flat_args, result);
-		}
-		flat_args.push(quote! { "</" });
-		flat_args.push(quote! { #tag_name });
-		flat_args.push(quote! { ">" });
-	}
-}
-
-/// Contribute an attribute's value(s) to `flat_args`.
-/// Toggle attributes (ImplicitToggle / ExplicitToggle) are always boundaries:
-/// they flush `flat_args` and emit a direct `if … { page.push_static(…); }`.
-fn process_attribute(attr: &Attribute, flat_args: &mut Vec<TokenStream>, result: &mut TokenStream) {
-	let name = attr.name.as_str();
-	let name_trimmed = name.trim_start_matches("r#");
-
-	match &attr.attribute_type {
-		AttributeType::Constant => {
-			flat_args.push(quote! { #name_trimmed });
-			flat_args.push(quote! { " " });
-		}
-		AttributeType::ConstantLiteral { literal } => {
-			flat_args.push(quote! { #name_trimmed });
-			flat_args.push(quote! { "=\"" });
-			flat_args.push(quote! { #literal });
-			flat_args.push(quote! { "\" " });
-		}
-		AttributeType::Expression { content } => {
-			flat_args.push(quote! { #name_trimmed });
-			flat_args.push(quote! { "=\"" });
-			text_to_args(content, flat_args);
-			flat_args.push(quote! { "\" " });
-		}
-		AttributeType::ImplicitToggle => {
-			flush_flat(flat_args, result);
-			let ident = format_ident!("{}", name);
-			result.append_all(quote! {
-				if #ident { page.push_static(concat!(#name, " ")); }
-			});
-		}
-		AttributeType::ExplicitToggle { value } => {
-			flush_flat(flat_args, result);
-			result.append_all(quote! {
-				if #value { page.push_static(concat!(#name_trimmed, " ")); }
-			});
-		}
-	}
-}
-
-fn text_to_args(text: &TextContent, flat_args: &mut Vec<TokenStream>) {
-	match text {
-		TextContent::Literal(literal) => {
-			let lit = TextContent::sanitize_literal(literal.clone());
-			flat_args.push(quote! { #lit });
-		}
-		TextContent::Formatted(literal, contents) => {
-			let lit = TextContent::sanitize_literal(literal.clone());
-			flat_args.push(quote! { format!(#lit #( , #( #contents )* )* ) });
-		}
-		TextContent::Expression(expr) => {
-			flat_args.push(quote! { tidos::sanitize!( #( #expr )* ) });
-		}
-	}
-}
-
-fn raw_to_args(text: &TextContent, flat_args: &mut Vec<TokenStream>) {
-	match text {
-		TextContent::Literal(literal) => {
-			flat_args.push(quote! { #literal });
-		}
-		TextContent::Formatted(literal, contents) => {
-			flat_args.push(quote! { format!(#literal #( , #( #contents )* )* ) });
-		}
-		TextContent::Expression(expr) => {
-			flat_args.push(quote! { #( #expr )* });
-		}
-	}
+/// Like [`syn::parse::Parse`], but for the code-generation side: instead of
+/// turning tokens into a `Self`, this turns a `Self` into its contribution to
+/// the surrounding `combine!` call. Implementors push their static pieces
+/// onto `flat_args` (merged later by [`flush_flat`]) and/or flush + write
+/// directly into `result` for anything that can't be a flat argument at all
+/// (control flow, toggle attributes).
+pub(crate) trait ToFlatArgs {
+	fn to_flat_args(&self, flat_args: &mut Vec<FlatArg>, result: &mut TokenStream);
 }

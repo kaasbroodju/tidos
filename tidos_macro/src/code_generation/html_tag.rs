@@ -1,17 +1,37 @@
-use crate::code_generation::component::{flush_flat, process_native_tag, to_push_stmts};
+use crate::code_generation::component::{to_push_stmts, FlatArg, ToFlatArgs};
 use crate::tokens::{Attribute, ComponentContent, Content, ControlTag, NativeContent};
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 
-impl ToTokens for NativeContent {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
-		// Fallback for native tags invoked via Content::to_tokens.
-		// The primary path goes through process_native_tag directly.
-		let mut flat_args = vec![];
-		let mut result = TokenStream::new();
-		process_native_tag(self, &mut flat_args, &mut result);
-		flush_flat(&mut flat_args, &mut result);
-		tokens.append_all(result);
+/// Expand a native HTML tag inline — tag open, attributes, children, tag close
+/// are all added to `flat_args` so [`flush_flat`] can merge adjacent literals
+/// across tag boundaries.
+impl ToFlatArgs for NativeContent {
+	fn to_flat_args(&self, flat_args: &mut Vec<FlatArg>, result: &mut TokenStream) {
+		let tag_name = self.tag.as_str();
+
+		flat_args.push(FlatArg::Literal("<".to_string()));
+		flat_args.push(FlatArg::Literal(tag_name.to_string()));
+
+		if !self.attributes.is_empty() {
+			flat_args.push(FlatArg::Literal(" ".to_string()));
+		}
+
+		for attr in &self.attributes {
+			attr.to_flat_args(flat_args, result);
+		}
+
+		if self.is_self_closing {
+			flat_args.push(FlatArg::Literal("/>".to_string()));
+		} else {
+			flat_args.push(FlatArg::Literal(">".to_string()));
+			for child in &self.children {
+				child.to_flat_args(flat_args, result);
+			}
+			flat_args.push(FlatArg::Literal("</".to_string()));
+			flat_args.push(FlatArg::Literal(tag_name.to_string()));
+			flat_args.push(FlatArg::Literal(">".to_string()));
+		}
 	}
 }
 

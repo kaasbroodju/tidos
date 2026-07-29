@@ -1,0 +1,6 @@
+error: Attribute values must be a string, change it into the following:
+       tabindex={ 5 }
+ --> tests/attributes/panics/non_string_attribute_literal.rs:5:17
+  |
+5 |         <div tabindex=5></div>
+  |                       ^

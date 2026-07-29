@@ -1,0 +1,9 @@
+error: proc macro panicked
+ --> tests/view_macro/panics/raw_text_between_tags.rs:4:2
+  |
+4 | /     view! {
+5 | |         <p>hello world</p>
+6 | |     };
+  | |_____^
+  |
+  = help: message: Raw text between tags is no longer supported. Use `{"hello world"}` instead.

@@ -1,5 +1,5 @@
+use crate::tokens::Attribute;
 use crate::tokens::Content;
-use crate::tokens::{Attribute, IsStatic};
 use proc_macro2::Span;
 
 #[derive(Debug)]
@@ -24,20 +24,4 @@ pub struct ComponentContent {
 pub struct Attributes {
 	pub attributes: Vec<Attribute>,
 	pub has_default_flag: bool,
-}
-
-impl IsStatic for NativeContent {
-	fn is_static(&self) -> bool {
-		let has_only_static_attributes = self.attributes.iter().all(Attribute::is_static);
-
-		let has_only_static_children = self.children.iter().all(Content::is_static);
-
-		has_only_static_attributes && has_only_static_children
-	}
-}
-
-impl IsStatic for ComponentContent {
-	fn is_static(&self) -> bool {
-		false
-	}
 }
