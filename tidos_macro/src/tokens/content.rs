@@ -3,7 +3,7 @@
 
 use crate::tokens::ControlTag;
 use crate::tokens::{ComponentContent, NativeContent};
-use proc_macro2::{Ident, Literal, TokenStream, TokenTree};
+use proc_macro2::{Ident, Literal, TokenStream};
 
 /// One item inside a template body (a tag's children, a loop/if/match body,
 /// or the top-level `Component`). Produced by `parsing::content::Content::parse`,
@@ -29,7 +29,7 @@ pub enum Content {
 
 	/// `@slot{expr}`: invokes a slot-render closure passed in as a component
 	/// prop, e.g. `@slot{self.field_name}`.
-	SlotRender(Vec<TokenTree>),
+	SlotRender(TokenStream),
 }
 
 /// The three forms text inside `{ ... }` (or `@html{ ... }`) can take: a bare

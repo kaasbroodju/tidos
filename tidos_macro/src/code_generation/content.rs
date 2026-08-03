@@ -29,7 +29,7 @@ impl ToFlatArgs for Content {
 			}
 			Content::SlotRender(expr) => {
 				flush_flat(flat_args, result);
-				result.append_all(quote! { (#( #expr )*)(page); });
+				result.append_all(quote! { (#expr)(page); });
 			}
 			Content::Text(text) => {
 				text.to_flat_args(flat_args, result);

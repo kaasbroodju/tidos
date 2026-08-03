@@ -13,7 +13,7 @@
 //! `syn::Error` instead of a malformed struct-literal field.
 
 use crate::parsing::attribute::parse_attributes;
-use crate::parsing::utils::HTMLutils;
+use crate::parsing::utils::{HTMLutils, TidosError};
 use crate::tokens::{AttributeType, ComponentContent, NativeContent};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
@@ -33,7 +33,7 @@ impl Parse for NativeContent {
 
 		attributes
 			.has_default_flag
-			.then_some(syn::Error::new(
+			.then_some(TidosError::new(
 				start_first_tag_token.span(),
 				"native html tags cannot have a default flag, remove the `..`",
 			))
@@ -73,14 +73,16 @@ impl Parse for NativeContent {
 					is_self_closing: false,
 				})
 			}
-			(Ok(slash), Err(_)) => Err(syn::Error::new(
+			(Ok(slash), Err(_)) => Err(TidosError::new(
 				start_first_tag_token.span().resolved_at(slash.span()),
 				format!("Expected <{tag} /> to self close"),
-			)),
-			(Err(err), Err(_)) => Err(syn::Error::new(
+			)
+			.build()),
+			(Err(err), Err(_)) => Err(TidosError::new(
 				start_first_tag_token.span().resolved_at(err.span()),
 				format!("<{tag} is not closed add `>` or `/>` at the end of the tag"),
-			)),
+			)
+			.build()),
 		}
 	}
 }
@@ -105,10 +107,11 @@ impl Parse for ComponentContent {
 			.iter()
 			.find(|attribute| matches!(attribute.attribute_type, AttributeType::ScopedCss { .. }))
 		{
-			return Err(syn::Error::new(
+			return Err(TidosError::new(
 				attribute.name_span,
 				"`@class` is only supported on native HTML tags, not components",
-			));
+			)
+			.build());
 		}
 
 		let slash = input.parse::<Token![/]>();
@@ -141,12 +144,13 @@ impl Parse for ComponentContent {
 					.expect("Peeked and matched in HTMLutils::parse_body");
 
 				if children.is_empty() {
-					return Err(syn::Error::new(
+					return Err(TidosError::new(
 						start_first_tag_token
 							.span()
 							.resolved_at(closing_bracket.span()),
 						format!("<{tag}> has no children it should be <{tag} />"),
-					));
+					)
+					.build());
 				}
 
 				Ok(ComponentContent {
@@ -158,14 +162,16 @@ impl Parse for ComponentContent {
 					children,
 				})
 			}
-			(Ok(slash), Err(_)) => Err(syn::Error::new(
+			(Ok(slash), Err(_)) => Err(TidosError::new(
 				start_first_tag_token.span().resolved_at(slash.span()),
 				format!("Expected <{tag} /> to self close"),
-			)),
-			(Err(err), Err(_)) => Err(syn::Error::new(
+			)
+			.build()),
+			(Err(err), Err(_)) => Err(TidosError::new(
 				start_first_tag_token.span().resolved_at(err.span()),
 				format!("<{tag} is not closed add `>` or `/>` at the end of the component"),
-			)),
+			)
+			.build()),
 		}
 	}
 }

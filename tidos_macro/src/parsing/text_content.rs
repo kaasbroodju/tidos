@@ -4,6 +4,7 @@
 //! expression. Used both for plain `{...}` text and, via
 //! `Content::parse_at_statement`, for `@html{...}`.
 
+use crate::parsing::utils::to_tidos_error;
 use crate::tokens::TextContent;
 use proc_macro2::{Literal, TokenStream};
 use syn::parse::{Parse, ParseStream};
@@ -27,9 +28,9 @@ impl Parse for TextContent {
 				return Ok(TextContent::Literal(base_string));
 			}
 
-			content.parse::<Token![,]>().map_err(|error| {
-				syn::Error::new(error.span(), "Expected `,` for formatting arguments")
-			})?;
+			content
+				.parse::<Token![,]>()
+				.map_err(|error| to_tidos_error(error, "Expected `,` for formatting arguments"))?;
 
 			let params = content.parse::<TokenStream>()?;
 

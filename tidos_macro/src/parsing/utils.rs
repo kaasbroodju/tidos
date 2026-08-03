@@ -11,12 +11,12 @@
 //! They never advance the actual `ParseStream`.
 
 use crate::tokens::Content;
-use proc_macro2::{Delimiter, Ident, TokenTree};
+use proc_macro2::{Delimiter, Ident, Span, TokenTree};
 use syn::buffer::Cursor;
 use syn::parse::ParseStream;
 use syn::spanned::Spanned;
 use syn::token::Lt;
-use syn::Token;
+use syn::{Error, Token};
 
 /// Checks whether the upcoming `{ ... }` group is the closing tag for
 /// `target_tag`, i.e. its first two tokens are `/` and an identifier equal to
@@ -218,10 +218,11 @@ impl HTMLutils {
 		let mut children: Vec<Content> = Vec::new();
 		loop {
 			if input.is_empty() {
-				return Err(syn::Error::new(
+				return Err(TidosError::new(
 					start_first_tag_token.span(),
 					format!("missing matching closing tag `</{tag}>`"),
-				));
+				)
+				.build());
 			}
 			if matches_tag(input.cursor(), tag) {
 				break;
@@ -233,22 +234,24 @@ impl HTMLutils {
 				let gt = input.parse::<Token![>]>();
 				// It is peeking at a closing tag but not the right one
 				return match (found_tag, gt) {
-					(Ok(found_tag), Ok(_)) => Err(syn::Error::new(
+					(Ok(found_tag), Ok(_)) => Err(TidosError::new(
 						found_tag.span(),
 						format!(
 							"Unexpected closing tag `</{}>`, expected `</{}>`",
 							found_tag, tag
 						),
-					)),
-					(Ok(found_tag), Err(_)) => Err(syn::Error::new(
+					)
+					.build()),
+					(Ok(found_tag), Err(_)) => Err(TidosError::new(
 						found_tag.span(),
 						format!("Tag was unproperly closed expected `</{}>`", found_tag),
-					)),
-					_ => Err(syn::Error::new(
+					)
+					.build()),
+					_ => Err(TidosError::new(
 						slash.span(),
-						"Expected an HTML tag name like `p`, `div`, or `custom-element`"
-							.to_string(),
-					)),
+						"Expected an HTML tag name like `p`, `div`, or `custom-element`",
+					)
+					.build()),
 				};
 			}
 			let child = input.parse::<Content>()?;
@@ -274,5 +277,61 @@ impl HTMLutils {
 			.next()
 			.unwrap()
 			.is_ascii_uppercase()
+	}
+}
+
+/// Reuses an existing (usually uninformative, e.g. syn's default "expected
+/// `,`") error's span to build a [`TidosError`] with a clearer message,
+/// discarding the original message. The common shape at a parse call site is
+/// `.map_err(|error| to_tidos_error(error, "clearer message"))?`, which
+/// works directly under `?` since `TidosError: Into<syn::Error>`.
+pub fn to_tidos_error(error: Error, message: impl Into<String>) -> TidosError {
+	TidosError::new(error.span(), message)
+}
+
+/// A `syn::Error` builder with an optional list of suggestions, appended to
+/// the message on `build()`/`into()` as `message:\ns1\ns2`. No extra
+/// indentation is added before each suggestion: rustc/syn already indents a
+/// diagnostic's continuation lines under the `error: ` prefix on its own, so
+/// adding another layer here would double it up.
+/// A consuming builder (`self -> Self`, not `&mut self -> &mut Self`) so a
+/// chain can end directly in `?` via the `From` impl below, without an
+/// explicit `.build()` call and without hitting "cannot move out of a
+/// mutable reference" on the final step.
+pub struct TidosError {
+	span: Span,
+	message: String,
+	suggestions: Vec<String>,
+}
+
+impl TidosError {
+	pub fn new(span: Span, message: impl Into<String>) -> TidosError {
+		TidosError {
+			span,
+			message: message.into(),
+			suggestions: vec![],
+		}
+	}
+
+	pub fn suggestion(mut self, suggestion: impl Into<String>) -> TidosError {
+		self.suggestions.push(suggestion.into());
+		self
+	}
+
+	pub fn build(self) -> syn::Error {
+		if self.suggestions.is_empty() {
+			syn::Error::new(self.span, self.message)
+		} else {
+			syn::Error::new(
+				self.span,
+				format!("{}:\n{}", self.message, self.suggestions.join("\n")),
+			)
+		}
+	}
+}
+
+impl From<TidosError> for syn::Error {
+	fn from(error: TidosError) -> syn::Error {
+		error.build()
 	}
 }

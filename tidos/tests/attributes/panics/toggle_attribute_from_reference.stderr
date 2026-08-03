@@ -1,0 +1,8 @@
+error: Unable to have a toggle attribute from a literal, change it into the following:
+       :checked
+       :checked={ boolean expression }
+       checked={ expression }
+ --> tests/attributes/panics/toggle_attribute_from_reference.rs:6:19
+  |
+6 |         <input :checked=&is_checked />
+  |                         ^

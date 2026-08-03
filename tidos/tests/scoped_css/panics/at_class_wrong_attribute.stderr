@@ -1,4 +1,5 @@
-error: `@` is only supported on `class`, e.g. `@class="file.css"`. Got `@id`
+error: `@` is only supported on `class`. Got `@id`:
+       @class="file.css"
  --> tests/scoped_css/panics/at_class_wrong_attribute.rs:5:9
   |
 5 |         <div @id="./scoped_css/test.css"></div>

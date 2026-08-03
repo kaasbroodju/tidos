@@ -197,3 +197,27 @@ fn large_amount_of_adjacent_static_content_does_not_hit_recursion_limit() {
 		"<span>x</span>".repeat(60)
 	);
 }
+
+#[test]
+fn component_without_children() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/component_without_children.rs");
+}
+
+#[test]
+fn component_default_flag_not_closed() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/component_default_flag_not_closed.rs");
+}
+
+#[test]
+fn component_default_flag_malformed_self_close() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/component_default_flag_malformed_self_close.rs");
+}
+
+#[test]
+fn text_literal_missing_comma() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/view_macro/panics/text_literal_missing_comma.rs");
+}

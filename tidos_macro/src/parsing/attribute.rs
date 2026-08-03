@@ -13,7 +13,7 @@
 //! parsed as a normal `class={...}` value and appended after the generated
 //! class name.
 
-use crate::parsing::utils::HTMLutils;
+use crate::parsing::utils::{to_tidos_error, HTMLutils, TidosError};
 use crate::tokens::{Attribute, AttributeType, Attributes, TextContent};
 use proc_macro2::{Group, Ident, Literal, Span, TokenStream};
 use syn::parse::{Parse, ParseStream};
@@ -35,10 +35,11 @@ pub(crate) fn parse_attributes(
 		|| input.peek(Token![.]))
 	{
 		if input.is_empty() {
-			return Err(syn::Error::new(
+			return Err(TidosError::new(
 				tag_span,
 				format!("missing closing `>` for `<{tag}>` tag"),
-			));
+			)
+			.build());
 		}
 
 		let attribute = input.parse::<Attribute>()?;
@@ -50,9 +51,9 @@ pub(crate) fn parse_attributes(
 		.ok()
 		.map(|first_dot| {
 			input.parse::<Token![.]>().map_err(|_| {
-				syn::Error::new(
+				TidosError::new(
 					first_dot.span(),
-					"Expected second `.` for default attribute".to_string(),
+					"Expected second `.` for default attribute",
 				)
 			})
 		})
@@ -87,7 +88,7 @@ impl Parse for Attribute {
 
 		let (attribute_name, attribute_name_span) =
 			HTMLutils::extract_name(input).map_err(|_| {
-				syn::Error::new(
+				TidosError::new(
 					input.span(),
 					"Expected an attribute like `class` or `data-tidos`",
 				)
@@ -106,39 +107,51 @@ impl Parse for Attribute {
 					})
 				}
 				Ok(_) => {
-					input.parse::<Literal>()
+					input
+						.parse::<Literal>()
 						.map(|literal| {
-							syn::Error::new(
+							TidosError::new(
 								literal.span(),
-								format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ boolean expression }}\n{attribute_name}={literal}\n{attribute_name}={{ {literal} }}"),
+								"Unable to have a toggle attribute from a literal, change it into the following",
 							)
+							.suggestion(format!(":{attribute_name}"))
+							.suggestion(format!(":{attribute_name}={{ boolean expression }}"))
+							.suggestion(format!("{attribute_name}={literal}"))
+							.suggestion(format!("{attribute_name}={{ {literal} }}"))
 						})
 						.map_or(Ok(()), Err)?;
 
-					input.parse::<Ident>()
+					input
+						.parse::<Ident>()
 						.map(|ident| {
-							syn::Error::new(
+							TidosError::new(
 								ident.span(),
-								format!("Unable to have a toggle attribute from a ident, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ {ident} }}\n{attribute_name}={{ {ident} }}"),
+								"Unable to have a toggle attribute from a ident, change it into the following",
 							)
+							.suggestion(format!(":{attribute_name}"))
+							.suggestion(format!(":{attribute_name}={{ {ident} }}"))
+							.suggestion(format!("{attribute_name}={{ {ident} }}"))
 						})
 						.map_or(Ok(()), Err)?;
 
-					input.parse::<Group>()
+					input
+						.parse::<Group>()
 						.map_err(|error| {
-							syn::Error::new(
+							TidosError::new(
 								error.span(),
-								format!("Unable to have a toggle attribute from a literal, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ boolean expression }}\n{attribute_name}={{ expression }}"),
+								"Unable to have a toggle attribute from a literal, change it into the following",
 							)
+							.suggestion(format!(":{attribute_name}"))
+							.suggestion(format!(":{attribute_name}={{ boolean expression }}"))
+							.suggestion(format!("{attribute_name}={{ expression }}"))
+							.build()
 						})
-						.map(|group| {
-							Attribute {
-								name: attribute_name,
-								name_span: attribute_name_span,
-								attribute_type: AttributeType::ExplicitToggle {
-									value: group.stream(),
-								},
-							}
+						.map(|group| Attribute {
+							name: attribute_name,
+							name_span: attribute_name_span,
+							attribute_type: AttributeType::ExplicitToggle {
+								value: group.stream(),
+							},
 						})
 				}
 			}
@@ -156,10 +169,12 @@ impl Parse for Attribute {
 					if let Ok(literal) = input.parse::<Literal>() {
 						(!matches!(syn::Lit::new(literal.clone()), syn::Lit::Str(_)))
 							.then_some(
-								syn::Error::new(
+								TidosError::new(
 									literal.span(),
-									format!("Attribute values must be a string, change it into the following:\n{attribute_name}={{ {literal} }}"),
+									"Attribute values must be a string, change it into the following",
 								)
+								.suggestion(format!("{attribute_name}={{ {literal} }}"))
+								.build()
 							)
 							.map_or(
 								Ok(Attribute {
@@ -176,13 +191,20 @@ impl Parse for Attribute {
 							attribute_type: AttributeType::Expression { content },
 						})
 					} else {
-						let message = if is_toggle_attribute {
-							format!("Expected a group {{}}, change it into the following:\n:{attribute_name}\n:{attribute_name}={{ bool }}")
+						let error = if is_toggle_attribute {
+							TidosError::new(
+								equal_sign_token.span(),
+								"Expected a group {}, change it into the following",
+							)
+							.suggestion(format!(":{attribute_name}"))
+							.suggestion(format!(":{attribute_name}={{ bool }}"))
 						} else {
-							format!("Expected a literal \"\" or a group {{}}, change it into the following:\n{attribute_name}=\"value\"\n{attribute_name}={{ \"value\" }}")
+							TidosError::new(equal_sign_token.span(), "Expected a literal \"\" or a group {}, change it into the following")
+								.suggestion(format!("{attribute_name}=\"value\""))
+								.suggestion(format!("{attribute_name}={{ \"value\" }}"))
 						};
 
-						Err(syn::Error::new(equal_sign_token.span(), message))
+						Err(error.build())
 					}
 				}
 			}
@@ -200,26 +222,25 @@ impl Parse for Attribute {
 /// see [`parse_text_content_body`].
 fn parse_scoped_css_attribute(input: ParseStream, at_span: Span) -> syn::Result<Attribute> {
 	let (attribute_name, attribute_name_span) = HTMLutils::extract_name(input).map_err(|_| {
-		syn::Error::new(
-			at_span.span(),
+		TidosError::new(
+			at_span,
 			"Expected `class` after `@`, e.g. `@class=\"file.css\"`",
 		)
 	})?;
 
 	if attribute_name != "class" {
-		return Err(syn::Error::new(
+		return Err(TidosError::new(
 			attribute_name_span,
-			format!(
-				"`@` is only supported on `class`, e.g. `@class=\"file.css\"`. Got `@{attribute_name}`"
-			),
-		));
+			format!("`@` is only supported on `class`. Got `@{attribute_name}`"),
+		)
+		.suggestion("@class=\"file.css\"")
+		.build());
 	}
 
 	input.parse::<Token![=]>().map_err(|_| {
-		syn::Error::new(
-			at_span,
-			"Expected `=` after `@class`, e.g. `@class=\"file.css\"` or `@class={\"file.css\"}`",
-		)
+		TidosError::new(at_span, "Expected `=` after `@class`")
+			.suggestion("@class=\"file.css\"")
+			.suggestion("@class={\"file.css\"}")
 	})?;
 
 	let (file, rest) = if let Ok(literal) = input.parse::<Literal>() {
@@ -229,7 +250,7 @@ fn parse_scoped_css_attribute(input: ParseStream, at_span: Span) -> syn::Result<
 		syn::braced!(content in input);
 
 		let file = content.parse::<Literal>().map_err(|_| {
-			syn::Error::new(
+			TidosError::new(
 				content.span(),
 				"Expected a string literal path, e.g. `@class={\"file.css\"}`",
 			)
@@ -239,10 +260,8 @@ fn parse_scoped_css_attribute(input: ParseStream, at_span: Span) -> syn::Result<
 			None
 		} else {
 			content.parse::<Token![,]>().map_err(|error| {
-				syn::Error::new(
-					error.span(),
-					"Expected `,` before the class value, e.g. `@class={\"file.css\", \"extra\"}`",
-				)
+				to_tidos_error(error, "Expected `,` before the class value")
+					.suggestion("@class={\"file.css\", \"extra\"}")
 			})?;
 
 			Some(parse_text_content_body(&content)?)
@@ -250,17 +269,20 @@ fn parse_scoped_css_attribute(input: ParseStream, at_span: Span) -> syn::Result<
 
 		(file, rest)
 	} else {
-		return Err(syn::Error::new(
-			input.span(),
-			"Expected a string literal path: `@class=\"file.css\"` or `@class={\"file.css\"}`",
-		));
+		return Err(
+			TidosError::new(input.span(), "Expected a string literal path")
+				.suggestion("@class=\"file.css\"")
+				.suggestion("@class={\"file.css\"}")
+				.build(),
+		);
 	};
 
 	if !matches!(syn::Lit::new(file.clone()), syn::Lit::Str(_)) {
-		return Err(syn::Error::new(
+		return Err(TidosError::new(
 			file.span(),
 			"`@class` requires a string literal path, e.g. `@class=\"file.css\"`",
-		));
+		)
+		.build());
 	}
 
 	Ok(Attribute {
@@ -284,9 +306,9 @@ fn parse_text_content_body(content: ParseStream) -> syn::Result<TextContent> {
 			return Ok(TextContent::Literal(base_string));
 		}
 
-		content.parse::<Token![,]>().map_err(|error| {
-			syn::Error::new(error.span(), "Expected `,` for formatting arguments")
-		})?;
+		content
+			.parse::<Token![,]>()
+			.map_err(|error| to_tidos_error(error, "Expected `,` for formatting arguments"))?;
 
 		let params = content.parse::<TokenStream>()?;
 

@@ -1,4 +1,6 @@
-error: Expected a string literal path: `@class="file.css"` or `@class={"file.css"}`
+error: Expected a string literal path:
+       @class="file.css"
+       @class={"file.css"}
  --> tests/scoped_css/panics/at_class_neither_literal_nor_brace.rs:6:15
   |
 6 |         <div @class=some_ident></div>

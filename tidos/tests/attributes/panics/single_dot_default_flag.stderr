@@ -1,0 +1,5 @@
+error: Expected second `.` for default attribute
+  --> tests/attributes/panics/single_dot_default_flag.rs:12:11
+   |
+12 |         <Widget . />
+   |                 ^

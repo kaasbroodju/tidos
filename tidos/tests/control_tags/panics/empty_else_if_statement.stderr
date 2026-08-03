@@ -1,0 +1,5 @@
+error: Empty else if statement
+ --> tests/control_tags/panics/empty_else_if_statement.rs:6:3
+  |
+6 |         {#if n == 0}
+  |         ^^^^^^^^^^^^

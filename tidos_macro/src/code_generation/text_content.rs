@@ -5,9 +5,17 @@ use quote::quote;
 use syn::LitStr;
 
 impl TextContent {
+	/// Escapes a text-content literal for direct, unescaped embedding into the
+	/// generated HTML output. Parses `literal` as a [`syn::LitStr`] and reads
+	/// its *cooked* value (`LitStr::value()`), not the raw token source text:
+	/// a naive "strip the surrounding quotes" approach would leave Rust's own
+	/// escape sequences (`\n`, `\t`, `\"`, ...) un-cooked, e.g. `{"a\nb"}`
+	/// would render the two characters `\`+`n` instead of an actual newline.
 	pub(crate) fn sanitize_literal(literal: Literal) -> Literal {
-		let input = &literal.to_string();
-		let input = &input[1..input.len() - 1];
+		let syn::Lit::Str(lit_str) = syn::Lit::new(literal.clone()) else {
+			unreachable!("TextContent literals are always string literals")
+		};
+		let input = lit_str.value();
 
 		if !input.contains(['&', '<', '>', '"', '\'']) {
 			return literal;
@@ -63,9 +71,13 @@ impl ToFlatArgs for TextContent {
 				flat_args.push(FlatArg::Literal(literal_string_value(&lit)));
 			}
 			TextContent::Formatted(literal, contents) => {
-				let lit = TextContent::sanitize_literal(literal.clone());
+				// Not pre-escaped via `sanitize_literal` like the `Literal`
+				// arm above: the whole `format!` result, literal part
+				// included, already goes through the runtime `sanitize!`
+				// below. Escaping the literal part here too would
+				// double-escape it (e.g. `&` -> `&amp;` -> `&amp;amp;`).
 				flat_args.push(FlatArg::Expr(
-					quote! { tidos::sanitize!(format!(#lit, #contents )) },
+					quote! { tidos::sanitize!(format!(#literal, #contents )) },
 				));
 			}
 			TextContent::Expression(expr) => {
@@ -98,9 +110,14 @@ impl ToFlatArgs for RawTextContent<'_> {
 }
 
 /// Extract the string value out of a literal that is known to be a plain
-/// string literal (e.g. a sanitized text literal). Uses the same
-/// quote-stripping convention as [`TextContent::sanitize_literal`].
+/// string literal (e.g. a sanitized text literal). Parses as a
+/// [`syn::LitStr`] and reads the *cooked* value, same as
+/// [`TextContent::sanitize_literal`] and for the same reason: naively
+/// stripping the surrounding quotes off the raw token text would leave
+/// Rust's own escape sequences (`\n`, `\t`, `\"`, ...) un-cooked.
 pub(crate) fn literal_string_value(literal: &Literal) -> String {
-	let s = literal.to_string();
-	s[1..s.len() - 1].to_string()
+	let syn::Lit::Str(lit_str) = syn::Lit::new(literal.clone()) else {
+		unreachable!("TextContent literals are always string literals")
+	};
+	lit_str.value()
 }

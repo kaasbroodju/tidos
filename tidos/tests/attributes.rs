@@ -304,3 +304,27 @@ fn default_flag_on_native_element() {
 	let t = trybuild::TestCases::new();
 	t.compile_fail("tests/attributes/panics/default_flag_on_native_element.rs");
 }
+
+#[test]
+fn toggle_attribute_from_ident() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/toggle_attribute_from_ident.rs");
+}
+
+#[test]
+fn single_dot_default_flag() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/single_dot_default_flag.rs");
+}
+
+#[test]
+fn unrecognized_attribute_name() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/unrecognized_attribute_name.rs");
+}
+
+#[test]
+fn toggle_attribute_from_reference() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/attributes/panics/toggle_attribute_from_reference.rs");
+}

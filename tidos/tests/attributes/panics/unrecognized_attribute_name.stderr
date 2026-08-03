@@ -1,0 +1,5 @@
+error: Expected an attribute like `class` or `data-tidos`
+ --> tests/attributes/panics/unrecognized_attribute_name.rs:5:8
+  |
+5 |         <div 5></div>
+  |              ^

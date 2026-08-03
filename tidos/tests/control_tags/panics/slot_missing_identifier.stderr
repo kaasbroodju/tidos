@@ -1,0 +1,8 @@
+error: Expected named slot to have an identifier:
+       {#slot:slot_name}
+ --> tests/control_tags/panics/slot_missing_identifier.rs:5:4
+  |
+5 |         {#slot}
+  |          ^
+  |
+  = note: this error originates in the macro `view` (in Nightly builds, run with -Z macro-backtrace for more info)

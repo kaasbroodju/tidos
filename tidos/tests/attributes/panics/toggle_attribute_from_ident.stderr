@@ -1,0 +1,8 @@
+error: Unable to have a toggle attribute from a ident, change it into the following:
+       :checked
+       :checked={ some_var }
+       checked={ some_var }
+ --> tests/attributes/panics/toggle_attribute_from_ident.rs:6:19
+  |
+6 |         <input :checked=some_var />
+  |                         ^^^^^^^^

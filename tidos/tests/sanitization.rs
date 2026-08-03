@@ -130,3 +130,134 @@ fn raw_html_alongside_sanitized_expression() {
 		"<p>&lt;evil&gt;<b>safe</b></p>"
 	);
 }
+
+// --- static literal sanitization (compile-time, `TextContent::sanitize_literal`) ---
+//
+// Everything above uses a dynamic `{expr}`, which goes through the runtime
+// `sanitize()` above. A bare `{"literal text"}` is escaped at macro-expansion
+// time instead, by a separate (textually identical) implementation in
+// `tidos_macro::code_generation::text_content::TextContent::sanitize_literal`.
+// These exercise that code path specifically, one special char at a time.
+
+#[test]
+fn static_literal_ampersand_is_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"fish & chips"}</span> }
+		}),
+		"<span>fish &amp; chips</span>"
+	);
+}
+
+#[test]
+fn static_literal_less_than_is_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"1 < 2"}</span> }
+		}),
+		"<span>1 &lt; 2</span>"
+	);
+}
+
+#[test]
+fn static_literal_greater_than_is_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"2 > 1"}</span> }
+		}),
+		"<span>2 &gt; 1</span>"
+	);
+}
+
+#[test]
+fn static_literal_escape_sequences_are_cooked() {
+	// Regression test: `sanitize_literal`/`literal_string_value` used to read
+	// the literal's raw token source text and merely strip the surrounding
+	// quotes, leaving Rust's own escape sequences un-cooked (e.g. `\n` would
+	// render as the two characters `\` and `n` instead of an actual
+	// newline). Fixed by parsing as `syn::LitStr` and using `.value()`.
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"a\tb\nc"}</span> }
+		}),
+		"<span>a\tb\nc</span>"
+	);
+}
+
+#[test]
+fn raw_html_escape_sequences_are_cooked() {
+	assert_eq!(
+		render(|page| {
+			view! { @html{"a\tb\nc"} }
+		}),
+		"a\tb\nc"
+	);
+}
+
+#[test]
+fn static_literal_double_quote_is_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"say \"hello\""}</span> }
+		}),
+		"<span>say &quot;hello&quot;</span>"
+	);
+}
+
+#[test]
+fn static_literal_single_quote_is_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"it's"}</span> }
+		}),
+		"<span>it&#x27;s</span>"
+	);
+}
+
+#[test]
+fn static_literal_multiple_special_chars_are_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"<b>it's & \"fun\"</b>"}</span> }
+		}),
+		"<span>&lt;b&gt;it&#x27;s &amp; &quot;fun&quot;&lt;/b&gt;</span>"
+	);
+}
+
+#[test]
+fn static_format_string_literal_part_is_escaped() {
+	let name = "Bob";
+	assert_eq!(
+		render(|page| {
+			view! { <span>{"fish & chips, {}", name}</span> }
+		}),
+		"<span>fish &amp; chips, Bob</span>"
+	);
+}
+
+// --- static attribute literal sanitization (compile-time, `sanitize_lit_str`) ---
+//
+// `class="wrapper"`-style plain string attribute values are escaped by yet
+// another copy of the same logic, `TextContent::sanitize_lit_str`. Every
+// existing attribute test happens to use a value with no special characters,
+// so this loop had never actually run.
+
+#[test]
+fn static_attribute_literal_ampersand_is_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <div title="Tom & Jerry"></div> }
+		}),
+		r#"<div title="Tom &amp; Jerry" ></div>"#
+	);
+}
+
+#[test]
+fn static_attribute_literal_multiple_special_chars_are_escaped() {
+	assert_eq!(
+		render(|page| {
+			view! { <div title="it's <fun> & \"games\""></div> }
+		}),
+		r#"<div title="it&#x27;s &lt;fun&gt; &amp; &quot;games&quot;" ></div>"#
+	);
+}

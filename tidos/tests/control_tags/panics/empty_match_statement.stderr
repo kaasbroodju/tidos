@@ -1,0 +1,5 @@
+error: Empty match statement
+ --> tests/control_tags/panics/empty_match_statement.rs:5:4
+  |
+5 |         {#match}
+  |          ^

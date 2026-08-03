@@ -1,0 +1,5 @@
+error: Expected <Widget /> to self close
+  --> tests/view_macro/panics/component_default_flag_malformed_self_close.rs:12:3
+   |
+12 |         <Widget .. / garbage>
+   |         ^

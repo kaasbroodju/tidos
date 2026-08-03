@@ -74,3 +74,9 @@ fn missing_pattern_in_match_statement() {
 	let t = trybuild::TestCases::new();
 	t.compile_fail("tests/control_tags/panics/missing_pattern_in_match_statement.rs");
 }
+
+#[test]
+fn empty_match_statement() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/empty_match_statement.rs");
+}

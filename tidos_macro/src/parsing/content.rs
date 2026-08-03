@@ -6,10 +6,10 @@
 //! `Content::parse`, so this file effectively defines the shape of the whole
 //! grammar even though most of the actual parsing logic lives elsewhere.
 
-use crate::parsing::utils::HTMLutils;
+use crate::parsing::utils::{to_tidos_error, HTMLutils, TidosError};
 use crate::tokens::TextContent;
 use crate::tokens::{ComponentContent, Content, ControlTag, NativeContent};
-use proc_macro2::{Delimiter, Ident, Punct, Spacing, TokenTree};
+use proc_macro2::{Delimiter, Ident, Punct, Spacing, TokenStream, TokenTree};
 use syn::parse::{Parse, ParseStream};
 use syn::token::{Brace, Token};
 use syn::Token;
@@ -122,28 +122,27 @@ impl Content {
 				let expr = Self::parse_slot_expr(input)?;
 				Ok(Content::SlotRender(expr))
 			}
-			other => Err(syn::Error::new(
+			other => Err(TidosError::new(
 				ident.span(),
 				format!(
 					"Did you mean `{RAW_HTML_IDENTIFIER}` or `{SLOT_IDENTIFIER}`? Got `{other}`"
 				),
-			)),
+			)
+			.build()),
 		}
 	}
 
 	/// Collects the raw tokens inside `@slot{ ... }` without parsing them as a
 	/// Rust expression here; they are re-emitted verbatim as a function-call
 	/// expression by `code_generation` (`(#expr)(page)`), so keeping them as
-	/// unparsed `TokenTree`s avoids committing to a specific expression
+	/// an unparsed `TokenStream` avoids committing to a specific expression
 	/// grammar at this stage.
-	fn parse_slot_expr(input: ParseStream) -> syn::Result<Vec<TokenTree>> {
+	fn parse_slot_expr(input: ParseStream) -> syn::Result<TokenStream> {
 		let content;
 		syn::braced!(content in input);
-		let mut tokens = vec![];
-		while let Ok(token) = content.parse::<TokenTree>() {
-			tokens.push(token);
-		}
-		Ok(tokens)
+		content.parse::<TokenStream>().map_err(|error| {
+			to_tidos_error(error, "Expected an expression inside `@slot{...}`").build()
+		})
 	}
 }
 

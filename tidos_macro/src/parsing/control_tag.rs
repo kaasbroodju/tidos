@@ -18,6 +18,7 @@
 use crate::parsing::utils::{
 	is_cursor_on_else_branch, is_cursor_on_else_if_branch, is_cursor_on_end_of_if_branch,
 	is_cursor_on_new_if_branch, matches_case_statement, matches_corresponding_command_tag,
+	TidosError,
 };
 use crate::tokens::{Content, ControlTag, TypeOfCommandTag};
 use proc_macro2::{Group, Ident, TokenStream};
@@ -118,9 +119,12 @@ impl ControlTag {
 			else_if_tag
 				.parse::<Token![if]>()
 				.expect("`if` peeked before parsed");
-			let else_if_statement = else_if_tag
-				.parse::<TokenStream>()
-				.map_err(|error| syn::Error::new(error.span(), "Empty else if statement"))?;
+			if else_if_tag.is_empty() {
+				return Err(TidosError::new(group.span(), "Empty else if statement").build());
+			}
+			let else_if_statement = else_if_tag.parse::<TokenStream>().expect(
+				"If the ParseStream is not empty, there should be content for a TokenStream",
+			);
 
 			let if_else_halting_condition = if_halting_condition;
 			let content_else_if_branch: Vec<Content> = Self::parse_content_until(
@@ -170,18 +174,20 @@ impl ControlTag {
 
 		if is_cursor_on_else_if_branch(&input.cursor()) {
 			let duplicate = input.parse::<Group>()?;
-			return Err(syn::Error::new(
+			return Err(TidosError::new(
 				duplicate.span(),
 				"{:else if} must come before {:else}, not after",
-			));
+			)
+			.build());
 		}
 
 		if is_cursor_on_else_branch(&input.cursor()) {
 			let duplicate = input.parse::<Group>()?;
-			return Err(syn::Error::new(
+			return Err(TidosError::new(
 				duplicate.span(),
 				"cannot have two {:else} blocks in one {#if}",
-			));
+			)
+			.build());
 		}
 
 		Ok(contents)
@@ -246,40 +252,33 @@ impl ControlTag {
 		group_span: proc_macro2::Span,
 		tag_name: &str,
 	) -> syn::Result<()> {
+		let missing_closing_tag = |span: proc_macro2::Span| {
+			TidosError::new(
+				span,
+				format!("missing matching closing tag `{{/{tag_name}}}`"),
+			)
+			.build()
+		};
+
 		if !input.peek(syn::token::Brace) {
-			return Err(syn::Error::new(
-				group_span,
-				format!("a) missing matching closing tag `{{/{tag_name}}}`"),
-			));
+			return Err(missing_closing_tag(group_span));
 		}
 
 		let group;
 		braced!(group in input);
 
-		group.parse::<Token![/]>().map_err(|_| {
-			syn::Error::new(
-				group_span,
-				format!("b) missing matching closing tag `{{/{tag_name}}}`"),
-			)
-		})?;
+		group
+			.parse::<Token![/]>()
+			.map_err(|_| missing_closing_tag(group_span))?;
 
-		// let x = Ident::parse_any(&group);
 		group
 			.call(Ident::parse_any)
-			.map_err(|_| {
-				syn::Error::new(
-					group_span,
-					format!("c) missing matching closing tag `{{/{tag_name}}}`"),
-				)
-			})
+			.map_err(|_| missing_closing_tag(group_span))
 			.map(|ident| {
 				if *ident.to_string() == *tag_name {
 					Ok(())
 				} else {
-					Err(syn::Error::new(
-						group.span(),
-						format!("d) missing matching closing tag `{{/{tag_name}}}`"),
-					))
+					Err(missing_closing_tag(group.span()))
 				}
 			})?
 	}
@@ -301,10 +300,11 @@ impl ControlTag {
 		let mut contents: Vec<Content> = Vec::new();
 		loop {
 			if input.is_empty() {
-				return Err(syn::Error::new(
+				return Err(TidosError::new(
 					group_span,
 					format!("missing matching closing tag `{{/{tag_name}}}`"),
-				));
+				)
+				.build());
 			}
 			if should_stop(input.cursor()) {
 				break;
@@ -336,10 +336,11 @@ impl Parse for TypeOfCommandTag {
 		{
 			Self::parse_slot(input, command_token)
 		} else {
-			Err(syn::Error::new(
+			Err(TidosError::new(
 				command_token.span(),
 				"Unknown command tag, must be: 'for', 'if', 'match' or 'slot'",
-			))
+			)
+			.build())
 		}
 	}
 }
@@ -363,10 +364,11 @@ impl TypeOfCommandTag {
 		let left_side = input.step(Self::_parse_left_side_of_loop)?;
 
 		if left_side.is_empty() {
-			return Err(syn::Error::new(
+			return Err(TidosError::new(
 				command_token.span(),
 				"expected a binding variable before `in`, e.g. `{#for item in items}`",
-			));
+			)
+			.build());
 		}
 
 		let right_side = input.step(Self::_parse_right_side_of_loop)?;
@@ -391,7 +393,7 @@ impl TypeOfCommandTag {
 			}
 		}
 
-		Err(syn::Error::new(rest.span(), "No `in` found in for loop "))
+		Err(TidosError::new(rest.span(), "No `in` found in for loop ").build())
 	}
 
 	fn _parse_right_side_of_loop<'c, 'a>(
@@ -405,7 +407,7 @@ impl TypeOfCommandTag {
 		}
 
 		if output.is_empty() {
-			Err(syn::Error::new(rest.span(), "Empty right side of `in`."))
+			Err(TidosError::new(rest.span(), "Empty right side of `in`.").build())
 		} else {
 			Ok((TokenStream::from_iter(output), rest))
 		}
@@ -422,10 +424,11 @@ impl TypeOfCommandTag {
 			.parse::<Token![match]>()
 			.expect("Peeked `match` before decided to parse");
 		if input.is_empty() {
-			Err(syn::Error::new(
+			Err(TidosError::new(
 				command_token.span().resolved_at(match_token.span()),
 				"Empty match statement",
-			))
+			)
+			.build())
 		} else {
 			let match_content = input.parse::<TokenStream>().expect(
 				"If the ParseStream is not empty, there should be content for a TokenStream",
@@ -448,10 +451,11 @@ impl TypeOfCommandTag {
 			.expect("Peeked `if` before decided to parse");
 
 		if input.is_empty() {
-			Err(syn::Error::new(
+			Err(TidosError::new(
 				command_token.span().resolved_at(if_token.span()),
 				"Empty if statement",
-			))
+			)
+			.build())
 		} else {
 			let if_content = input.parse::<TokenStream>().expect(
 				"If the ParseStream is not empty, there should be content for a TokenStream",
@@ -474,16 +478,18 @@ impl TypeOfCommandTag {
 			.parse::<syn::Ident>()
 			.expect("Peeked identifier before decided to parse");
 		input.parse::<Token![:]>().map_err(|error| {
-			syn::Error::new(
+			TidosError::new(
 				command_token.span().resolved_at(error.span()),
-				"Expected named slot to have an identifier:\n{#slot:slot_name}",
+				"Expected named slot to have an identifier",
 			)
+			.suggestion("{#slot:slot_name}")
 		})?;
 		let name_ident = input.parse::<syn::Ident>().map_err(|error| {
-			syn::Error::new(
+			TidosError::new(
 				command_token.span().resolved_at(error.span()),
-				"Expected named slot to have an identifier:\n{#slot:slot_name}",
+				"Expected named slot to have an identifier",
 			)
+			.suggestion("{#slot:slot_name}")
 		})?;
 		Ok(TypeOfCommandTag::Slot(name_ident))
 	}

@@ -1,0 +1,5 @@
+error: <Widget> has no children it should be <Widget />
+  --> tests/view_macro/panics/component_without_children.rs:11:3
+   |
+11 |         <Widget></Widget>
+   |         ^

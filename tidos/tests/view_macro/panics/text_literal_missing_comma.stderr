@@ -1,0 +1,5 @@
+error: Expected `,` for formatting arguments
+ --> tests/view_macro/panics/text_literal_missing_comma.rs:5:15
+  |
+5 |         <p>{"Hello" world}</p>
+  |                     ^^^^^

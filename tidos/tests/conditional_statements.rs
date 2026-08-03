@@ -156,3 +156,15 @@ fn double_else() {
 	let t = trybuild::TestCases::new();
 	t.compile_fail("tests/control_tags/panics/double_else.rs");
 }
+
+#[test]
+fn empty_if_statement() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/empty_if_statement.rs");
+}
+
+#[test]
+fn empty_else_if_statement() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/empty_else_if_statement.rs");
+}

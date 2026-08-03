@@ -134,3 +134,9 @@ fn unnamed_slot() {
 
 	assert_eq!(page_output.into_html(), "<div><p>Hello world</p></div>");
 }
+
+#[test]
+fn slot_missing_identifier() {
+	let t = trybuild::TestCases::new();
+	t.compile_fail("tests/control_tags/panics/slot_missing_identifier.rs");
+}

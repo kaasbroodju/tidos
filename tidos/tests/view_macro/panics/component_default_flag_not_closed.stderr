@@ -1,0 +1,5 @@
+error: <Widget is not closed add `>` or `/>` at the end of the component
+  --> tests/view_macro/panics/component_default_flag_not_closed.rs:12:3
+   |
+12 |         <Widget .. garbage>
+   |         ^

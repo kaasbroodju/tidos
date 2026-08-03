@@ -1,0 +1,5 @@
+error: Empty if statement
+ --> tests/control_tags/panics/empty_if_statement.rs:5:4
+  |
+5 |         {#if}
+  |          ^
