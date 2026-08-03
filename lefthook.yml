@@ -4,6 +4,9 @@ pre-commit:
       run: . "$HOME/.cargo/env" && cargo fmt --all -- --check
     clippy:
       run: . "$HOME/.cargo/env" && cargo clippy --workspace -- -D warnings
+    lockfile:
+      glob: "Cargo.toml"
+      run: . "$HOME/.cargo/env" && cargo update --workspace --locked
 
 pre-push:
   commands:

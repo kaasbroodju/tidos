@@ -19,6 +19,15 @@ jobs:
           cargo test --package tidos --tests --verbose
           cargo test -p tidos --features "i18n,rocket,axum,actix-web,warp" --test i18n --verbose
 
+  coverage:
+    name: Coverage
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
       - name: Install llvm-tools
         run: rustup component add llvm-tools-preview
 
@@ -27,6 +36,7 @@ jobs:
 
       - name: Run tests and generate coverage
         run: |
+          cargo llvm-cov clean --workspace
           cargo llvm-cov --no-clean --package tidos --tests --lcov --output-path lcov.info
           cargo llvm-cov --no-clean --package tidos --features "i18n,rocket,axum,actix-web,warp" --test i18n --lcov --output-path lcov.info
           cargo llvm-cov report --lcov --output-path lcov.info
