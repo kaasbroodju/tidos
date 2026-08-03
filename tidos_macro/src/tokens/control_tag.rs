@@ -2,7 +2,7 @@
 //! header and body together. Produced by `parsing::control_tag`.
 
 use crate::tokens::Content;
-use proc_macro2::{Ident, TokenTree};
+use proc_macro2::{Ident, TokenStream};
 
 /// A parsed control-flow construct with its body already collected. Unlike
 /// [`crate::tokens::TypeOfCommandTag`] (just the header), each variant here
@@ -12,21 +12,21 @@ use proc_macro2::{Ident, TokenTree};
 pub enum ControlTag {
 	/// {#if ... } ... {:else if ... } ... {:else} ... {/if}
 	IfChain {
-		if_statement: Vec<TokenTree>,
+		if_statement: TokenStream,
 		if_content: Vec<Content>,
-		if_else_chain: Vec<(Vec<TokenTree>, Vec<Content>)>,
+		if_else_chain: Vec<(TokenStream, Vec<Content>)>,
 		else_content: Option<Vec<Content>>,
 	},
 	/// {#for ... in ... } ... {/for}
 	For {
-		left_side: Vec<TokenTree>,
-		right_side: Vec<TokenTree>,
+		left_side: TokenStream,
+		right_side: TokenStream,
 		contents: Vec<Content>,
 	},
 	/// {#match ... } ... {/match}
 	Match {
-		match_statement: Vec<TokenTree>,
-		cases: Vec<(Vec<TokenTree>, Vec<Content>)>,
+		match_statement: TokenStream,
+		cases: Vec<(TokenStream, Vec<Content>)>,
 	},
 	/// {#slot:name } ... {/slot}
 	Slot { name: Ident, contents: Vec<Content> },

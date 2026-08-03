@@ -3,7 +3,7 @@
 
 use crate::tokens::ControlTag;
 use crate::tokens::{ComponentContent, NativeContent};
-use proc_macro2::{Ident, Literal, TokenTree};
+use proc_macro2::{Ident, Literal, TokenStream, TokenTree};
 
 /// One item inside a template body (a tag's children, a loop/if/match body,
 /// or the top-level `Component`). Produced by `parsing::content::Content::parse`,
@@ -39,9 +39,14 @@ pub enum Content {
 /// or used directly by `code_generation`, never inspected here.
 #[derive(Debug)]
 pub enum TextContent {
+	/// {"hello world"}
 	Literal(Literal),
-	Formatted(Literal, Vec<Vec<TokenTree>>),
-	Expression(Vec<TokenTree>),
+
+	/// {"Hello {}", name}
+	Formatted(Literal, TokenStream),
+
+	/// { text expression }
+	Expression(TokenStream),
 }
 
 /// The header of a `{#command ...}` control tag, before its body has been
@@ -50,10 +55,10 @@ pub enum TextContent {
 /// (see that module for why the tokens are kept unparsed).
 pub enum TypeOfCommandTag {
 	For {
-		left_side: Vec<TokenTree>,
-		right_side: Vec<TokenTree>,
+		left_side: TokenStream,
+		right_side: TokenStream,
 	},
-	If(Vec<TokenTree>),
-	Match(Vec<TokenTree>),
+	If(TokenStream),
+	Match(TokenStream),
 	Slot(Ident),
 }

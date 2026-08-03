@@ -561,25 +561,40 @@ impl Component for MyCard {
 ### File & directory structure
 
 Organise each component as a **directory** with a `mod.rs` and a CSS file
-alongside it:
+alongside it. Keep route handlers that produce a `page!` in their own
+`src/pages/` tree, one file per page, mirrored by a `pages/mod.rs` that
+re-exports them:
 
 ```
 src/
 ├── main.rs
 ├── main.css
-└── components/
-    ├── mod.rs          # pub mod nav_bar; pub mod card; …
-    ├── nav_bar/
-    │   ├── mod.rs      # the NavBar component
-    │   └── nav_bar.css
-    └── card/
-        ├── mod.rs      # the Card component
-        └── card.css
+├── components/
+│   ├── mod.rs          # pub mod nav_bar; pub mod card; …
+│   ├── nav_bar/
+│   │   ├── mod.rs      # the NavBar component
+│   │   └── nav_bar.css
+│   └── card/
+│       ├── mod.rs      # the Card component
+│       └── card.css
+└── pages/
+    ├── mod.rs          # pub mod index; pub mod docs; pub mod news; …
+    ├── index.rs        # #[get("/")] fn index() -> Page { page! { … } }
+    ├── docs/
+    │   └── …            # one file (or submodule) per doc page
+    └── news/
+        └── …            # one file (or submodule) per news page
 ```
 
 Rust resolves `pub mod nav_bar;` to either `nav_bar.rs` or `nav_bar/mod.rs`,
-so the existing module declarations in `components/mod.rs` require no
-changes when a component moves from a flat file into a directory.
+so the existing module declarations in `components/mod.rs` (or
+`pages/mod.rs`) require no changes when a component or page moves from a
+flat file into a directory.
+
+Each page file owns one route handler returning a `Page`: the `page! { … }`
+body plus any `head! { … }` calls for that page's metadata (title,
+`<meta>` tags, structured data). Pages compose components from
+`src/components/` rather than defining their own markup inline.
 
 ### CSS file format, one file per component
 

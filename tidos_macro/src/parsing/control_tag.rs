@@ -20,16 +20,20 @@ use crate::parsing::utils::{
 	is_cursor_on_new_if_branch, matches_case_statement, matches_corresponding_command_tag,
 };
 use crate::tokens::{Content, ControlTag, TypeOfCommandTag};
-use proc_macro2::{Group, Ident, TokenTree};
-use syn::parse::{Parse, ParseStream};
+use proc_macro2::{Group, Ident, TokenStream};
+use syn::buffer::Cursor;
+use syn::ext::IdentExt;
+use syn::parse::{Parse, ParseStream, StepCursor};
 use syn::spanned::Spanned;
 use syn::token::Pound;
-use syn::Token;
+use syn::{braced, Token};
 
 const LOOP_TAG: &str = "for";
 const CONDITIONAL_TAG: &str = "if";
 const MATCH_TAG: &str = "match";
 const SLOT_TAG: &str = "slot";
+
+type CommandSymbol = Pound;
 
 /// Parses one `{#command ...}` group, identifies which of the four
 /// constructs it opens via [`TypeOfCommandTag`], then runs that construct's
@@ -63,15 +67,15 @@ impl ControlTag {
 	fn parse_for_loop_body(
 		input: ParseStream,
 		group: &Group,
-		left_side: Vec<TokenTree>,
-		right_side: Vec<TokenTree>,
+		left_side: TokenStream,
+		right_side: TokenStream,
 	) -> syn::Result<Self> {
 		let contents = Self::parse_content_until(&input, group.span(), LOOP_TAG, |cursor| {
 			matches_corresponding_command_tag(cursor, LOOP_TAG)
 		})?;
 
 		// {/for}
-		Self::parse_closing_tag(input, group.span(), LOOP_TAG, || ControlTag::For {
+		Self::parse_closing_tag(input, group.span(), LOOP_TAG).map(|_| ControlTag::For {
 			left_side,
 			right_side,
 			contents,
@@ -94,63 +98,93 @@ impl ControlTag {
 	fn parse_if_statement_body(
 		input: &ParseStream,
 		group: &Group,
-		if_statement: Vec<TokenTree>,
+		if_statement: TokenStream,
 	) -> syn::Result<Self> {
+		let if_halting_condition = |cursor: Cursor| is_cursor_on_new_if_branch(&cursor);
+
 		let if_content =
-			Self::parse_content_until(input, group.span(), CONDITIONAL_TAG, |cursor| {
-				is_cursor_on_new_if_branch(&cursor)
-			})?;
+			Self::parse_content_until(input, group.span(), CONDITIONAL_TAG, if_halting_condition)?;
 
 		let mut if_else_chain = Vec::new();
 		while is_cursor_on_else_if_branch(&input.cursor()) {
-			let else_if_tag = input.parse::<Group>()?;
-			let else_if_statement = else_if_tag.stream().into_iter().skip(3).collect::<Vec<_>>();
-			let content_else_if_branch: Vec<Content> =
-				Self::parse_content_until(input, group.span(), CONDITIONAL_TAG, |cursor| {
-					is_cursor_on_new_if_branch(&cursor)
-				})?;
+			let else_if_tag;
+			braced!(else_if_tag in input);
+			else_if_tag
+				.parse::<Token![:]>()
+				.expect("`:` peeked before parsed");
+			else_if_tag
+				.parse::<Token![else]>()
+				.expect("`else` peeked before parsed");
+			else_if_tag
+				.parse::<Token![if]>()
+				.expect("`if` peeked before parsed");
+			let else_if_statement = else_if_tag
+				.parse::<TokenStream>()
+				.map_err(|error| syn::Error::new(error.span(), "Empty else if statement"))?;
+
+			let if_else_halting_condition = if_halting_condition;
+			let content_else_if_branch: Vec<Content> = Self::parse_content_until(
+				input,
+				group.span(),
+				CONDITIONAL_TAG,
+				if_else_halting_condition,
+			)?;
 
 			if_else_chain.push((else_if_statement, content_else_if_branch));
 		}
 
-		let else_content = if is_cursor_on_else_branch(&input.cursor()) {
-			let else_group = input.parse::<Group>()?;
+		let else_content = is_cursor_on_else_branch(&input.cursor())
+			.then(|| Self::_parse_else_statement_body(input, group))
+			.transpose()?;
 
-			let contents =
-				Self::parse_content_until(input, group.span(), CONDITIONAL_TAG, |cursor| {
-					is_cursor_on_end_of_if_branch(&cursor)
-						|| is_cursor_on_else_if_branch(&cursor)
-						|| is_cursor_on_else_branch(&cursor)
-				})?;
+		Self::parse_closing_tag(input, group.span(), CONDITIONAL_TAG).map(|_| ControlTag::IfChain {
+			if_statement,
+			if_content,
+			if_else_chain,
+			else_content,
+		})
+	}
 
-			if is_cursor_on_else_if_branch(&input.cursor()) {
-				return Err(syn::Error::new(
-					else_group.span(),
-					"{:else if} must come before {:else}, not after",
-				));
-			}
+	fn _parse_else_statement_body(input: &ParseStream, group: &Group) -> syn::Result<Vec<Content>> {
+		let else_group;
+		braced!(else_group in input);
+		else_group
+			.parse::<Token![:]>()
+			.expect("`:` peeked before parsed");
+		else_group
+			.parse::<Token![else]>()
+			.expect("`else` peeked before parsed");
 
-			if is_cursor_on_else_branch(&input.cursor()) {
-				let duplicate = input.parse::<Group>()?;
-				return Err(syn::Error::new(
-					duplicate.span(),
-					"cannot have two {:else} blocks in one {#if}",
-				));
-			}
-
-			Some(contents)
-		} else {
-			None
+		let else_halting_condition = |cursor: Cursor| {
+			is_cursor_on_end_of_if_branch(&cursor)
+				|| is_cursor_on_else_if_branch(&cursor) // for rare cases of debugging
+				|| is_cursor_on_else_branch(&cursor) // for rare cases of debugging
 		};
 
-		Self::parse_closing_tag(input, group.span(), CONDITIONAL_TAG, || {
-			ControlTag::IfChain {
-				if_statement,
-				if_content,
-				if_else_chain,
-				else_content,
-			}
-		})
+		let contents = Self::parse_content_until(
+			input,
+			group.span(),
+			CONDITIONAL_TAG,
+			else_halting_condition,
+		)?;
+
+		if is_cursor_on_else_if_branch(&input.cursor()) {
+			let duplicate = input.parse::<Group>()?;
+			return Err(syn::Error::new(
+				duplicate.span(),
+				"{:else if} must come before {:else}, not after",
+			));
+		}
+
+		if is_cursor_on_else_branch(&input.cursor()) {
+			let duplicate = input.parse::<Group>()?;
+			return Err(syn::Error::new(
+				duplicate.span(),
+				"cannot have two {:else} blocks in one {#if}",
+			));
+		}
+
+		Ok(contents)
 	}
 
 	/// Parses `{#match ...} {:case pat} ... {:case pat} ... {/match}`: repeats
@@ -161,29 +195,28 @@ impl ControlTag {
 	fn parse_match_body(
 		input: ParseStream,
 		group: Group,
-		match_statement: Vec<TokenTree>,
+		match_statement: TokenStream,
 	) -> syn::Result<Self> {
 		let mut cases = Vec::new();
 
 		while !matches_corresponding_command_tag(input.cursor(), MATCH_TAG) {
 			let case = input.parse::<Group>()?;
 
-			let statement = case
-				.stream()
-				.into_iter()
-				.skip(2)
-				.collect::<Vec<TokenTree>>();
+			let statement = case.stream().into_iter().skip(2).collect::<TokenStream>();
 
-			let children = Self::parse_content_until(&input, case.span(), MATCH_TAG, |cursor| {
+			let halting_condition = |cursor: Cursor| {
 				matches_case_statement(cursor)
 					|| matches_corresponding_command_tag(cursor, MATCH_TAG)
-			})?;
+			};
+
+			let children =
+				Self::parse_content_until(&input, case.span(), MATCH_TAG, halting_condition)?;
 
 			cases.push((statement, children));
 		}
 
 		// {/match}>
-		Self::parse_closing_tag(input, group.span(), MATCH_TAG, || ControlTag::Match {
+		Self::parse_closing_tag(input, group.span(), MATCH_TAG).map(|_| ControlTag::Match {
 			match_statement,
 			cases,
 		})
@@ -194,15 +227,13 @@ impl ControlTag {
 	/// render closure prop by `code_generation` (see `ComponentContent`'s
 	/// `ToTokens` impl).
 	fn parse_slot_body(input: ParseStream, group: &Group, name: Ident) -> syn::Result<Self> {
-		let contents = Self::parse_content_until(&input, group.span(), SLOT_TAG, |cursor| {
-			matches_corresponding_command_tag(cursor, SLOT_TAG)
-		})?;
+		let stop_condition = |cursor: Cursor| matches_corresponding_command_tag(cursor, SLOT_TAG);
+
+		let contents = Self::parse_content_until(&input, group.span(), SLOT_TAG, stop_condition)?;
 
 		// {/for}
-		Self::parse_closing_tag(input, group.span(), SLOT_TAG, || ControlTag::Slot {
-			name,
-			contents,
-		})
+		Self::parse_closing_tag(input, group.span(), SLOT_TAG)
+			.map(|_| ControlTag::Slot { name, contents })
 	}
 
 	/// Consumes the next `{...}` group and checks it is the expected closing
@@ -210,35 +241,47 @@ impl ControlTag {
 	/// finished `ControlTag` via `on_success` (deferred so callers don't have
 	/// to construct it before knowing parsing succeeded). Shared by all four
 	/// constructs since the closing-tag grammar is identical.
-	fn parse_closing_tag<F>(
+	fn parse_closing_tag(
 		input: ParseStream,
 		group_span: proc_macro2::Span,
 		tag_name: &str,
-		on_success: F,
-	) -> syn::Result<ControlTag>
-	where
-		F: FnOnce() -> ControlTag,
-	{
-		let Ok(group) = input.parse::<Group>() else {
+	) -> syn::Result<()> {
+		if !input.peek(syn::token::Brace) {
 			return Err(syn::Error::new(
 				group_span,
-				format!("missing matching closing tag `{{/{tag_name}}}`"),
+				format!("a) missing matching closing tag `{{/{tag_name}}}`"),
 			));
-		};
-
-		let peeked: Vec<TokenTree> = group.stream().into_iter().take(2).collect();
-
-		if peeked.len() == 2
-			&& matches!(&peeked[0], TokenTree::Punct(p) if p.as_char() == '/')
-			&& matches!(&peeked[1], TokenTree::Ident(i) if *i.to_string() == *tag_name)
-		{
-			Ok(on_success())
-		} else {
-			Err(syn::Error::new(
-				group.span(),
-				format!("missing matching closing tag `{{/{tag_name}}}`"),
-			))
 		}
+
+		let group;
+		braced!(group in input);
+
+		group.parse::<Token![/]>().map_err(|_| {
+			syn::Error::new(
+				group_span,
+				format!("b) missing matching closing tag `{{/{tag_name}}}`"),
+			)
+		})?;
+
+		// let x = Ident::parse_any(&group);
+		group
+			.call(Ident::parse_any)
+			.map_err(|_| {
+				syn::Error::new(
+					group_span,
+					format!("c) missing matching closing tag `{{/{tag_name}}}`"),
+				)
+			})
+			.map(|ident| {
+				if *ident.to_string() == *tag_name {
+					Ok(())
+				} else {
+					Err(syn::Error::new(
+						group.span(),
+						format!("d) missing matching closing tag `{{/{tag_name}}}`"),
+					))
+				}
+			})?
 	}
 
 	/// Parses `Content` children in a loop until `should_stop` reports that
@@ -256,15 +299,18 @@ impl ControlTag {
 		F: Fn(syn::buffer::Cursor) -> bool,
 	{
 		let mut contents: Vec<Content> = Vec::new();
-		while !should_stop(input.cursor()) {
-			let child = input.parse::<Content>()?;
-			contents.push(child);
+		loop {
 			if input.is_empty() {
 				return Err(syn::Error::new(
 					group_span,
 					format!("missing matching closing tag `{{/{tag_name}}}`"),
 				));
 			}
+			if should_stop(input.cursor()) {
+				break;
+			}
+			let child = input.parse::<Content>()?;
+			contents.push(child);
 		}
 		Ok(contents)
 	}
@@ -276,7 +322,9 @@ impl ControlTag {
 /// handled afterwards by `ControlTag::parse`.
 impl Parse for TypeOfCommandTag {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
-		let command_token = input.parse::<Token![#]>()?;
+		let command_token: CommandSymbol = input
+			.parse::<Token![#]>()
+			.expect("Peeked `#` before decided to parse");
 
 		if input.peek(Token![for]) {
 			Self::parse_for_loop(input, command_token)
@@ -284,7 +332,8 @@ impl Parse for TypeOfCommandTag {
 			Self::parse_pattern_matching(input, command_token)
 		} else if input.peek(Token![if]) {
 			Self::parse_conditional_statements(input, command_token)
-		} else if input.peek(syn::Ident) {
+		} else if matches!(input.cursor().ident(), Some((ident, _)) if &ident.to_string() == "slot")
+		{
 			Self::parse_slot(input, command_token)
 		} else {
 			Err(syn::Error::new(
@@ -305,27 +354,13 @@ impl TypeOfCommandTag {
 	/// deferring that parsing keeps this step permissive and simple.
 	fn parse_for_loop(
 		input: ParseStream,
-		command_token: Pound,
+		command_token: CommandSymbol,
 	) -> Result<TypeOfCommandTag, syn::Error> {
-		input.parse::<Token![for]>()?;
+		input
+			.parse::<Token![for]>()
+			.expect("Peeked `for` before decided to parse");
 
-		let left_side = input.step(|cursor| {
-			let mut rest = *cursor;
-			let mut output = Vec::new();
-			while let Some((tt, next)) = rest.token_tree() {
-				if tt.to_string().as_str() == "in" {
-					return Ok((output, next));
-				} else {
-					output.push(tt);
-					rest = next;
-				}
-			}
-
-			Err(syn::Error::new(
-				command_token.span(),
-				"No `in` found in for loop ",
-			))
-		})?;
+		let left_side = input.step(Self::_parse_left_side_of_loop)?;
 
 		if left_side.is_empty() {
 			return Err(syn::Error::new(
@@ -334,23 +369,7 @@ impl TypeOfCommandTag {
 			));
 		}
 
-		let right_side = input.step(|cursor| {
-			let mut rest = *cursor;
-			let mut output = Vec::new();
-			while let Some((tt, next)) = rest.token_tree() {
-				output.push(tt);
-				rest = next;
-			}
-
-			if output.is_empty() {
-				Err(syn::Error::new(
-					command_token.span(),
-					"Empty right side of `in`.",
-				))
-			} else {
-				Ok((output, rest))
-			}
-		})?;
+		let right_side = input.step(Self::_parse_right_side_of_loop)?;
 
 		Ok(TypeOfCommandTag::For {
 			left_side,
@@ -358,34 +377,62 @@ impl TypeOfCommandTag {
 		})
 	}
 
+	fn _parse_left_side_of_loop<'c, 'a>(
+		cursor: StepCursor<'c, 'a>,
+	) -> Result<(TokenStream, Cursor<'c>), syn::Error> {
+		let mut rest = *cursor;
+		let mut output = Vec::new();
+		while let Some((tt, next)) = rest.token_tree() {
+			if tt.to_string().as_str() == "in" {
+				return Ok((TokenStream::from_iter(output), next));
+			} else {
+				output.push(tt);
+				rest = next;
+			}
+		}
+
+		Err(syn::Error::new(rest.span(), "No `in` found in for loop "))
+	}
+
+	fn _parse_right_side_of_loop<'c, 'a>(
+		cursor: StepCursor<'c, 'a>,
+	) -> Result<(TokenStream, Cursor<'c>), syn::Error> {
+		let mut rest = *cursor;
+		let mut output = Vec::new();
+		while let Some((tt, next)) = rest.token_tree() {
+			output.push(tt);
+			rest = next;
+		}
+
+		if output.is_empty() {
+			Err(syn::Error::new(rest.span(), "Empty right side of `in`."))
+		} else {
+			Ok((TokenStream::from_iter(output), rest))
+		}
+	}
+
 	/// Captures every remaining token in the `{#match ...}` header verbatim as
 	/// the scrutinee expression, re-parsed as Rust only once `code_generation`
 	/// splices it into an actual `match ... { }`.
 	fn parse_pattern_matching(
 		input: ParseStream,
-		command_token: Pound,
+		command_token: CommandSymbol,
 	) -> Result<TypeOfCommandTag, syn::Error> {
-		input.parse::<Token![match]>()?;
+		let match_token = input
+			.parse::<Token![match]>()
+			.expect("Peeked `match` before decided to parse");
+		if input.is_empty() {
+			Err(syn::Error::new(
+				command_token.span().resolved_at(match_token.span()),
+				"Empty match statement",
+			))
+		} else {
+			let match_content = input.parse::<TokenStream>().expect(
+				"If the ParseStream is not empty, there should be content for a TokenStream",
+			);
 
-		let match_content = input.step(|cursor| {
-			let mut rest = *cursor;
-			let mut output = Vec::new();
-			while let Some((tt, next)) = rest.token_tree() {
-				output.push(tt);
-				rest = next;
-			}
-
-			if output.is_empty() {
-				Err(syn::Error::new(
-					command_token.span(),
-					"No variable to match against.",
-				))
-			} else {
-				Ok((output, rest))
-			}
-		})?;
-
-		Ok(TypeOfCommandTag::Match(match_content))
+			Ok(TypeOfCommandTag::Match(match_content))
+		}
 	}
 
 	/// Captures every remaining token in the `{#if ...}` header verbatim as
@@ -394,29 +441,24 @@ impl TypeOfCommandTag {
 	/// `code_generation` splices it into an actual `if ... { }`.
 	fn parse_conditional_statements(
 		input: ParseStream,
-		command_token: Pound,
+		command_token: CommandSymbol,
 	) -> Result<TypeOfCommandTag, syn::Error> {
-		input.parse::<Token![if]>()?;
+		let if_token = input
+			.parse::<Token![if]>()
+			.expect("Peeked `if` before decided to parse");
 
-		let if_content = input.step(|cursor| {
-			let mut rest = *cursor;
-			let mut output = Vec::new();
-			while let Some((tt, next)) = rest.token_tree() {
-				output.push(tt);
-				rest = next;
-			}
+		if input.is_empty() {
+			Err(syn::Error::new(
+				command_token.span().resolved_at(if_token.span()),
+				"Empty if statement",
+			))
+		} else {
+			let if_content = input.parse::<TokenStream>().expect(
+				"If the ParseStream is not empty, there should be content for a TokenStream",
+			);
 
-			if output.is_empty() {
-				Err(syn::Error::new(
-					command_token.span(),
-					"If statement is empty.",
-				))
-			} else {
-				Ok((output, rest))
-			}
-		})?;
-
-		Ok(TypeOfCommandTag::If(if_content))
+			Ok(TypeOfCommandTag::If(if_content))
+		}
 	}
 
 	/// Parses `slot:name` after `#`. Unlike `for`/`if`/`match`, `slot` isn't a
@@ -426,18 +468,23 @@ impl TypeOfCommandTag {
 	/// unrecognized keyword would.
 	fn parse_slot(
 		input: ParseStream,
-		command_token: Pound,
+		command_token: CommandSymbol,
 	) -> Result<TypeOfCommandTag, syn::Error> {
-		let slot_ident = input.parse::<syn::Ident>()?;
-		if &slot_ident.to_string() == "slot" {
-			input.parse::<Token![:]>()?;
-			let name_ident = input.parse::<syn::Ident>()?;
-			Ok(TypeOfCommandTag::Slot(name_ident))
-		} else {
-			Err(syn::Error::new(
-				command_token.span(),
-				"Unknown command tag, must be: 'for', 'if', 'match' or 'slot'",
-			))
-		}
+		input
+			.parse::<syn::Ident>()
+			.expect("Peeked identifier before decided to parse");
+		input.parse::<Token![:]>().map_err(|error| {
+			syn::Error::new(
+				command_token.span().resolved_at(error.span()),
+				"Expected named slot to have an identifier:\n{#slot:slot_name}",
+			)
+		})?;
+		let name_ident = input.parse::<syn::Ident>().map_err(|error| {
+			syn::Error::new(
+				command_token.span().resolved_at(error.span()),
+				"Expected named slot to have an identifier:\n{#slot:slot_name}",
+			)
+		})?;
+		Ok(TypeOfCommandTag::Slot(name_ident))
 	}
 }

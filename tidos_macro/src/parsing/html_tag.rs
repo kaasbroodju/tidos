@@ -21,53 +21,63 @@ use syn::Token;
 impl Parse for NativeContent {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>
-		let start_first_tag_token = input.parse::<Token![<]>()?;
+		let start_first_tag_token = input
+			.parse::<Token![<]>()
+			.expect("Expected caller to peek `<` first");
 		let (tag, _) = HTMLutils::extract_name(input)?;
 		let attributes = parse_attributes(input, &tag, start_first_tag_token.span())?;
 
-		if attributes.has_default_flag {
-			return Err(syn::Error::new(
+		attributes
+			.has_default_flag
+			.then_some(syn::Error::new(
 				start_first_tag_token.span(),
-				"native html tags cannot have a default flag, remove the `..`".to_string(),
-			));
-		}
+				"native html tags cannot have a default flag, remove the `..`",
+			))
+			.map_or(Ok(()), Err)?;
 
-		// self closing tags, like <img />
-		if HTMLutils::is_peeking_at_self_closing_tag(input) {
-			input.parse::<Token![/]>()?;
-			input.parse::<Token![>]>()?;
+		let slash = input.parse::<Token![/]>();
+		let closing_bracket = input.parse::<Token![>]>();
 
-			return Ok(NativeContent {
+		match (slash, closing_bracket) {
+			(Ok(_), Ok(_)) => Ok(NativeContent {
 				tag,
 				attributes: attributes.attributes,
 				children: vec![],
 				is_self_closing: true,
-			});
+			}),
+			(Err(_), Ok(_end_first_tag_token)) => {
+				// ...
+				let children = HTMLutils::parse_body(input, start_first_tag_token, &tag)?;
+
+				// </p>
+				input
+					.parse::<Token![<]>()
+					.expect("Peeked and matched in HTMLutils::parse_body");
+				input
+					.parse::<Token![/]>()
+					.expect("Peeked and matched in HTMLutils::parse_body");
+				HTMLutils::extract_name(input)
+					.expect("Peeked and matched in HTMLutils::parse_body");
+				input
+					.parse::<Token![>]>()
+					.expect("Peeked and matched in HTMLutils::parse_body");
+
+				Ok(NativeContent {
+					tag,
+					attributes: attributes.attributes,
+					children,
+					is_self_closing: false,
+				})
+			}
+			(Ok(slash), Err(_)) => Err(syn::Error::new(
+				start_first_tag_token.span().resolved_at(slash.span()),
+				format!("Expected <{tag} /> to self close"),
+			)),
+			(Err(err), Err(_)) => Err(syn::Error::new(
+				start_first_tag_token.span().resolved_at(err.span()),
+				format!("<{tag} is not closed add `>` or `/>` at the end of the tag"),
+			)),
 		}
-
-		let _end_first_tag_token = input.parse::<Token![>]>()?;
-		if input.is_empty() {
-			return Err(syn::Error::new(
-				start_first_tag_token.span(),
-				format!("missing matching closing tag `</{tag}>`"),
-			));
-		}
-
-		// ...
-		let children = HTMLutils::parse_body(input, start_first_tag_token, &tag)?;
-
-		// </p>
-		input.parse::<Token![<]>()?;
-		input.parse::<Token![/]>()?;
-		HTMLutils::extract_name(input)?;
-		input.parse::<Token![>]>()?;
-
-		Ok(NativeContent {
-			tag,
-			attributes: attributes.attributes,
-			children,
-			is_self_closing: false,
-		})
 	}
 }
 
@@ -80,49 +90,67 @@ impl Parse for NativeContent {
 impl Parse for ComponentContent {
 	fn parse(input: ParseStream) -> syn::Result<Self> {
 		// <p>
-		let start_first_tag_token = input.parse::<Token![<]>()?;
+		let start_first_tag_token = input
+			.parse::<Token![<]>()
+			.expect("Expected caller to peek `<` first");
 		let (tag, tag_span) = HTMLutils::extract_name(input)?;
 		let attributes = parse_attributes(input, &tag, start_first_tag_token.span())?;
 
-		// self closing tags, like <img />
-		if HTMLutils::is_peeking_at_self_closing_tag(input) {
-			input.parse::<Token![/]>()?;
-			input.parse::<Token![>]>()?;
+		let slash = input.parse::<Token![/]>();
+		let closing_bracket = input.parse::<Token![>]>();
 
-			return Ok(ComponentContent {
+		match (slash, closing_bracket) {
+			(Ok(_), Ok(_)) => Ok(ComponentContent {
 				tag,
 				tag_span,
 				closing_tag_span: None,
 				attributes: attributes.attributes,
 				has_default_flag: attributes.has_default_flag,
 				children: vec![],
-			});
+			}),
+			(Err(_), Ok(_end_first_tag_token)) => {
+				// ...
+				let children = HTMLutils::parse_body(input, start_first_tag_token, &tag)?;
+
+				// </p>
+				input
+					.parse::<Token![<]>()
+					.expect("Peeked and matched in HTMLutils::parse_body");
+				input
+					.parse::<Token![/]>()
+					.expect("Peeked and matched in HTMLutils::parse_body");
+				let (_, closing_span) = HTMLutils::extract_name(input)
+					.expect("Peeked and matched in HTMLutils::parse_body");
+				let closing_bracket = input
+					.parse::<Token![>]>()
+					.expect("Peeked and matched in HTMLutils::parse_body");
+
+				if children.is_empty() {
+					return Err(syn::Error::new(
+						start_first_tag_token
+							.span()
+							.resolved_at(closing_bracket.span()),
+						format!("<{tag}> has no children it should be <{tag} />"),
+					));
+				}
+
+				Ok(ComponentContent {
+					tag,
+					tag_span,
+					closing_tag_span: Some(closing_span),
+					attributes: attributes.attributes,
+					has_default_flag: attributes.has_default_flag,
+					children,
+				})
+			}
+			(Ok(slash), Err(_)) => Err(syn::Error::new(
+				start_first_tag_token.span().resolved_at(slash.span()),
+				format!("Expected <{tag} /> to self close"),
+			)),
+			(Err(err), Err(_)) => Err(syn::Error::new(
+				start_first_tag_token.span().resolved_at(err.span()),
+				format!("<{tag} is not closed add `>` or `/>` at the end of the component"),
+			)),
 		}
-
-		let _end_first_tag_token = input.parse::<Token![>]>()?;
-		if input.is_empty() {
-			return Err(syn::Error::new(
-				start_first_tag_token.span(),
-				format!("missing matching closing tag `</{tag}>`"),
-			));
-		}
-
-		// ...
-		let children = HTMLutils::parse_body(input, start_first_tag_token, &tag)?;
-
-		// </p>
-		input.parse::<Token![<]>()?;
-		input.parse::<Token![/]>()?;
-		let (_, closing_span) = HTMLutils::extract_name(input)?;
-		input.parse::<Token![>]>()?;
-
-		Ok(ComponentContent {
-			tag,
-			tag_span,
-			closing_tag_span: Some(closing_span),
-			attributes: attributes.attributes,
-			has_default_flag: attributes.has_default_flag,
-			children,
-		})
 	}
 }

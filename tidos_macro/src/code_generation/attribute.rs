@@ -89,10 +89,10 @@ impl Attribute {
 					quote! { #name: #literal }
 				}
 				TextContent::Formatted(literal, contents) => {
-					quote! { #name: format!(#literal #( , #( #contents )* )* ) }
+					quote! { #name: format!(#literal, #contents ) }
 				}
 				TextContent::Expression(expr) => {
-					quote! { #name: #( #expr )* }
+					quote! { #name:  #expr }
 				}
 			},
 		}

@@ -5,7 +5,7 @@
 //! `Content::parse_at_statement`, for `@html{...}`.
 
 use crate::tokens::TextContent;
-use proc_macro2::{Literal, TokenTree};
+use proc_macro2::{Literal, TokenStream};
 use syn::parse::{Parse, ParseStream};
 use syn::Token;
 
@@ -19,28 +19,24 @@ impl Parse for TextContent {
 		let content;
 		syn::braced!(content in input);
 		if content.peek(syn::LitStr) {
-			let base_string = content.parse::<Literal>()?;
-			let mut params = vec![];
-			while !content.is_empty() && content.peek(Token![,]) {
-				content.parse::<Token![,]>()?;
-				let mut contents = vec![];
-				while !content.is_empty() && !content.peek(Token![,]) {
-					contents.push(content.parse::<TokenTree>()?);
-				}
-				params.push(contents);
+			let base_string = content
+				.parse::<Literal>()
+				.expect("Literal string peeked above");
+
+			if content.is_empty() {
+				return Ok(TextContent::Literal(base_string));
 			}
 
-			if params.is_empty() {
-				Ok(TextContent::Literal(base_string))
-			} else {
-				Ok(TextContent::Formatted(base_string, params))
-			}
+			content.parse::<Token![,]>().map_err(|error| {
+				syn::Error::new(error.span(), "Expected `,` for formatting arguments")
+			})?;
+
+			let params = content.parse::<TokenStream>()?;
+
+			Ok(TextContent::Formatted(base_string, params))
 		} else {
-			let mut contents = vec![];
-			while let Ok(token) = content.parse::<TokenTree>() {
-				contents.push(token);
-			}
-			Ok(TextContent::Expression(contents))
+			let params = content.parse::<TokenStream>()?;
+			Ok(TextContent::Expression(params))
 		}
 	}
 }

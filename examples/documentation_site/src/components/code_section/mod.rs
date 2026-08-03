@@ -113,7 +113,7 @@ impl Component for CodeSection {
                             {" wants them"}
                         </h2>
                         <p class="body">
-                            {"Pattern matching, iterators, conditionals, all right inside your components. No DSL to learn \u{2014} just Rust, with extra power where you want it."}
+                            {"Pattern matching, iterators, conditionals, all right inside your components. No DSL to learn just Rust, with extra power where you want it."}
                         </p>
                         <a href="/docs/component" class="guide-link">{"See the component guide"}@html{include_str!("../hero/arrow.svg")}</a>
                     </div>

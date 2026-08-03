@@ -11,7 +11,7 @@
 //! They never advance the actual `ParseStream`.
 
 use crate::tokens::Content;
-use proc_macro2::{Delimiter, TokenTree};
+use proc_macro2::{Delimiter, Ident, TokenTree};
 use syn::buffer::Cursor;
 use syn::parse::ParseStream;
 use syn::spanned::Spanned;
@@ -63,7 +63,7 @@ pub fn is_cursor_on_else_if_branch(cursor: &Cursor) -> bool {
 	if let Some((a, _, _)) = cursor.group(Delimiter::Brace) {
 		let peeked: Vec<TokenTree> = a.token_stream().into_iter().take(3).collect();
 
-		peeked.len() >= 3
+		peeked.len() == 3
 			&& matches!(&peeked[0], TokenTree::Punct(p) if p.as_char() == ':')
 			&& matches!(&peeked[1], TokenTree::Ident(i) if &i.to_string() == "else")
 			&& matches!(&peeked[2], TokenTree::Ident(i) if &i.to_string() == "if")
@@ -80,7 +80,7 @@ pub fn is_cursor_on_else_branch(cursor: &Cursor) -> bool {
 	if let Some((a, _, _)) = cursor.group(Delimiter::Brace) {
 		let peeked: Vec<TokenTree> = a.token_stream().into_iter().take(2).collect();
 
-		peeked.len() >= 2
+		peeked.len() == 2
 			&& matches!(&peeked[0], TokenTree::Punct(p) if p.as_char() == ':')
 			&& matches!(&peeked[1], TokenTree::Ident(i) if &i.to_string() == "else")
 	} else {
@@ -94,48 +94,12 @@ pub fn is_cursor_on_end_of_if_branch(cursor: &Cursor) -> bool {
 	if let Some((a, _, _)) = cursor.group(Delimiter::Brace) {
 		let peeked: Vec<TokenTree> = a.token_stream().into_iter().take(2).collect();
 
-		peeked.len() >= 2
+		peeked.len() == 2
 			&& matches!(&peeked[0], TokenTree::Punct(p) if p.as_char() == '/')
 			&& matches!(&peeked[1], TokenTree::Ident(i) if &i.to_string() == "if")
 	} else {
 		false
 	}
-}
-
-/// Reads a hyphenated tag name out of an upcoming `</name>` (or
-/// `</name-with-hyphens>`) without requiring it to equal any particular
-/// target; used to report *which* wrong closing tag was found when
-/// `matches_tag` fails to match the expected one, so the error message can
-/// say e.g. "found `</span>`, expected `</div>`" instead of just "not found".
-pub fn peek_closing_tag_name(cursor: Cursor) -> Option<String> {
-	let mut rest = cursor;
-	let (p, next) = rest.punct()?;
-	if p.as_char() != '<' {
-		return None;
-	}
-	rest = next;
-	let (p, next) = rest.punct()?;
-	if p.as_char() != '/' {
-		return None;
-	}
-	rest = next;
-	let (ident, mut rest) = rest.ident()?;
-	let mut name = ident.to_string();
-
-	while let Some((p, next)) = rest.punct() {
-		if p.as_char() != '-' {
-			break;
-		}
-		if let Some((ident, next)) = next.ident() {
-			name.push('-');
-			name.push_str(&ident.to_string());
-			rest = next;
-		} else {
-			break;
-		}
-	}
-
-	Some(name)
 }
 
 /// Checks whether the upcoming tokens are exactly the closing tag
@@ -235,6 +199,10 @@ impl HTMLutils {
 		input.peek(Token![/]) && input.peek2(Token![>])
 	}
 
+	pub(crate) fn is_peeking_at_start_of_a_closing_tag(input: ParseStream) -> bool {
+		input.peek(Token![<]) && input.peek2(Token![/])
+	}
+
 	/// Parses a tag's children: repeatedly parses `Content` until the
 	/// upcoming tokens are that tag's own closing tag ([`matches_tag`]).
 	/// Shared by native elements and components since both close the same
@@ -248,21 +216,43 @@ impl HTMLutils {
 		tag: &String,
 	) -> Result<Vec<Content>, syn::Error> {
 		let mut children: Vec<Content> = Vec::new();
-		while !matches_tag(input.cursor(), tag) {
-			if let Some(found_tag) = peek_closing_tag_name(input.cursor()) {
-				return Err(syn::Error::new(
-					input.span(),
-					format!("unexpected closing tag `</{found_tag}>`, expected `</{tag}>`"),
-				));
-			}
-			let child = input.parse::<Content>()?;
-			children.push(child);
+		loop {
 			if input.is_empty() {
 				return Err(syn::Error::new(
 					start_first_tag_token.span(),
 					format!("missing matching closing tag `</{tag}>`"),
 				));
 			}
+			if matches_tag(input.cursor(), tag) {
+				break;
+			}
+			if HTMLutils::is_peeking_at_start_of_a_closing_tag(input) {
+				input.parse::<Token![<]>().expect("Peeked");
+				let slash = input.parse::<Token![/]>().expect("Peeked");
+				let found_tag = input.parse::<Ident>();
+				let gt = input.parse::<Token![>]>();
+				// It is peeking at a closing tag but not the right one
+				return match (found_tag, gt) {
+					(Ok(found_tag), Ok(_)) => Err(syn::Error::new(
+						found_tag.span(),
+						format!(
+							"Unexpected closing tag `</{}>`, expected `</{}>`",
+							found_tag, tag
+						),
+					)),
+					(Ok(found_tag), Err(_)) => Err(syn::Error::new(
+						found_tag.span(),
+						format!("Tag was unproperly closed expected `</{}>`", found_tag),
+					)),
+					_ => Err(syn::Error::new(
+						slash.span(),
+						"Expected an HTML tag name like `p`, `div`, or `custom-element`"
+							.to_string(),
+					)),
+				};
+			}
+			let child = input.parse::<Content>()?;
+			children.push(child);
 		}
 		Ok(children)
 	}

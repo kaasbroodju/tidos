@@ -65,11 +65,11 @@ impl ToFlatArgs for TextContent {
 			TextContent::Formatted(literal, contents) => {
 				let lit = TextContent::sanitize_literal(literal.clone());
 				flat_args.push(FlatArg::Expr(
-					quote! { tidos::sanitize!(format!(#lit #( , #( #contents )* )* )) },
+					quote! { tidos::sanitize!(format!(#lit, #contents )) },
 				));
 			}
 			TextContent::Expression(expr) => {
-				flat_args.push(FlatArg::Expr(quote! { tidos::sanitize!( #( #expr )* ) }));
+				flat_args.push(FlatArg::Expr(quote! { tidos::sanitize!( #expr ) }));
 			}
 		}
 	}
@@ -88,12 +88,10 @@ impl ToFlatArgs for RawTextContent<'_> {
 				flat_args.push(FlatArg::Literal(literal_string_value(literal)));
 			}
 			TextContent::Formatted(literal, contents) => {
-				flat_args.push(FlatArg::Expr(
-					quote! { format!(#literal #( , #( #contents )* )* ) },
-				));
+				flat_args.push(FlatArg::Expr(quote! { format!(#literal, #contents ) }));
 			}
 			TextContent::Expression(expr) => {
-				flat_args.push(FlatArg::Expr(quote! { #( #expr )* }));
+				flat_args.push(FlatArg::Expr(quote! { #expr }));
 			}
 		}
 	}

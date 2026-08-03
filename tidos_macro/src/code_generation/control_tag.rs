@@ -5,7 +5,7 @@
 
 use crate::code_generation::component::to_push_stmts;
 use crate::tokens::{Content, ControlTag};
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::TokenStream;
 use quote::{quote, ToTokens, TokenStreamExt};
 
 /// Renders the control tag's own construct (`for`/`if`/`match`); `Slot` has no
@@ -54,15 +54,15 @@ impl ControlTag {
 	/// calling `.into_iter()` lets the iterator expression be anything
 	/// `IntoIterator`-compatible (a `Vec`, a `&Vec`, a range, ...).
 	fn to_tokens_for_loop(
-		left_side: &Vec<TokenTree>,
-		right_side: &Vec<TokenTree>,
+		left_side: &TokenStream,
+		right_side: &TokenStream,
 		contents: &[Content],
 		tokens: &mut TokenStream,
 	) {
 		let body = to_push_stmts(contents);
 
 		let output = quote! {
-			for ( #( #left_side )* ) in ( #( #right_side )* ).into_iter() {
+			for #left_side in #right_side {
 				#body
 			}
 		};
@@ -75,9 +75,9 @@ impl ControlTag {
 	/// `else if` clauses first, then spliced between the `if` and the final
 	/// `else` (only emitted if an `{:else}` was present).
 	fn to_tokens_if_chain(
-		if_statement: &Vec<TokenTree>,
+		if_statement: &TokenStream,
 		if_content: &[Content],
-		if_else_chain: &[(Vec<TokenTree>, Vec<Content>)],
+		if_else_chain: &[(TokenStream, Vec<Content>)],
 		else_content: &Option<Vec<Content>>,
 		tokens: &mut TokenStream,
 	) {
@@ -87,7 +87,7 @@ impl ControlTag {
 			.iter()
 			.fold(&mut TokenStream::new(), |acc, (statement, contents)| {
 				let body = to_push_stmts(contents);
-				quote! { else if #( #statement )* { #body } }.to_tokens(acc);
+				quote! { else if #statement { #body } }.to_tokens(acc);
 				acc
 			})
 			.to_owned();
@@ -95,11 +95,11 @@ impl ControlTag {
 		let output = if let Some(else_content) = else_content {
 			let else_body = to_push_stmts(else_content);
 			quote! {
-				if #( #if_statement )* { #if_body } #if_else_chain_tokens else { #else_body }
+				if #if_statement { #if_body } #if_else_chain_tokens else { #else_body }
 			}
 		} else {
 			quote! {
-				if #( #if_statement )* { #if_body } #if_else_chain_tokens
+				if #if_statement { #if_body } #if_else_chain_tokens
 			}
 		};
 
@@ -109,8 +109,8 @@ impl ControlTag {
 	/// Emits `match match_statement { case_statement => { body }, ... }`, one
 	/// arm per `{:case ...}`.
 	fn to_tokens_match(
-		match_statement: &Vec<TokenTree>,
-		cases: &[(Vec<TokenTree>, Vec<Content>)],
+		match_statement: &TokenStream,
+		cases: &[(TokenStream, Vec<Content>)],
 		tokens: &mut TokenStream,
 	) {
 		let cases = cases
@@ -118,13 +118,13 @@ impl ControlTag {
 			.map(|(case_statement, case_content)| {
 				let body = to_push_stmts(case_content);
 				quote! {
-					#( #case_statement )* => { #body }
+					#case_statement => { #body }
 				}
 			})
 			.collect::<Vec<_>>();
 
 		let output = quote! {
-			match #( #match_statement )* {
+			match #match_statement {
 				#( #cases )*
 			}
 		};
