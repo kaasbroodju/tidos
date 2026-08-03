@@ -51,6 +51,11 @@ matches one of the pitfalls below.
 11. **Numeric types**: `{self.score}` where `score` is `u32`/`usize` fails
     because sanitize requires `AsRef<str>`. Use `{self.score.to_string()}`.
 
+12. **`@class` is `class`-only, native tags only**: `@` is only valid on the
+    `class` attribute (`@data-foo="..."` is a compile error), and only on
+    native HTML tags, not component tags (there's no HTML string to merge a
+    class into). The path must be a bare string literal, not an expression.
+
 ## Attribute Formatting
 
 When a tag (native HTML or custom component) has **3 or more attributes**,
@@ -62,7 +67,7 @@ present:
 
 1. Bare attribute, no value (`disabled`)
 2. String literal value (`class="wrapper"`)
-3. Braced format-string value (`class={"{} data-tidos", scoped_css!("mod.css")}`)
+3. `@class` scoped-CSS shorthand (`@class="mod.css"` / `@class={"mod.css", "data-tidos"}`)
 4. Braced expression value (`value={expr}`)
 5. Bare toggle (`:toggle`)
 6. Toggle with an expression (`toggle={expr}`)
@@ -76,7 +81,7 @@ present:
 <UserBadge
     disabled
     class="wrapper"
-    class={"{} data-tidos", scoped_css!("mod.css")}
+    @class={"mod.css", "data-tidos"}
     value={expr}
     :toggle
     toggle={expr}
@@ -98,7 +103,7 @@ whole.
 ```rust
 // correct: one scoped_css! on the root, children styled in CSS
 view! {
-    <nav class={scoped_css!("./nav_bar.css")}>
+    <nav @class="./nav_bar.css">
         <span>{&self.title}</span>
         <ul>…</ul>
     </nav>
@@ -106,11 +111,17 @@ view! {
 
 // avoid: multiple scoped_css! calls, one per element
 view! {
-    <nav class={scoped_css!("./nav.css")}>
-        <span class={scoped_css!("./title.css")}>{&self.title}</span>
+    <nav @class="./nav.css">
+        <span @class="./title.css">{&self.title}</span>
     </nav>
 }
 ```
+
+Prefer the `@class` shorthand (`@class="./nav_bar.css"`) over
+`class={scoped_css!("./nav_bar.css")}` on native HTML tags, see "Scoped CSS"
+in `syntax.md`. Fall back to calling `scoped_css!` directly only when you
+need the class name itself as a value (passed as a prop, combined with other
+logic) or on a component tag, where `@class` isn't available.
 
 ### Styling variants with `data-*` attributes
 

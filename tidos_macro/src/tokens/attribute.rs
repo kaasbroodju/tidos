@@ -3,10 +3,11 @@
 use crate::tokens::TextContent;
 use proc_macro2::{Literal, Span, TokenStream};
 
-/// One attribute on a tag (`name`, `name="lit"`, `name={expr}`, `:name`, or
-/// `:name={expr}`). `name_span` is kept separately from the plain `String`
-/// name so error messages and codegen can still point at the attribute's
-/// original source location.
+/// One attribute on a tag (`name`, `name="lit"`, `name={expr}`, `:name`,
+/// `:name={expr}`, or the `class`-only `@class="file.css"` /
+/// `@class={"file.css", ...}`). `name_span` is kept separately from the plain
+/// `String` name so error messages and codegen can still point at the
+/// attribute's original source location.
 #[derive(Debug)]
 pub struct Attribute {
 	pub name: String,
@@ -14,7 +15,7 @@ pub struct Attribute {
 	pub attribute_type: AttributeType,
 }
 
-/// The five forms an attribute's value can take, corresponding 1:1 to what
+/// The six forms an attribute's value can take, corresponding 1:1 to what
 /// `parsing::attribute::Parse for Attribute` recognizes.
 #[derive(Debug)]
 pub enum AttributeType {
@@ -32,4 +33,13 @@ pub enum AttributeType {
 
 	/// value={ person.name }
 	Expression { content: TextContent },
+
+	/// @class="file.css" or @class={"file.css", ...}. `rest`, when present,
+	/// is parsed with the exact same grammar as a plain `class={...}` value
+	/// (bare literal, format-string + args, or expression) and rendered
+	/// after the generated class name, space-separated.
+	ScopedCss {
+		file: Literal,
+		rest: Option<TextContent>,
+	},
 }

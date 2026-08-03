@@ -138,6 +138,19 @@ pub fn head(input: TokenStream) -> TokenStream {
 ///     }
 /// }
 /// ```
+///
+/// # `@class` shorthand
+///
+/// On a native HTML tag's `class` attribute, `@class="./card.css"` (or
+/// `@class={"./card.css"}`) is equivalent to `class={scoped_css!("./card.css")}`,
+/// except the generated class name is emitted as a plain string literal
+/// instead of a block expression, so it merges with surrounding static
+/// markup instead of forcing an unnecessary dynamic split. Anything after
+/// the path, e.g. `@class={"./card.css", "extra"}` or
+/// `@class={"./card.css", "extra {}", expr}`, is parsed with the same
+/// grammar as a plain `class={...}` value and appended after the generated
+/// class name, space-separated. Only valid on `class`, and only on native
+/// HTML tags (not components).
 #[allow(clippy::all)]
 #[proc_macro]
 pub fn scoped_css(input: TokenStream) -> TokenStream {

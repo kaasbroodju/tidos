@@ -1,0 +1,5 @@
+error: Expected `class` after `@`, e.g. `@class="file.css"`
+ --> tests/scoped_css/panics/at_class_invalid_name.rs:5:8
+  |
+5 |         <div @="./scoped_css/test.css"></div>
+  |              ^

@@ -45,6 +45,7 @@ tidos = "0.8.0-rc.2"            # or latest
 | `Slot<'render>` | `Box<dyn Fn(&mut Page) + 'render>`, holds slot content, invoked with `@slot{...}`. |
 | `{#slot:name}` | Named slot, fills a `Slot<'render>` field of the same name on a child component. |
 | `scoped_css!` | Injects a scoped `<style>` tag into the page `<head>` and returns the generated class name. |
+| `@class="file.css"` | `class`-only shorthand for `scoped_css!` on native HTML tags; generates the class name as a plain literal instead of an opaque expression. |
 | `head!` | Injects arbitrary HTML into the page `<head>`, deduplicated by UUID. |
 | `#[native_element]` | Auto-generates a `Component` impl that injects a JS `<script>` and renders a kebab-case custom element tag with struct fields as attributes. |
 | `i18n!` | *(feature: `i18n`)* Looks up a Fluent translation key. |

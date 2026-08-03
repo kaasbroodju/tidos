@@ -1,0 +1,5 @@
+error: Expected a string literal path, e.g. `@class={"file.css"}`
+ --> tests/scoped_css/panics/at_class_non_literal_braced.rs:6:16
+  |
+6 |         <div @class={some_var}></div>
+  |                      ^^^^^^^^

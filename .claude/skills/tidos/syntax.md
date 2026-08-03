@@ -57,7 +57,7 @@ view! {
 
 ## HTML tag attributes
 
-An attribute on a native HTML tag (`<input ...>`) comes in five forms:
+An attribute on a native HTML tag (`<input ...>`) comes in six forms:
 
 | Form | Meaning |
 |---|---|
@@ -66,6 +66,7 @@ An attribute on a native HTML tag (`<input ...>`) comes in five forms:
 | `value={expr}` | Braced value, sanitized |
 | `:disabled` | Toggle attribute, present only when `true` |
 | `:disabled={expr}` | Toggle attribute driven by a boolean expression |
+| `@class="file.css"` / `@class={"file.css", ...}` | `class`-only shorthand for `scoped_css!`, see below |
 
 A braced (non-toggle) attribute value (`name={...}`) is parsed as the same
 grammar as text content, so it accepts all three of its sub-forms, not just
@@ -90,6 +91,45 @@ view! {
     <button :disabled>{"Always disabled"}</button>
 }
 ```
+
+### `@class` — scoped CSS shorthand
+
+`@` prefixed on `class` (and only `class`) is sugar for `scoped_css!`. The
+first value must be a bare string literal CSS path (`include_str!` needs a
+literal at compile time), which is why `@class` can't take an arbitrary
+expression the way `class={expr}` can:
+
+| Form | Equivalent to |
+|---|---|
+| `@class="./card.css"` | `class={scoped_css!("./card.css")}` |
+| `@class={"./card.css"}` | `class={scoped_css!("./card.css")}` |
+
+Anything after the path (following a `,`) is parsed with the exact same
+grammar as a plain `class={...}` value — literal, format-string + args, or
+expression — and appended after the generated class name, space-separated:
+
+```rust
+view! {
+    // -> class="tidos-<uuid>"
+    <div @class="./card.css"></div>
+
+    // -> class="tidos-<uuid> extra"
+    <div @class={"./card.css", "extra"}></div>
+
+    // -> class="tidos-<uuid> extra <value-of-variant_class>"
+    <div @class={"./card.css", "extra {}", variant_class}></div>
+}
+```
+
+Only valid on native HTML tags, `@class` on a component tag is a compile
+error (components have no HTML string to merge a class into).
+
+Why prefer `@class` over `class={scoped_css!(...)}`: the latter makes
+`scoped_css!`'s return value an opaque expression from the template's point
+of view, forcing the surrounding static markup to split into a dynamic
+push even though the generated class name is actually known at compile
+time. `@class` generates that class name as a plain literal instead, so it
+merges into the same static string as the rest of the tag.
 
 ## `{#for … }` / `{/for}` — loops
 
@@ -509,6 +549,7 @@ pub fn dashboard() -> Page {
 | `@html{expr}` | Raw HTML expression, not sanitized |
 | `attr={expr}` | HTML attribute with a Rust expression value |
 | `:attr` / `:attr={expr}` | Toggle attribute, present only when true |
+| `@class="file.css"` / `@class={"file.css", ...}` | `class`-only shorthand for `scoped_css!`, native HTML tags only |
 | `{#for x in iter} … {/for}` | Loop |
 | `{#if cond} … {:else if cond} … {:else} … {/if}` | Conditional |
 | `{#match val} {:case Pat} … {/match}` | Pattern match |
@@ -547,6 +588,15 @@ impl Component for MyCard {
     }
 }
 ```
+
+On a native HTML tag's `class` attribute, prefer the `@class` shorthand from
+"HTML tag attributes" above (`<div @class="./my_card.css">`) over
+`class={scoped_css!(...)}`: same result, but the generated class name is a
+plain literal instead of an opaque expression, so it doesn't force an
+unnecessary dynamic split in the surrounding static markup. Reach for
+`scoped_css!` directly when you need the class name as a value outside of a
+`class` attribute (e.g. passed as a prop, or combined with other logic
+before use), or on a component tag, where `@class` isn't available.
 
 ### How it works
 

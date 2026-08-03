@@ -1,0 +1,5 @@
+error: `@class` is only supported on native HTML tags, not components
+  --> tests/scoped_css/panics/at_class_on_component.rs:11:12
+   |
+11 |         <Widget @class="./scoped_css/test.css" />
+   |                  ^^^^^

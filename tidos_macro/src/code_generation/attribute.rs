@@ -7,8 +7,9 @@
 
 use crate::code_generation::component::{flush_flat, FlatArg, ToFlatArgs};
 use crate::tokens::{Attribute, AttributeType, TextContent};
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens, TokenStreamExt};
+use uuid::Uuid;
 
 /// Contribute an attribute's value(s) to `flat_args`.
 /// Toggle attributes (ImplicitToggle / ExplicitToggle) are always boundaries:
@@ -58,6 +59,35 @@ impl ToFlatArgs for Attribute {
 					if #value { page.push_static(concat!(#name_trimmed, " ")); }
 				});
 			}
+			AttributeType::ScopedCss { file, rest } => {
+				// Unlike `scoped_css!` used as an expression, the class name is
+				// generated as a plain string literal here (not a block
+				// expression), so it can be pushed as `FlatArg::Literal` and
+				// merged with surrounding static markup instead of forcing a
+				// `FlatArg::Expr` split. The head-registration call is the only
+				// part that has to run at runtime, so it's appended to `result`
+				// directly rather than going through `flat_args`.
+				let class_name = format!("tidos-{}", Uuid::new_v4());
+				let class_literal = Literal::string(&class_name);
+
+				result.append_all(quote! {
+					page.add_elements_to_head(#class_literal, String::from(concat!("<style>.", #class_literal, " {", include_str!(#file), "}</style>")));
+				});
+
+				flat_args.push(FlatArg::Literal(name_trimmed.to_string()));
+				flat_args.push(FlatArg::Literal("=\"".to_string()));
+				flat_args.push(FlatArg::Literal(class_name));
+				// `rest` reuses `TextContent`'s own `ToFlatArgs` impl, so a
+				// literal `rest` stays fully static (merges into the same
+				// literal run as the class name) while a format-string/expr
+				// `rest` becomes exactly the kind of `FlatArg::Expr` split a
+				// plain `class={...}` attribute would already produce.
+				if let Some(rest) = rest {
+					flat_args.push(FlatArg::Literal(" ".to_string()));
+					rest.to_flat_args(flat_args, result);
+				}
+				flat_args.push(FlatArg::Literal("\" ".to_string()));
+			}
 		}
 	}
 }
@@ -95,6 +125,11 @@ impl Attribute {
 					quote! { #name:  #expr }
 				}
 			},
+			AttributeType::ScopedCss { .. } => unreachable!(
+				"`@class` on a component tag is rejected in `parsing::html_tag::ComponentContent::parse`, \
+				 before `to_tokens_custom_element` ever runs; a `to_compile_error()` here would land as a \
+				 malformed struct-literal field instead of a clean error"
+			),
 		}
 	}
 }

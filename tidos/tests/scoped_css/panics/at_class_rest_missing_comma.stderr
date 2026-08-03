@@ -1,0 +1,5 @@
+error: Expected `,` for formatting arguments
+ --> tests/scoped_css/panics/at_class_rest_missing_comma.rs:6:49
+  |
+6 |         <div @class={"./scoped_css/test.css", "extra" foo}></div>
+  |                                                       ^^^

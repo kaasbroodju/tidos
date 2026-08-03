@@ -1,0 +1,5 @@
+error: Expected `=` after `@class`, e.g. `@class="file.css"` or `@class={"file.css"}`
+ --> tests/scoped_css/panics/at_class_missing_equals.rs:5:8
+  |
+5 |         <div @class "./scoped_css/test.css"></div>
+  |              ^

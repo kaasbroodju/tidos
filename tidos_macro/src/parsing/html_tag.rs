@@ -7,10 +7,14 @@
 //! a tracked span for their tag name, whereas components do (see
 //! `ComponentContent::tag_span` / `closing_tag_span`, used later by
 //! `code_generation` to splice the identifier back into real Rust code).
+//! Conversely, components forbid the `@class` scoped-CSS attribute (there's
+//! no HTML string for it to merge a class into), rejected right here rather
+//! than in `code_generation`, so the error surfaces as one clean
+//! `syn::Error` instead of a malformed struct-literal field.
 
 use crate::parsing::attribute::parse_attributes;
 use crate::parsing::utils::HTMLutils;
-use crate::tokens::{ComponentContent, NativeContent};
+use crate::tokens::{AttributeType, ComponentContent, NativeContent};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::Token;
@@ -95,6 +99,17 @@ impl Parse for ComponentContent {
 			.expect("Expected caller to peek `<` first");
 		let (tag, tag_span) = HTMLutils::extract_name(input)?;
 		let attributes = parse_attributes(input, &tag, start_first_tag_token.span())?;
+
+		if let Some(attribute) = attributes
+			.attributes
+			.iter()
+			.find(|attribute| matches!(attribute.attribute_type, AttributeType::ScopedCss { .. }))
+		{
+			return Err(syn::Error::new(
+				attribute.name_span,
+				"`@class` is only supported on native HTML tags, not components",
+			));
+		}
 
 		let slash = input.parse::<Token![/]>();
 		let closing_bracket = input.parse::<Token![>]>();

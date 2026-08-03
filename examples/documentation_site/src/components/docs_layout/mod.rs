@@ -48,7 +48,7 @@ impl Component for DocsLayout<'_> {
         }
 
         view!{
-            <div class={scoped_css!("./docs_layout.css")}>
+            <div @class={"./docs_layout.css"}>
                 <div class="navbar">
                     <nav>
                         <ul>
