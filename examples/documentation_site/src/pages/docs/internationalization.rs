@@ -33,7 +33,7 @@ impl Component for I18nContent {
 			<title>{"Internationalization - Tidos"}</title>
 		}
 
-		let cargo_toml = "[dependencies]\ntidos = { version = \"0.8.0-rc.1\", features = [\"rocket\", \"i18n\"] }";
+		let cargo_toml = "[dependencies]\ntidos = { version = \"0.8.0-rc.3\", features = [\"rocket\", \"i18n\"] }";
 
 		let tidos_toml = "[default]\nresource_location = \"translations\"\ndefault_locale = \"en-US\"\nresources = [\"common.ftl\"]";
 

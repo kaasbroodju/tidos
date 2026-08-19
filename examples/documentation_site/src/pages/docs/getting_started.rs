@@ -47,27 +47,27 @@ impl Component for GettingStartedContent {
 		let frameworks = vec![
             FwDocs {
                 name: "Rocket",
-                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.1\", features = [\"rocket\"] }\nrocket = \"0.5\"",
+                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.3\", features = [\"rocket\"] }\nrocket = \"0.5\"",
                 code: "use tidos::{page, Page};\nuse rocket::{get, routes};\n\n#[get(\"/\")]\npub fn index() -> Page {\n    page! {\n        <main>\n            <h1>{\"Hello from Tidos!\"}</h1>\n        </main>\n    }\n}\n\n#[rocket::main]\nasync fn main() {\n    rocket::build()\n        .mount(\"/\", routes![index])\n        .launch()\n        .await\n        .unwrap();\n}",
             },
             FwDocs {
                 name: "Actix",
-                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.1\", features = [\"actix-web\"] }\nactix-web = \"4\"",
+                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.3\", features = [\"actix-web\"] }\nactix-web = \"4\"",
                 code: "use actix_web::{get, App, HttpServer, HttpResponse};\nuse tidos::{page, Page};\n\n#[get(\"/\")]\nasync fn index() -> HttpResponse {\n    let page: Page = page! {\n        <main>\n            <h1>{\"Hello from Tidos!\"}</h1>\n        </main>\n    };\n    HttpResponse::Ok()\n        .content_type(\"text/html; charset=utf-8\")\n        .body(page.to_string())\n}\n\n#[actix_web::main]\nasync fn main() -> std::io::Result<()> {\n    HttpServer::new(|| App::new().service(index))\n        .bind(\"127.0.0.1:8080\")?\n        .run()\n        .await\n}",
             },
             FwDocs {
                 name: "Axum",
-                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.1\", features = [\"axum\"] }\naxum = \"0.8\"\ntokio = { version = \"1\", features = [\"full\"] }",
+                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.3\", features = [\"axum\"] }\naxum = \"0.8\"\ntokio = { version = \"1\", features = [\"full\"] }",
                 code: "use axum::{response::IntoResponse, routing::get, Router};\nuse tidos::{page, Page};\n\nasync fn index() -> impl IntoResponse {\n    page! {\n        <main>\n            <h1>{\"Hello from Tidos!\"}</h1>\n        </main>\n    }\n}\n\n#[tokio::main]\nasync fn main() {\n    let app = Router::new().route(\"/\", get(index));\n    let listener = tokio::net::TcpListener::bind(\"0.0.0.0:3000\").await.unwrap();\n    axum::serve(listener, app).await.unwrap();\n}",
             },
             FwDocs {
                 name: "Warp",
-                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.1\", features = [\"warp\"] }\nwarp = \"0.4\"\ntokio = { version = \"1\", features = [\"full\"] }",
+                cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.3\", features = [\"warp\"] }\nwarp = \"0.4\"\ntokio = { version = \"1\", features = [\"full\"] }",
                 code: "use warp::Filter;\nuse tidos::{page, Page};\n\n#[tokio::main]\nasync fn main() {\n    let route = warp::get()\n        .and(warp::path::end())\n        .map(|| {\n            warp::reply::html(page! {\n                <main>\n                    <h1>{\"Hello from Tidos!\"}</h1>\n                </main>\n            }.to_string())\n        });\n    warp::serve(route).run(([127, 0, 0, 1], 3030)).await;\n}",
             },
             FwDocs {
                 name: "Standalone",
-                cargo: "[dependencies]\ntidos = \"0.8.0-rc.1\"",
+                cargo: "[dependencies]\ntidos = \"0.8.0-rc.3\"",
                 code: "use tidos::{page, Page};\n\nfn main() {\n    let html: Page = page! {\n        <main>\n            <h1>{\"Hello from Tidos!\"}</h1>\n        </main>\n    };\n    println!(\"{}\", html);\n}",
             },
         ];

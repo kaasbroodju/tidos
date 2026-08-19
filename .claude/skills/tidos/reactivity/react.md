@@ -162,7 +162,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tidos = { version = "0.8.0-rc.2", features = ["rocket"] }
+tidos = { version = "0.8.0-rc.3", features = ["rocket"] }
 rocket = "0.5"
 ```
 

@@ -21,16 +21,16 @@ hand, don't load all of them speculatively.
 
 ```toml
 [dependencies]
-tidos = "0.8.0-rc.2"            # or latest
+tidos = "0.8.0-rc.3"            # or latest
 
 # Pick the web framework integration you need (or none, for a bare binary):
-# tidos = { version = "0.8.0-rc.2", features = ["rocket"] }
-# tidos = { version = "0.8.0-rc.2", features = ["actix-web"] }
-# tidos = { version = "0.8.0-rc.2", features = ["axum"] }
-# tidos = { version = "0.8.0-rc.2", features = ["warp"] }
+# tidos = { version = "0.8.0-rc.3", features = ["rocket"] }
+# tidos = { version = "0.8.0-rc.3", features = ["actix-web"] }
+# tidos = { version = "0.8.0-rc.3", features = ["axum"] }
+# tidos = { version = "0.8.0-rc.3", features = ["warp"] }
 
 # Add i18n support on top of any of the above:
-# tidos = { version = "0.8.0-rc.2", features = ["rocket", "i18n"] }
+# tidos = { version = "0.8.0-rc.3", features = ["rocket", "i18n"] }
 ```
 
 ## Core concepts

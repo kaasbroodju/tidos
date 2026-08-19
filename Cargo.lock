@@ -3083,7 +3083,7 @@ dependencies = [
 
 [[package]]
 name = "tidos"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "actix-web",
  "axum",
@@ -3108,7 +3108,7 @@ dependencies = [
 
 [[package]]
 name = "tidos_i18n"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "cargo-expand",
  "proc-macro2",
@@ -3118,7 +3118,7 @@ dependencies = [
 
 [[package]]
 name = "tidos_macro"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "cargo-expand",
  "proc-macro2",
