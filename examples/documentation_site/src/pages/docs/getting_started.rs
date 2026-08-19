@@ -7,44 +7,44 @@ use tidos::{head, page, view, Component, Page};
 
 #[get("/docs/getting-started?<framework>")]
 pub fn getting_started(framework: Option<String>) -> Page {
-    let active = framework.unwrap_or_else(|| String::from("Rocket"));
+	let active = framework.unwrap_or_else(|| String::from("Rocket"));
 
-    let mut page = page! {
-        <NavBarDocs />
-        <DocsLayout>
-            {#slot:content}
-                <GettingStartedContent active={active.clone()} />
-            {/slot}
-        </DocsLayout>
-    };
+	let mut page = page! {
+		<NavBarDocs />
+		<DocsLayout>
+			{#slot:content}
+				<GettingStartedContent active={active.clone()} />
+			{/slot}
+		</DocsLayout>
+	};
 
-    {
-        let page = &mut page;
-        head! {
-            <script type="application/ld+json">@html{include_str!("./getting_started.jsonld")}</script>
-        }
-    }
+	{
+		let page = &mut page;
+		head! {
+			<script type="application/ld+json">@html{include_str!("./getting_started.jsonld")}</script>
+		}
+	}
 
-    page
+	page
 }
 
 struct FwDocs {
-    name: &'static str,
-    cargo: &'static str,
-    code: &'static str,
+	name: &'static str,
+	cargo: &'static str,
+	code: &'static str,
 }
 
 struct GettingStartedContent {
-    pub active: String,
+	pub active: String,
 }
 
 impl Component for GettingStartedContent {
-    fn to_render(&self, page: &mut Page) {
-        head! {
-            <title>{"Getting Started - Tidos"}</title>
-        }
+	fn to_render(&self, page: &mut Page) {
+		head! {
+			<title>{"Getting Started - Tidos"}</title>
+		}
 
-        let frameworks = vec![
+		let frameworks = vec![
             FwDocs {
                 name: "Rocket",
                 cargo: "[dependencies]\ntidos = { version = \"0.8.0-rc.1\", features = [\"rocket\"] }\nrocket = \"0.5\"",
@@ -72,37 +72,37 @@ impl Component for GettingStartedContent {
             },
         ];
 
-        let active = self.active.as_str();
-        let frameworks_str = String::from("Rocket,Actix,Axum,Warp,Standalone");
-        let active_clone = self.active.clone();
+		let active = self.active.as_str();
+		let frameworks_str = String::from("Rocket,Actix,Axum,Warp,Standalone");
+		let active_clone = self.active.clone();
 
-        let dev_loop = "# install once\ncargo install watchexec-cli\n\n# rebuild & restart on every save\nwatchexec -r -e rs -- cargo run\n\n# with multiple binaries, name the one to run\nwatchexec -r -e rs -- cargo run --bin my_app";
+		let dev_loop = "# install once\ncargo install watchexec-cli\n\n# rebuild & restart on every save\nwatchexec -r -e rs -- cargo run\n\n# with multiple binaries, name the one to run\nwatchexec -r -e rs -- cargo run --bin my_app";
 
-        view! {
-            <div class="doc-content">
-                <h1>{"Getting Started"}</h1>
-                <p>{"Tidos is a server-side rendering (SSR) component framework for Rust. It lets you write HTML components directly in Rust, using regular Rust syntax and control flow instead of a separate template language, and it plugs into the web framework you're already using."}</p>
-                <FrameworkTabs frameworks={frameworks_str} active={active_clone} />
-                <h2>{"1. Add to Cargo.toml"}</h2>
-                {#for fw in &frameworks}
-                    <div data-framework={fw.name} style={if fw.name == active { "display:block" } else { "display:none" }}>
-                        <CodeBlock code={fw.cargo.to_string()} />
-                    </div>
-                {/for}
-                <h2>{"2. Create your first route"}</h2>
-                <p>{"Use the page! macro inside a route handler to return a rendered HTML page:"}</p>
-                {#for fw in &frameworks}
-                    <div data-framework={fw.name} style={if fw.name == active { "display:block" } else { "display:none" }}>
-                        <CodeBlock code={fw.code.to_string()} />
-                    </div>
-                {/for}
-                <h2>{"Live reloading during development"}</h2>
-                <p>{"Rust has no native hot module reloading, so retyping cargo run after every change gets tedious. We recommend using "}<a href="https://github.com/watchexec/watchexec">{"Watchexec"}</a>{" as it rebuilds and restarts your server automatically whenever you save a file. We use it for the Tidos documentation website itself."}</p>
-                <CodeBlock code={dev_loop.to_string()} />
+		view! {
+			<div class="doc-content">
+				<h1>{"Getting Started"}</h1>
+				<p>{"Tidos is a server-side rendering (SSR) component framework for Rust. It lets you write HTML components directly in Rust, using regular Rust syntax and control flow instead of a separate template language, and it plugs into the web framework you're already using."}</p>
+				<FrameworkTabs frameworks={frameworks_str} active={active_clone} />
+				<h2>{"1. Add to Cargo.toml"}</h2>
+				{#for fw in &frameworks}
+					<div data-framework={fw.name} style={if fw.name == active { "display:block" } else { "display:none" }}>
+						<CodeBlock code={fw.cargo.to_string()} />
+					</div>
+				{/for}
+				<h2>{"2. Create your first route"}</h2>
+				<p>{"Use the page! macro inside a route handler to return a rendered HTML page:"}</p>
+				{#for fw in &frameworks}
+					<div data-framework={fw.name} style={if fw.name == active { "display:block" } else { "display:none" }}>
+						<CodeBlock code={fw.code.to_string()} />
+					</div>
+				{/for}
+				<h2>{"Live reloading during development"}</h2>
+				<p>{"Rust has no native hot module reloading, so retyping cargo run after every change gets tedious. We recommend using "}<a href="https://github.com/watchexec/watchexec">{"Watchexec"}</a>{" as it rebuilds and restarts your server automatically whenever you save a file. We use it for the Tidos documentation website itself."}</p>
+				<CodeBlock code={dev_loop.to_string()} />
 
-                <h2>{"Next steps"}</h2>
-                <p>{"You've got a page rendering. Next, learn how to build reusable "}<a href="/docs/component">{"Components"}</a>{" with the view! macro, control flow, slots, and scoped CSS."}</p>
-            </div>
-        }
-    }
+				<h2>{"Next steps"}</h2>
+				<p>{"You've got a page rendering. Next, learn how to build reusable "}<a href="/docs/component">{"Components"}</a>{" with the view! macro, control flow, slots, and scoped CSS."}</p>
+			</div>
+		}
+	}
 }

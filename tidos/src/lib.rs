@@ -175,9 +175,8 @@ pub mod i18n {
 		() => {
 			tidos::i18n::lazy_static::lazy_static! {
 				static ref TIDOS_I18N_CONFIGURATION: tidos::i18n::TidosI18nConfig = {
-					tidos::i18n::TidosI18nConfig::figment()
-						.extract()
-						.unwrap()
+					tidos::i18n::TidosI18nConfig::load()
+						.unwrap_or_else(|error| panic!("{error}"))
 				};
 			}
 		};
@@ -187,7 +186,7 @@ pub mod i18n {
 	#[doc(inline)]
 	pub use tidos_i18n::*;
 
-	pub use crate::i18n_config::TidosI18nConfig;
+	pub use crate::i18n_config::{TidosI18nConfig, TidosI18nError};
 
 	pub use crate::page::Lang;
 }

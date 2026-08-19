@@ -8,6 +8,6 @@ use tidos::native_element;
 /// through as an HTML attribute value.
 #[native_element]
 pub struct FrameworkTabs {
-    pub frameworks: String,
-    pub active: String,
+	pub frameworks: String,
+	pub active: String,
 }

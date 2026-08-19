@@ -3,9 +3,9 @@ use tidos::{scoped_css, view, Component, Page};
 use crate::components::feature_card::FeatureCard;
 
 struct Feature {
-    title: &'static str,
-    body: &'static str,
-    icon: &'static str,
+	title: &'static str,
+	body: &'static str,
+	icon: &'static str,
 }
 
 const FEATURES: &[Feature] = &[
@@ -36,23 +36,23 @@ const FEATURES: &[Feature] = &[
 pub struct FeaturesSection;
 
 impl Component for FeaturesSection {
-    fn to_render(&self, page: &mut Page) {
-        view! {
-            <section class={scoped_css!("./features_section.css")}>
-                <h2 class="section-title">
-                    {"Built for the "}
-                    <em>{"deep end"}</em>
-                </h2>
-                <div class="grid">
-                    {#for f in FEATURES}
-                        <FeatureCard
-                            title={f.title.to_string()}
-                            body={f.body.to_string()}
-                            icon={f.icon.to_string()}
-                        />
-                    {/for}
-                </div>
-            </section>
-        }
-    }
+	fn to_render(&self, page: &mut Page) {
+		view! {
+			<section class={scoped_css!("./features_section.css")}>
+				<h2 class="section-title">
+					{"Built for the "}
+					<em>{"deep end"}</em>
+				</h2>
+				<div class="grid">
+					{#for f in FEATURES}
+						<FeatureCard
+							title={f.title.to_string()}
+							body={f.body.to_string()}
+							icon={f.icon.to_string()}
+						/>
+					{/for}
+				</div>
+			</section>
+		}
+	}
 }

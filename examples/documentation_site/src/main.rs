@@ -5,9 +5,8 @@ mod components;
 mod pages;
 mod server_timing;
 
-use std::path::PathBuf;
 
-use rocket::fs::{FileServer, NamedFile};
+use rocket::fs::FileServer;
 use rocket::routes;
 
 use crate::pages::docs::component::component_docs;
@@ -25,30 +24,29 @@ use crate::pages::news::v0_8_0_rc2::news_v0_8_0_rc2;
 
 #[rocket::main]
 async fn main() {
-    rocket::build()
-        .attach(server_timing::ServerTimingFairing)
-        .attach(cache_control::CacheControlFairing)
-        .mount(
-            "/",
-            routes![
-                index,
-                getting_started,
-                the_page_macro,
-                component_docs,
-                javascript_framework,
-                internationalization,
-                news_index,
-                news_v0_8_0_rc2,
-                news_v0_8_0_rc1,
-                news_v0_7_6,
-                news_v0_7_5,
-                news_v0_7_0,
-            ],
-        )
-        .mount("/dist", FileServer::from("./dist"))
-        .mount("/", FileServer::from("./public").rank(1))
-        .launch()
-        .await
-        .unwrap();
-
+	rocket::build()
+		.attach(server_timing::ServerTimingFairing)
+		.attach(cache_control::CacheControlFairing)
+		.mount(
+			"/",
+			routes![
+				index,
+				getting_started,
+				the_page_macro,
+				component_docs,
+				javascript_framework,
+				internationalization,
+				news_index,
+				news_v0_8_0_rc2,
+				news_v0_8_0_rc1,
+				news_v0_7_6,
+				news_v0_7_5,
+				news_v0_7_0,
+			],
+		)
+		.mount("/dist", FileServer::from("./dist"))
+		.mount("/", FileServer::from("./public").rank(1))
+		.launch()
+		.await
+		.unwrap();
 }

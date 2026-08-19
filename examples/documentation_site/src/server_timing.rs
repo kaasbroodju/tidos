@@ -15,23 +15,23 @@ pub struct ServerTimingFairing;
 
 #[rocket::async_trait]
 impl Fairing for ServerTimingFairing {
-    fn info(&self) -> Info {
-        Info {
-            name: "Server-Timing",
-            kind: Kind::Request | Kind::Response,
-        }
-    }
+	fn info(&self) -> Info {
+		Info {
+			name: "Server-Timing",
+			kind: Kind::Request | Kind::Response,
+		}
+	}
 
-    async fn on_request(&self, request: &mut Request<'_>, _data: &mut Data<'_>) {
-        request.local_cache(|| Instant::now());
-    }
+	async fn on_request(&self, request: &mut Request<'_>, _data: &mut Data<'_>) {
+		request.local_cache(Instant::now);
+	}
 
-    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
-        let start = request.local_cache(|| Instant::now());
-        let ms = start.elapsed().as_millis();
-        response.set_raw_header(
-            "Server-Timing",
-            format!("render;dur={ms:.3};desc=\"Tidos\""),
-        );
-    }
+	async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+		let start = request.local_cache(Instant::now);
+		let ms = start.elapsed().as_millis();
+		response.set_raw_header(
+			"Server-Timing",
+			format!("render;dur={ms:.3};desc=\"Tidos\""),
+		);
+	}
 }

@@ -8,6 +8,6 @@ use tidos::native_element;
 /// - `label`: accessible name for the button.
 #[native_element]
 pub struct MobileMenu {
-    pub controls: String,
-    pub label: String,
+	pub controls: String,
+	pub label: String,
 }
