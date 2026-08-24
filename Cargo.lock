@@ -578,9 +578,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-expand"
-version = "1.0.124"
+version = "1.0.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aca34081d27e607774067d8afc61edaa7e7461e354dead2c0a8a62d2ee792229"
+checksum = "5ec57557ae0fec82538182456909314e4806539d94de12c8a300e206b54cd06b"
 dependencies = [
  "bat",
  "cargo-subcommand-metadata",
@@ -690,9 +690,9 @@ dependencies = [
 
 [[package]]
 name = "clap-cargo"
-version = "0.18.3"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "936551935c8258754bb8216aec040957d261f977303754b9bf1a213518388006"
+checksum = "ac0fb996b5acdd543c8b8ff723c719715d437fdce607ac1fda01c977f568020d"
 dependencies = [
  "anstyle",
  "clap",
